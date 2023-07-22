@@ -3,8 +3,10 @@ import { ReactNativeZoomableView } from "@openspacelabs/react-native-zoomable-vi
 import theCuttingEdge from "./assets/IMG_20230716_184450.jpg";
 import React, { useState } from "react";
 import Svg, { Line } from "react-native-svg";
-import Animated from "react-native-reanimated";
-
+import Animated, {
+  useSharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import {
   Gesture,
   GestureDetector,
@@ -44,21 +46,27 @@ const Node = ({
   nodeAttributes,
   setIsPanEnabled,
   setSelectedNodeIdx,
+  animatedStyles,
+  selectedNodeIdx,
 }) => {
+  const animatedStylesArray = idx === selectedNodeIdx ? [animatedStyles] : [];
   return (
     <Animated.View
-      style={{
-        width: 50,
-        height: 50,
-        borderRadius: 50,
-        borderColor: nodeAttributes.borderColor,
-        borderWidth: 10,
-        position: "absolute",
-        top: nodeAttributes.y - 25,
-        left: nodeAttributes.x - 25,
-        zIndex: 2,
-        backgroundColor: "white",
-      }}
+      style={[
+        {
+          width: 50,
+          height: 50,
+          borderRadius: 50,
+          borderColor: nodeAttributes.borderColor,
+          borderWidth: 10,
+          position: "absolute",
+          top: nodeAttributes.y - 25,
+          left: nodeAttributes.x - 25,
+          zIndex: 2,
+          backgroundColor: "white",
+        },
+        animatedStylesArray,
+      ]}
     >
       <TouchableWithoutFeedback
         style={{
@@ -103,11 +111,24 @@ const Node = ({
   );
 };
 
+const animatedSvg = () => {};
+
 export default GestureDemo = () => {
   const [nodes, setNodes] = useState([]);
   const [isSelectingNode, setIsSelectingNode] = useState(false);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
   const [selectedNodeIdx, setSelectedNodeIdx] = useState(null);
+  const offset = useSharedValue({ x: 0, y: 0 });
+  const start = useSharedValue({ x: 0, y: 0 });
+
+  const animatedStyles = useAnimatedStyle(() => {
+    return {
+      transform: [
+        { translateX: offset.value.x },
+        { translateY: offset.value.y },
+      ],
+    };
+  });
 
   const applyImage = (n) => {
     console.log(n.x, n.y);
@@ -126,22 +147,27 @@ export default GestureDemo = () => {
     .runOnJS(true)
     .onUpdate((n) => {
       if (isSelectingNode) {
-        setNodes((prevState) => {
-          prevState[selectedNodeIdx].x = n.x;
-          prevState[selectedNodeIdx].y = n.y;
-          return prevState;
-        });
+        offset.value = {
+          x: n.translationX + start.value.x,
+          y: n.translationY + start.value.y,
+        };
       }
       console.log(n.x, n.y);
     })
-    .onEnd(() => {
-      if (isSelectingNode) {
-        setNodes((prevState) =>
-          prevState.map((node) => ({ ...node, borderColor: "black" }))
-        );
-        setIsSelectingNode(false);
-      }
-    });
+    .onEnd(async () => {
+      if (!isSelectingNode) return;
+      setNodes(
+        (prevState) => {
+          prevState[selectedNodeIdx].borderColor = "black";
+          prevState[selectedNodeIdx].x += offset.value.x;
+          prevState[selectedNodeIdx].y += offset.value.y;
+          return prevState;
+        }
+        // prevState.map((node) => ({ ...node, borderColor: "black" }))
+      );
+      setIsSelectingNode(false);
+    })
+    .onFinalize(() => (offset.value = { x: 0, y: 0 }));
   const exclusive = Gesture.Exclusive(longPress, pan);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
@@ -151,12 +177,14 @@ export default GestureDemo = () => {
             <Node
               key={idx}
               {...{
+                animatedStyles,
                 setNodes,
                 setIsSelectingNode,
                 nodeAttributes,
                 idx,
                 setIsPanEnabled,
                 setSelectedNodeIdx,
+                selectedNodeIdx,
               }}
             />
           ))}
