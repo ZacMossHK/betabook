@@ -3,6 +3,7 @@ import { ReactNativeZoomableView } from "@openspacelabs/react-native-zoomable-vi
 import theCuttingEdge from "./assets/IMG_20230716_184450.jpg";
 import React, { useState } from "react";
 import Svg, { Line } from "react-native-svg";
+import Animated from "react-native-reanimated";
 
 import {
   Gesture,
@@ -36,9 +37,16 @@ const exampleImages = [
   },
 ];
 
-const Node = ({ idx, setDeletingNode, setNodes, nodeAttributes }) => {
+const Node = ({
+  idx,
+  setIsSelectingNode,
+  setNodes,
+  nodeAttributes,
+  setIsPanEnabled,
+  setSelectedNodeIdx,
+}) => {
   return (
-    <View
+    <Animated.View
       style={{
         width: 50,
         height: 50,
@@ -61,7 +69,9 @@ const Node = ({ idx, setDeletingNode, setNodes, nodeAttributes }) => {
         }}
         delayLongPress={650}
         onPressIn={() => {
-          setDeletingNode(true);
+          setSelectedNodeIdx(idx);
+          setIsSelectingNode(true);
+          setIsPanEnabled(true);
           setNodes((prevState) => {
             prevState[idx].borderColor =
               prevState[idx].borderColor === "black" ? "red" : "black";
@@ -69,7 +79,12 @@ const Node = ({ idx, setDeletingNode, setNodes, nodeAttributes }) => {
           });
         }}
         onPress={() => {
-          setDeletingNode(false);
+          setIsSelectingNode(false);
+          setNodes((prevState) => {
+            prevState[idx].borderColor =
+              prevState[idx].borderColor === "black" ? "red" : "black";
+            return prevState;
+          });
         }}
         onLongPress={() => {
           setNodes((prevState) =>
@@ -77,20 +92,22 @@ const Node = ({ idx, setDeletingNode, setNodes, nodeAttributes }) => {
               (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
             )
           );
-          setDeletingNode(false);
+          setIsSelectingNode(false);
         }}
       >
         <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
           {idx + 1}
         </Text>
       </TouchableWithoutFeedback>
-    </View>
+    </Animated.View>
   );
 };
 
 export default GestureDemo = () => {
   const [nodes, setNodes] = useState([]);
-  const [deletingNode, setDeletingNode] = useState(false);
+  const [isSelectingNode, setIsSelectingNode] = useState(false);
+  const [isPanEnabled, setIsPanEnabled] = useState(false);
+  const [selectedNodeIdx, setSelectedNodeIdx] = useState(null);
 
   const applyImage = (n) => {
     console.log(n.x, n.y);
@@ -98,25 +115,49 @@ export default GestureDemo = () => {
     setNodes((prevState) => [...prevState, n]);
   };
 
-  const touch = Gesture.Tap().onStart(applyImage);
   const longPress = Gesture.LongPress()
-    .enabled(!deletingNode)
+    .enabled(!isSelectingNode)
+    .runOnJS(true)
     .minDuration(300)
     .onStart(applyImage)
-    .onEnd(() => setDeletingNode(false));
-  const pan = Gesture.Pan().onUpdate((n) => console.log(n.x, n.y));
-  const longerPress = Gesture.LongPress()
-    .minDuration(5000)
-    .onStart(() => console.log("NEXT"));
-  const race = Gesture.Race(longPress, longerPress);
+    .onEnd(() => setIsSelectingNode(false));
+
+  const pan = Gesture.Pan()
+    .runOnJS(true)
+    .onUpdate((n) => {
+      if (isSelectingNode) {
+        setNodes((prevState) => {
+          prevState[selectedNodeIdx].x = n.x;
+          prevState[selectedNodeIdx].y = n.y;
+          return prevState;
+        });
+      }
+      console.log(n.x, n.y);
+    })
+    .onEnd(() => {
+      if (isSelectingNode) {
+        setNodes((prevState) =>
+          prevState.map((node) => ({ ...node, borderColor: "black" }))
+        );
+        setIsSelectingNode(false);
+      }
+    });
+  const exclusive = Gesture.Exclusive(longPress, pan);
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector gesture={longPress}>
+      <GestureDetector gesture={exclusive}>
         <SafeAreaView style={{ flex: 1 }}>
           {nodes.map((nodeAttributes, idx) => (
             <Node
               key={idx}
-              {...{ setNodes, setDeletingNode, nodeAttributes, idx }}
+              {...{
+                setNodes,
+                setIsSelectingNode,
+                nodeAttributes,
+                idx,
+                setIsPanEnabled,
+                setSelectedNodeIdx,
+              }}
             />
           ))}
           <Svg style={{ zIndex: 1 }}>
