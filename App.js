@@ -134,6 +134,17 @@ export default GestureDemo = () => {
   const line1Start = useSharedValue({ x2: 0, y2: 0 });
   const line2Offset = useSharedValue({ x1: 0, y1: 0 });
   const line2Start = useSharedValue({ x1: 0, y1: 0 });
+
+  useEffect(() => {
+    line2Start.value = {
+      x1: nodes[selectedNodeIdx].x,
+      y1: nodes[selectedNodeIdx].y,
+    };
+    line1Start.value = {
+      x2: nodes[selectedNodeIdx].x,
+      y2: nodes[selectedNodeIdx].y,
+    };
+  }, [isSelectingNode]);
   const animatedStyles = useAnimatedStyle(() => {
     return {
       transform: [
@@ -160,14 +171,6 @@ export default GestureDemo = () => {
     .runOnJS(true)
     .onStart(() => {
       if (!isSelectingNode) return;
-      line2Start.value = {
-        x1: nodes[selectedNodeIdx].x,
-        y1: nodes[selectedNodeIdx].y,
-      };
-      line1Start.value = {
-        x2: nodes[selectedNodeIdx].x,
-        y2: nodes[selectedNodeIdx].y,
-      };
       setIsMovingNode(true);
     })
     .onUpdate((n) => {
