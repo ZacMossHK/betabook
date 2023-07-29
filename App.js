@@ -144,6 +144,10 @@ export default GestureDemo = () => {
       x2: nodes[selectedNodeIdx]?.x,
       y2: nodes[selectedNodeIdx]?.y,
     };
+    if (isSelectingNode) return;
+    nodeOffset.value = { x: 0, y: 0 };
+    line1Offset.vaue = { x2: 0, y2: 0 };
+    line2Offset.vaue = { x1: 0, y1: 0 };
   }, [isSelectingNode]);
   const animatedStyles = useAnimatedStyle(() => {
     return {
@@ -197,12 +201,12 @@ export default GestureDemo = () => {
       });
       setIsMovingNode(false);
       setIsSelectingNode(false);
-    })
-    .onFinalize(() => {
-      nodeOffset.value = { x: 0, y: 0 };
-      line1Offset.vaue = { x2: 0, y2: 0 };
-      line2Offset.vaue = { x1: 0, y1: 0 };
     });
+  // .onFinalize(() => {
+  //   nodeOffset.value = { x: 0, y: 0 };
+  //   line1Offset.vaue = { x2: 0, y2: 0 };
+  //   line2Offset.vaue = { x1: 0, y1: 0 };
+  // });
 
   const exclusive = Gesture.Exclusive(longPress, pan);
 
