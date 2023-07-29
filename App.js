@@ -123,7 +123,7 @@ const Node = ({
 };
 
 export default GestureDemo = () => {
-  const [nodes, setNodes] = useState(exampleImages);
+  const [nodes, setNodes] = useState([]);
   const [isSelectingNode, setIsSelectingNode] = useState(false);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
   const [selectedNodeIdx, setSelectedNodeIdx] = useState(0);
@@ -137,12 +137,12 @@ export default GestureDemo = () => {
 
   useEffect(() => {
     line2Start.value = {
-      x1: nodes[selectedNodeIdx].x,
-      y1: nodes[selectedNodeIdx].y,
+      x1: nodes[selectedNodeIdx]?.x,
+      y1: nodes[selectedNodeIdx]?.y,
     };
     line1Start.value = {
-      x2: nodes[selectedNodeIdx].x,
-      y2: nodes[selectedNodeIdx].y,
+      x2: nodes[selectedNodeIdx]?.x,
+      y2: nodes[selectedNodeIdx]?.y,
     };
   }, [isSelectingNode]);
   const animatedStyles = useAnimatedStyle(() => {
@@ -155,7 +155,6 @@ export default GestureDemo = () => {
   });
 
   const applyImage = (n) => {
-    console.log(n.x, n.y);
     n.borderColor = "black";
     setNodes((prevState) => [...prevState, n]);
   };
@@ -206,6 +205,16 @@ export default GestureDemo = () => {
     });
 
   const exclusive = Gesture.Exclusive(longPress, pan);
+
+  const line1AnimatedProps = useAnimatedProps(() => ({
+    x2: line1Offset.value.x2,
+    y2: line1Offset.value.y2,
+  }));
+  const line2AnimatedProps = useAnimatedProps(() => ({
+    x1: line2Offset.value.x1,
+    y1: line2Offset.value.y1,
+  }));
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector gesture={exclusive}>
@@ -228,31 +237,39 @@ export default GestureDemo = () => {
           <Svg style={{ zIndex: 1 }}>
             {nodes.map((node, idx) => {
               if (idx === nodes.length - 1) return;
-              const nextNode = nodes[idx + 1];
-              const animatedProps = useAnimatedProps(() => ({
-                x1:
-                  isMovingNode && selectedNodeIdx === idx
-                    ? line2Offset.value.x1
-                    : node.x,
-                x2:
-                  isMovingNode && selectedNodeIdx === idx + 1
-                    ? line1Offset.value.x2
-                    : nextNode.x,
-                y2:
-                  isMovingNode && selectedNodeIdx === idx + 1
-                    ? line1Offset.value.y2
-                    : nextNode.y,
-                y1:
-                  isMovingNode && selectedNodeIdx === idx
-                    ? line2Offset.value.y1
-                    : node.y,
-              }));
+              if (isMovingNode && selectedNodeIdx === idx) {
+                return (
+                  <AnimatedLine
+                    key={idx}
+                    animatedProps={line2AnimatedProps}
+                    stroke="black"
+                    strokeWidth="4"
+                    x2={nodes[idx + 1].x}
+                    y2={nodes[idx + 1].y}
+                  />
+                );
+              }
+              if (isMovingNode && selectedNodeIdx === idx + 1) {
+                return (
+                  <AnimatedLine
+                    key={idx}
+                    animatedProps={line1AnimatedProps}
+                    stroke="black"
+                    strokeWidth="4"
+                    x1={node.x}
+                    y1={node.y}
+                  />
+                );
+              }
               return (
                 <AnimatedLine
                   key={idx}
-                  animatedProps={animatedProps}
                   stroke="black"
                   strokeWidth="4"
+                  x1={node.x}
+                  y1={node.y}
+                  x2={nodes[idx + 1].x}
+                  y2={nodes[idx + 1].y}
                 />
               );
             })}
