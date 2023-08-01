@@ -18,6 +18,8 @@ import {
   GestureHandlerRootView,
   TouchableWithoutFeedback,
 } from "react-native-gesture-handler";
+import MoveNodeLine from "./src/components/MoveNodeLine";
+import MoveNode from "./src/components/MoveNode";
 const { width, height } = Image.resolveAssetSource(theCuttingEdge);
 const exampleImages = [
   {
@@ -58,91 +60,92 @@ const exampleImages = [
   },
 ];
 
-const AnimatedLine = Animated.createAnimatedComponent(Line);
+// const AnimatedLine = Animated.createAnimatedComponent(Line);
 
-const Node = ({
-  idx,
-  setIsSelectingNode,
-  setNodes,
-  nodeAttributes,
-  setIsPanEnabled,
-  setSelectedNodeIdx,
-  animatedStyles,
-  selectedNodeIdx,
-  scale,
-  nodeOffset,
-}) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    top: nodeAttributes.y * scale.value - 25,
-    left: nodeAttributes.x * scale.value - 25,
-  }));
-  const animatedStyleWithTransform = useAnimatedStyle(() => ({
-    top: nodeAttributes.y * scale.value - 25,
-    left: nodeAttributes.x * scale.value - 25,
-    transform: [
-      { translateX: nodeOffset.value.x },
-      { translateY: nodeOffset.value.y },
-    ],
-  }));
+// const Node = ({
+//   idx,
+//   setIsSelectingNode,
+//   setNodes,
+//   nodeAttributes,
+//   setIsPanEnabled,
+//   setSelectedNodeIdx,
+//   selectedNodeIdx,
+//   scale,
+//   nodeOffset,
+//   translateTop,
+//   translateLeft,
+// }) => {
+//   const animatedStyle = useAnimatedStyle(() => ({
+//     top: translateTop.value + nodeAttributes.y * scale.value - 25,
+//     left: translateLeft.value + nodeAttributes.x * scale.value - 25,
+//   }));
+//   const animatedStyleWithTransform = useAnimatedStyle(() => ({
+//     top: translateTop.value + nodeAttributes.y * scale.value - 25,
+//     left: translateLeft.value + nodeAttributes.x * scale.value - 25,
+//     transform: [
+//       { translateX: nodeOffset.value.x },
+//       { translateY: nodeOffset.value.y },
+//     ],
+//   }));
 
-  return (
-    <Animated.View
-      style={[
-        {
-          width: 50,
-          height: 50,
-          borderRadius: 50,
-          borderColor: nodeAttributes.borderColor,
-          borderWidth: 10,
-          position: "absolute",
-          top: nodeAttributes.y - 25,
-          left: nodeAttributes.x - 25,
-          zIndex: 2,
-          backgroundColor: "white",
-        },
-        idx === selectedNodeIdx ? animatedStyleWithTransform : animatedStyle,
-      ]}
-    >
-      <TouchableWithoutFeedback
-        style={{
-          width: "100%",
-          height: "100%",
-          justifyContent: "center",
-          alignItems: "center",
-        }}
-        delayLongPress={650}
-        onPressIn={() => {
-          setSelectedNodeIdx(idx);
-          setIsSelectingNode(true);
-          setIsPanEnabled(true);
-          setNodes((prevState) => {
-            prevState[idx].borderColor = "red";
-            return prevState;
-          });
-        }}
-        onPress={() => {
-          setIsSelectingNode(false);
-          setNodes((prevState) => {
-            prevState[idx].borderColor = "red";
-            return prevState;
-          });
-        }}
-        onLongPress={() => {
-          setNodes((prevState) =>
-            prevState.filter(
-              (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
-            )
-          );
-          setIsSelectingNode(false);
-        }}
-      >
-        <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-          {idx + 1}
-        </Text>
-      </TouchableWithoutFeedback>
-    </Animated.View>
-  );
-};
+//   return (
+//     <Animated.View
+//       style={[
+//         {
+//           width: 50,
+//           height: 50,
+//           borderRadius: 50,
+//           borderColor: nodeAttributes.borderColor,
+//           borderWidth: 10,
+//           position: "absolute",
+//           top: nodeAttributes.y - 25,
+//           left: nodeAttributes.x - 25,
+//           zIndex: 2,
+//           backgroundColor: "white",
+//         },
+//         idx === selectedNodeIdx ? animatedStyleWithTransform : animatedStyle,
+//       ]}
+//     >
+//       <TouchableWithoutFeedback
+//         style={{
+//           width: "100%",
+//           height: "100%",
+//           justifyContent: "center",
+//           alignItems: "center",
+//         }}
+//         delayLongPress={650}
+//         onPressIn={() => {
+//           setSelectedNodeIdx(idx);
+//           setIsSelectingNode(true);
+//           setIsPanEnabled(true);
+//           setNodes((prevState) => {
+//             prevState[idx].borderColor = "red";
+//             return prevState;
+//           });
+//         }}
+//         onPress={() => {
+//           setIsSelectingNode(false);
+//           setNodes((prevState) => {
+//             prevState[idx].borderColor = "red";
+//             return prevState;
+//           });
+//         }}
+//         onLongPress={() => {
+//           setNodes((prevState) =>
+//             prevState.filter(
+//               (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
+//             )
+//           );
+//           setIsSelectingNode(false);
+//         }}
+//       >
+//         <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
+//           {idx + 1}
+//         </Text>
+//       </TouchableWithoutFeedback>
+//     </Animated.View>
+//   );
+// };
 
 export default GestureDemo = () => {
   const [nodes, setNodes] = useState(exampleImages);
@@ -156,20 +159,19 @@ export default GestureDemo = () => {
   const line1Start = useSharedValue({ x2: 0, y2: 0 });
   const line2Offset = useSharedValue({ x1: 0, y1: 0 });
   const line2Start = useSharedValue({ x1: 0, y1: 0 });
-  // const scale = useSharedValue(1);
   const animatedImage = useAnimatedRef();
   const initialHeight = useSharedValue(0);
   const initialWidth = useSharedValue(0);
-  const height = useSharedValue(917.6470947265625);
-  const width = useSharedValue(423.5294189453125);
   const baseScale = useSharedValue(1);
   const pinchScale = useSharedValue(1);
   const scale = useDerivedValue(() => baseScale.value * pinchScale.value);
-  let lastScale = 1;
-  // this._onPinchGestureEvent = Animated.event(
-  //   [{ nativeEvent: { scale: pinchScale } }],
-  //   { useNativeDriver: USE_NATIVE_DRIVER }
-  // );
+  const translateTop = useDerivedValue(
+    () => -1 * ((976.86279296875 * scale.value - 976.86279296875) / 2 || 0)
+  );
+  const translateLeft = useDerivedValue(
+    () => -1 * ((423.5294189453125 * scale.value - 423.5294189453125) / 2 || 0)
+  );
+
   useEffect(() => {
     "worklet";
     line2Start.value = {
@@ -182,24 +184,32 @@ export default GestureDemo = () => {
     };
     if (isSelectingNode) return;
     nodeOffset.value = { x: 0, y: 0 };
-    line1Offset.vaue = { x2: 0, y2: 0 };
-    line2Offset.vaue = { x1: 0, y1: 0 };
+    line1Offset.value = { x2: 0, y2: 0 };
+    line2Offset.value = { x1: 0, y1: 0 };
   }, [isSelectingNode]);
-
-  const animatedStyles = useAnimatedStyle(() => {
-    return {
-      transform: [
-        { translateX: nodeOffset.value.x },
-        { translateY: nodeOffset.value.y },
-      ],
-    };
-  });
 
   const pinchToZoomAnimatedStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scale.value }],
     };
   });
+
+  // const lineAnimatedProps = useAnimatedProps(() => ({
+  //   x1: translateLeft.value + node.x * scale.value,
+  //   y1: translateTop.value + node.y * scale.value,
+  //   x2: translateLeft.value + nodes[idx + 1].x * scale.value,
+  //   y2: translateTop.value + nodes[idx + 1].y * scale.value,
+  // }));
+
+  // const line1AnimatedProps = useAnimatedProps(() => ({
+  //   x2: line1Offset.value.x2,
+  //   y2: line1Offset.value.y2,
+  // }));
+
+  // const line2AnimatedProps = useAnimatedProps(() => ({
+  //   x1: line2Offset.value.x1,
+  //   y1: line2Offset.value.y1,
+  // }));
 
   const applyImage = (n) => {
     n.borderColor = "black";
@@ -220,18 +230,31 @@ export default GestureDemo = () => {
       setIsMovingNode(true);
     })
     .onUpdate((n) => {
+      "worklet";
       if (!isSelectingNode) return;
       nodeOffset.value = {
         x: n.translationX + nodeStart.value.x,
         y: n.translationY + nodeStart.value.y,
       };
       line1Offset.value = {
-        x2: n.translationX + line1Start.value.x2,
-        y2: n.translationY + line1Start.value.y2,
+        x2:
+          n.translationX +
+          line1Start.value.x2 * scale.value +
+          translateLeft.value,
+        y2:
+          n.translationY +
+          line1Start.value.y2 * scale.value +
+          translateTop.value,
       };
       line2Offset.value = {
-        x1: n.translationX + line2Start.value.x1,
-        y1: n.translationY + line2Start.value.y1,
+        x1:
+          n.translationX +
+          line2Start.value.x1 * scale.value +
+          translateLeft.value,
+        y1:
+          n.translationY +
+          line2Start.value.y1 * scale.value +
+          translateTop.value,
       };
     })
     .onEnd(() => {
@@ -247,25 +270,12 @@ export default GestureDemo = () => {
     });
 
   const pinch = Gesture.Pinch()
-    // .runOnJS(true)
     .enabled(!isSelectingNode)
     .onStart(() => {
       "worklet";
     })
     .onUpdate((n) => {
       "worklet";
-      // lastScale = baseScale.value;
-      // if (n.scale > 1.01) n.scale = 1.02;
-      // if (n.scale < 0.99) n.scale = 0.98;
-
-      // if (scale.value * n.scale < 1) {
-      //   scale.value = 1;
-      //   return;
-      // }
-      // if (scale.value * n.scale > 5) {
-      //   scale.value = 5;
-      //   return;
-      // }
       if (n.scale * baseScale.value <= 1) {
         pinchScale.value = 1;
         baseScale.value = 1;
@@ -276,17 +286,8 @@ export default GestureDemo = () => {
         baseScale.value = 5;
         return;
       }
-
       pinchScale.value = n.scale;
-      // console.log(lastScale);
-      // scale.value *= n.scale;
-      // console.log(scale.value);
-      // runOnUI(() => {
-      //   "worklet";
-      //   const { height: newHeight, width: newWidth } = measure(animatedImage);
-      //   height.value = newHeight;
-      //   width.value = newWidth;
-      // })();
+      // const { height, width } = measure(animatedImage);
     })
     .onFinalize((n) => {
       "worklet";
@@ -302,60 +303,23 @@ export default GestureDemo = () => {
       }
       baseScale.value *= n.scale;
       pinchScale.value = 1;
-      console.log(scale.value);
-      // console.log(lastScale);
-      // pinchScale.value = lastScale;
-      // console.log(pinchScale.value);
     });
 
   const exclusive = Gesture.Exclusive(longPress, pinch, pan);
-  // const exclusive = Gesture.Exclusive(pinch);
 
-  const line1AnimatedProps = useAnimatedProps(() => ({
-    x2: line1Offset.value.x2,
-    y2: line1Offset.value.y2,
-  }));
-  const line2AnimatedProps = useAnimatedProps(() => ({
-    x1: line2Offset.value.x1,
-    y1: line2Offset.value.y1,
-  }));
-
-  const animatedViewStyle = useAnimatedStyle(() => {
-    return {
-      // height: height.value,
-      // width: width.value,
-      // transform: [
-      //   { translateX: -1 * ((width.value - 423.5294189453125) / 2 || 0) },
-      //   { translateY: -1 * ((height.value - 976.86279296875) / 2 || 0) },
-      // ],
-    };
-  });
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector style={{ flex: 1 }} gesture={exclusive}>
         <SafeAreaView style={{ flex: 1 }}>
-          <Animated.View
-            style={[
-              {
-                zIndex: 1,
-                // borderRadius: 100,
-                // borderColor: "black",
-                // borderWidth: 100,
-                // margin: "auto",
-              },
-              animatedViewStyle,
-            ]}
-            // onLayout={(e) => console.log(e.nativeEvent.layout)}
-            // onLayout={(e) => {
-            //   height.value = e.nativeEvent.layout.height;
-            //   width.value = e.nativeEvent.layout.width;
-            // }}
+          <View
+            style={{
+              zIndex: 1,
+            }}
           >
             {nodes.map((nodeAttributes, idx) => (
-              <Node
+              <MoveNode
                 key={idx}
                 {...{
-                  animatedStyles,
                   setNodes,
                   setIsSelectingNode,
                   nodeAttributes,
@@ -365,50 +329,71 @@ export default GestureDemo = () => {
                   selectedNodeIdx,
                   scale,
                   nodeOffset,
+                  translateTop,
+                  translateLeft,
                 }}
               />
             ))}
             <Svg style={{ zIndex: 1 }}>
               {nodes.map((node, idx) => {
                 if (idx === nodes.length - 1) return;
-                if (isMovingNode && selectedNodeIdx === idx) {
-                  return (
-                    <AnimatedLine
-                      key={idx}
-                      animatedProps={line2AnimatedProps}
-                      stroke="black"
-                      strokeWidth="4"
-                      x2={nodes[idx + 1].x * scale.value}
-                      y2={nodes[idx + 1].y * scale.value}
-                    />
-                  );
-                }
-                if (isMovingNode && selectedNodeIdx === idx + 1) {
-                  return (
-                    <AnimatedLine
-                      key={idx}
-                      animatedProps={line1AnimatedProps}
-                      stroke="black"
-                      strokeWidth="4"
-                      x1={node.x * scale.value}
-                      y1={node.y * scale.value}
-                    />
-                  );
-                }
                 return (
-                  <AnimatedLine
+                  <MoveNodeLine
                     key={idx}
-                    stroke="black"
-                    strokeWidth="4"
-                    x1={node.x * scale.value}
-                    y1={node.y * scale.value}
-                    x2={nodes[idx + 1].x * scale.value}
-                    y2={nodes[idx + 1].y * scale.value}
+                    {...{
+                      translateLeft,
+                      translateTop,
+                      node,
+                      scale,
+                      nodes,
+                      idx,
+                      isMovingNode,
+                      selectedNodeIdx,
+                      line1Offset,
+                      line2Offset,
+                    }}
                   />
                 );
+                // if (isMovingNode && selectedNodeIdx === idx) {
+                //   return (
+                //     <AnimatedLine
+                //       key={idx}
+                //       lineAnimatedProps={line2AnimatedProps}
+                //       stroke="black"
+                //       strokeWidth="4"
+                //       x2={nodes[idx + 1].x * scale.value}
+                //       y2={nodes[idx + 1].y * scale.value}
+                //     />
+                //   );
+                // }
+                // if (isMovingNode && selectedNodeIdx === idx + 1) {
+                //   return (
+                //     <AnimatedLine
+                //       key={idx}
+                //       animatedProps={line1AnimatedProps}
+                //       stroke="black"
+                //       strokeWidth="4"
+                //       x1={node.x * scale.value}
+                //       y1={node.y * scale.value}
+                //     />
+                //   );
+                // }
+
+                // return (
+                //   <AnimatedLine
+                //     animatedProps={lineAnimatedProps}
+                //     key={idx}
+                //     stroke="black"
+                //     strokeWidth="4"
+                //     x1={translateLeft.value + node.x * scale.value}
+                //     y1={translateTop.value + node.y * scale.value}
+                //     x2={translateLeft.value + nodes[idx + 1].x * scale.value}
+                //     y2={translateTop.value + nodes[idx + 1].y * scale.value}
+                //   />
+                // );
               })}
             </Svg>
-          </Animated.View>
+          </View>
           <Animated.Image
             ref={animatedImage}
             source={theCuttingEdge}
@@ -423,10 +408,10 @@ export default GestureDemo = () => {
               pinchToZoomAnimatedStyle,
             ]}
             onLayout={(e) => {
-              initialHeight.value = e.nativeEvent.height;
-              initialWidth.value = e.nativeEvent.width;
-              height.value = e.nativeEvent.height;
-              width.value = e.nativeEvent.width;
+              runOnUI(() => {
+                initialHeight.value = e.nativeEvent.height;
+                initialWidth.value = e.nativeEvent.width;
+              })();
             }}
           />
         </SafeAreaView>
@@ -434,31 +419,6 @@ export default GestureDemo = () => {
     </GestureHandlerRootView>
   );
 };
-
-// export default function App() {
-//   return (
-//     <ReactNativeZoomableView
-//       style={{ position: "absolute" }}
-//       maxZoom={20}
-//       minZoom={1}
-//       bindToBorders={true}
-//       disablePanOnInitialZoom={true}
-//       // Give these to the zoomable view so it can apply the boundaries around the actual content.
-//       // Need to make sure the content is actually centered and the width and height are
-//       // dimensions when it's rendered naturally. Not the intrinsic size.
-//       // For example, an image with an intrinsic size of 400x200 will be rendered as 300x150 in this case.
-//       // Therefore, we'll feed the zoomable view the 300x150 size.
-//       // contentWidth={100}
-//       // contentHeight={400}
-//     >
-//       {/* <GestureDemo /> */}
-//       <Image
-//         // style={{ width: "100%", height: "100%" }}
-//         source={theCuttingEdge}
-//       />
-//     </ReactNativeZoomableView>
-//   );
-// }
 
 const styles = StyleSheet.create({
   container: {
