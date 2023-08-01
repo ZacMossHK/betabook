@@ -261,8 +261,8 @@ export default GestureDemo = () => {
       if (!isSelectingNode) return;
       setNodes((prevState) => {
         prevState[selectedNodeIdx].borderColor = "black";
-        prevState[selectedNodeIdx].x += nodeOffset.value.x;
-        prevState[selectedNodeIdx].y += nodeOffset.value.y;
+        prevState[selectedNodeIdx].x += nodeOffset.value.x / scale.value;
+        prevState[selectedNodeIdx].y += nodeOffset.value.y / scale.value;
         return prevState;
       });
       setIsMovingNode(false);
