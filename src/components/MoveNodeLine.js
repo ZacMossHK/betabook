@@ -49,7 +49,6 @@ export default MoveNodeLine = ({
     );
   }
   if (isMovingNode && selectedNodeIdx === idx + 1) {
-    console.log("what");
     return (
       <AnimatedLine
         key={idx}

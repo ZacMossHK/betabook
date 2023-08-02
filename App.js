@@ -56,12 +56,16 @@ const exampleImages = [
   },
 ];
 
+const initialHeight = 917.6470947265625;
+const initialWidth = 423.5294189453125;
+
 export default GestureDemo = () => {
   const [nodes, setNodes] = useState(exampleImages);
   const [isSelectingNode, setIsSelectingNode] = useState(false);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
   const [selectedNodeIdx, setSelectedNodeIdx] = useState(0);
   const [isMovingNode, setIsMovingNode] = useState(false);
+  const [imageHeight, setImageHeight] = useState(0);
   const nodeOffset = useSharedValue({ x: 0, y: 0 });
   const nodeStart = useSharedValue({ x: 0, y: 0 });
   const line1Offset = useSharedValue({ x2: 0, y2: 0 });
@@ -69,16 +73,14 @@ export default GestureDemo = () => {
   const line2Offset = useSharedValue({ x1: 0, y1: 0 });
   const line2Start = useSharedValue({ x1: 0, y1: 0 });
   const animatedImage = useAnimatedRef();
-  const initialHeight = useSharedValue(0);
-  const initialWidth = useSharedValue(0);
   const baseScale = useSharedValue(1);
   const pinchScale = useSharedValue(1);
   const scale = useDerivedValue(() => baseScale.value * pinchScale.value);
   const translateTop = useDerivedValue(
-    () => -1 * ((976.86279296875 * scale.value - 976.86279296875) / 2 || 0)
+    () => -1 * ((initialHeight * scale.value - initialHeight) / 2 || 0)
   );
   const translateLeft = useDerivedValue(
-    () => -1 * ((423.5294189453125 * scale.value - 423.5294189453125) / 2 || 0)
+    () => -1 * ((initialWidth * scale.value - initialWidth) / 2 || 0)
   );
 
   useEffect(() => {
@@ -105,8 +107,8 @@ export default GestureDemo = () => {
 
   const applyImage = (n) => {
     n.borderColor = "black";
-    n.x = (n.x - 423.5294189453125 / 2) / scale.value + 423.5294189453125 / 2;
-    n.y = (n.y - 976.86279296875 / 2) / scale.value + 976.86279296875 / 2;
+    n.x = (n.x - initialWidth / 2) / scale.value + initialWidth / 2;
+    n.y = (n.y - initialHeight / 2) / scale.value + initialHeight / 2;
     setNodes((prevState) => [...prevState, n]);
   };
 
@@ -119,16 +121,22 @@ export default GestureDemo = () => {
 
   const pan = Gesture.Pan()
     .runOnJS(true)
-    .onStart(() => {
+    .onStart((n) => {
       if (!isSelectingNode) return;
       setIsMovingNode(true);
     })
     .onUpdate((n) => {
       "worklet";
       if (!isSelectingNode) return;
+      nodes[selectedNodeIdx].x - yMargin;
+      const yMargin = (initialHeight - imageHeight) / 2;
+      let nodeTranslationY = n.translationY + nodeStart.value.y;
+      if (n.y < yMargin) {
+        nodeTranslationY = yMargin - nodes[selectedNodeIdx].y;
+      }
       nodeOffset.value = {
         x: n.translationX + nodeStart.value.x,
-        y: n.translationY + nodeStart.value.y,
+        y: nodeTranslationY,
       };
       line1Offset.value = {
         x2:
@@ -203,11 +211,16 @@ export default GestureDemo = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector style={{ flex: 1 }} gesture={exclusive}>
-        <SafeAreaView style={{ flex: 1 }}>
+        {/* <SafeAreaView style={{ flex: 1 }}> */}
+        <SafeAreaView
+          style={{ flex: 1, justifyContent: "center" }}
+          onLayout={(n) => console.log(n.nativeEvent)}
+        >
           <View
             style={{
               zIndex: 1,
             }}
+            onLayout={(n) => console.log(n.nativeEvent)}
           >
             {nodes.map((nodeAttributes, idx) => (
               <MoveNode
@@ -255,19 +268,26 @@ export default GestureDemo = () => {
             source={theCuttingEdge}
             style={[
               {
-                width: "100%",
-                height: "100%",
+                // width: "100%",
+                // height: "100%",
+                width: initialWidth,
+                height: imageHeight,
                 resizeMode: "contain",
                 position: "absolute",
                 zIndex: 0,
               },
               pinchToZoomAnimatedStyle,
             ]}
-            onLayout={(e) => {
-              runOnUI(() => {
-                initialHeight.value = e.nativeEvent.height;
-                initialWidth.value = e.nativeEvent.width;
-              })();
+            onLoad={(image) => {
+              if (
+                image.nativeEvent.source.height > image.nativeEvent.source.width
+              ) {
+                const proportion =
+                  image.nativeEvent.source.height /
+                  image.nativeEvent.source.width;
+                setImageHeight(initialWidth * proportion);
+              }
+              // console.log(image.nativeEvent);
             }}
           />
         </SafeAreaView>
