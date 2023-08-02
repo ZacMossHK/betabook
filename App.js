@@ -134,6 +134,9 @@ export default GestureDemo = () => {
       if (n.y < yMargin) {
         nodeTranslationY = yMargin - nodes[selectedNodeIdx].y;
       }
+      if (n.y > initialHeight - yMargin) {
+        nodeTranslationY = initialHeight - yMargin - nodes[selectedNodeIdx].y;
+      }
       nodeOffset.value = {
         x: n.translationX + nodeStart.value.x,
         y: nodeTranslationY,
