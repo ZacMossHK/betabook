@@ -146,8 +146,9 @@ export default App = () => {
       if (yPosition < yMargin) {
         nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
       }
-      if (n.y > initialHeight - yMargin) {
-        nodeTranslationY = initialHeight - yMargin - nodes[selectedNodeIdx].y;
+      if (yPosition > initialHeight - yMargin) {
+        nodeTranslationY =
+          (initialHeight - yMargin - nodes[selectedNodeIdx].y) * scale.value;
       }
       nodeOffset.value = {
         x: n.translationX + nodeStart.value.x,
