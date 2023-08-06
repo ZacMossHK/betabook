@@ -104,6 +104,9 @@ export default App = () => {
     };
   });
 
+  const getScaledPosition = (xyValue, initialSize, scale) =>
+    (xyValue - initialSize / 2) / scale.value + initialSize / 2;
+
   const applyImage = (n) => {
     const yMargin = (initialHeight - imageHeight * scale.value) / 2;
     if (n.y / scale.value < yMargin || n.y > initialHeight - yMargin) return;
@@ -115,8 +118,9 @@ export default App = () => {
     // offsetDistance / scale.value
     // add bottom half
     // value + width / 2
-    n.x = (n.x - initialWidth / 2) / scale.value + initialWidth / 2;
-    n.y = (n.y - initialHeight / 2) / scale.value + initialHeight / 2;
+
+    n.x = getScaledPosition(n.x, initialWidth, scale);
+    n.y = getScaledPosition(n.y, initialHeight, scale);
     setNodes((prevState) => [...prevState, n]);
   };
 
@@ -136,12 +140,9 @@ export default App = () => {
     .onUpdate((n) => {
       "worklet";
       if (!isSelectingNode) return;
-      nodes[selectedNodeIdx].x - yMargin;
       const yMargin = (initialHeight - imageHeight) / 2;
       let nodeTranslationY = n.translationY + nodeStart.value.y;
-      const yPosition =
-        (n.y - initialHeight / 2) / scale.value + initialHeight / 2;
-
+      const yPosition = getScaledPosition(n.y, initialHeight, scale);
       if (yPosition < yMargin) {
         nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
       }
