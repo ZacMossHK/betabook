@@ -1,4 +1,4 @@
-import { View, Image, SafeAreaView } from "react-native";
+import { View, SafeAreaView } from "react-native";
 import theCuttingEdge from "./assets/IMG_20230716_184450.jpg";
 import React, { useEffect, useState } from "react";
 import Svg from "react-native-svg";
@@ -6,7 +6,6 @@ import Animated, {
   useSharedValue,
   useAnimatedStyle,
   useAnimatedRef,
-  runOnUI,
   useDerivedValue,
 } from "react-native-reanimated";
 import {
@@ -59,8 +58,8 @@ const exampleImages = [
 const initialHeight = 917.6470947265625;
 const initialWidth = 423.5294189453125;
 
-export default GestureDemo = () => {
-  const [nodes, setNodes] = useState(exampleImages);
+export default App = () => {
+  const [nodes, setNodes] = useState([]);
   const [isSelectingNode, setIsSelectingNode] = useState(false);
   const [isPanEnabled, setIsPanEnabled] = useState(false);
   const [selectedNodeIdx, setSelectedNodeIdx] = useState(0);
@@ -106,7 +105,16 @@ export default GestureDemo = () => {
   });
 
   const applyImage = (n) => {
+    const yMargin = (initialHeight - imageHeight * scale.value) / 2;
+    if (n.y / scale.value < yMargin || n.y > initialHeight - yMargin) return;
     n.borderColor = "black";
+
+    // get offset distance from centre
+    // x - width / 2
+    // divide by scale because the distance from the centre gets smaller as the scale gets bigger
+    // offsetDistance / scale.value
+    // add bottom half
+    // value + width / 2
     n.x = (n.x - initialWidth / 2) / scale.value + initialWidth / 2;
     n.y = (n.y - initialHeight / 2) / scale.value + initialHeight / 2;
     setNodes((prevState) => [...prevState, n]);
@@ -131,8 +139,11 @@ export default GestureDemo = () => {
       nodes[selectedNodeIdx].x - yMargin;
       const yMargin = (initialHeight - imageHeight) / 2;
       let nodeTranslationY = n.translationY + nodeStart.value.y;
-      if (n.y < yMargin) {
-        nodeTranslationY = yMargin - nodes[selectedNodeIdx].y;
+      const yPosition =
+        (n.y - initialHeight / 2) / scale.value + initialHeight / 2;
+
+      if (yPosition < yMargin) {
+        nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
       }
       if (n.y > initialHeight - yMargin) {
         nodeTranslationY = initialHeight - yMargin - nodes[selectedNodeIdx].y;
@@ -215,15 +226,11 @@ export default GestureDemo = () => {
     <GestureHandlerRootView style={{ flex: 1 }}>
       <GestureDetector style={{ flex: 1 }} gesture={exclusive}>
         {/* <SafeAreaView style={{ flex: 1 }}> */}
-        <SafeAreaView
-          style={{ flex: 1, justifyContent: "center" }}
-          onLayout={(n) => console.log(n.nativeEvent)}
-        >
+        <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
           <View
             style={{
               zIndex: 1,
             }}
-            onLayout={(n) => console.log(n.nativeEvent)}
           >
             {nodes.map((nodeAttributes, idx) => (
               <MoveNode
@@ -290,7 +297,6 @@ export default GestureDemo = () => {
                   image.nativeEvent.source.width;
                 setImageHeight(initialWidth * proportion);
               }
-              // console.log(image.nativeEvent);
             }}
           />
         </SafeAreaView>
