@@ -67,9 +67,9 @@ export default App = () => {
   const [imageHeight, setImageHeight] = useState(0);
   const nodeOffset = useSharedValue({ x: 0, y: 0 });
   const nodeStart = useSharedValue({ x: 0, y: 0 });
-  const line1Offset = useSharedValue({ x2: 0, y2: 0 });
+  const line1Node = useSharedValue({ x2: 0, y2: 0 });
   const line1Start = useSharedValue({ x2: 0, y2: 0 });
-  const line2Offset = useSharedValue({ x1: 0, y1: 0 });
+  const line2Node = useSharedValue({ x1: 0, y1: 0 });
   const line2Start = useSharedValue({ x1: 0, y1: 0 });
   const animatedImage = useAnimatedRef();
   const baseScale = useSharedValue(1);
@@ -94,8 +94,8 @@ export default App = () => {
     };
     if (isSelectingNode) return;
     nodeOffset.value = { x: 0, y: 0 };
-    line1Offset.value = { x2: 0, y2: 0 };
-    line2Offset.value = { x1: 0, y1: 0 };
+    line1Node.value = { x2: 0, y2: 0 };
+    line2Node.value = { x1: 0, y1: 0 };
   }, [isSelectingNode]);
 
   const pinchToZoomAnimatedStyle = useAnimatedStyle(() => {
@@ -142,12 +142,12 @@ export default App = () => {
       if (!isSelectingNode) return;
       const yMargin = (initialHeight - imageHeight) / 2;
       let nodeTranslationY = n.translationY + nodeStart.value.y;
-      let line1OffsetY2 =
+      let line1y2 =
         n.translationY + line1Start.value.y2 * scale.value + translateTop.value;
       const yPosition = getScaledPosition(n.y, initialHeight, scale);
       if (yPosition < yMargin) {
         nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
-        line1OffsetY2 = yMargin * scale.value + translateTop.value;
+        line1y2 = yMargin * scale.value + translateTop.value;
       }
       if (yPosition > initialHeight - yMargin) {
         nodeTranslationY =
@@ -157,14 +157,14 @@ export default App = () => {
         x: n.translationX + nodeStart.value.x,
         y: nodeTranslationY,
       };
-      line1Offset.value = {
+      line1Node.value = {
         x2:
           n.translationX +
           line1Start.value.x2 * scale.value +
           translateLeft.value,
-        y2: line1OffsetY2,
+        y2: line1y2,
       };
-      line2Offset.value = {
+      line2Node.value = {
         x1:
           n.translationX +
           line2Start.value.x1 * scale.value +
@@ -267,8 +267,8 @@ export default App = () => {
                       idx,
                       isMovingNode,
                       selectedNodeIdx,
-                      line1Offset,
-                      line2Offset,
+                      line1Node,
+                      line2Node,
                     }}
                   />
                 );

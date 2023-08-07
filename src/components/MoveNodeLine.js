@@ -13,8 +13,8 @@ export default MoveNodeLine = ({
   idx,
   isMovingNode,
   selectedNodeIdx,
-  line1Offset,
-  line2Offset,
+  line1Node,
+  line2Node,
 }) => {
   const nextNode = nodes[idx + 1];
   const lineAnimatedProps = useAnimatedProps(() => ({
@@ -27,13 +27,13 @@ export default MoveNodeLine = ({
   const line1AnimatedProps = useAnimatedProps(() => ({
     x1: translateLeft.value + node.x * scale.value,
     y1: translateTop.value + node.y * scale.value,
-    x2: line1Offset.value.x2,
-    y2: line1Offset.value.y2,
+    x2: line1Node.value.x2,
+    y2: line1Node.value.y2,
   }));
 
   const line2AnimatedProps = useAnimatedProps(() => ({
-    x1: line2Offset.value.x1,
-    y1: line2Offset.value.y1,
+    x1: line2Node.value.x1,
+    y1: line2Node.value.y1,
     x2: translateLeft.value + nextNode.x * scale.value,
     y2: translateTop.value + nextNode.y * scale.value,
   }));
