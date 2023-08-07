@@ -144,10 +144,12 @@ export default App = () => {
       let nodeTranslationY = n.translationY + nodeStart.value.y;
       let line1y2 =
         n.translationY + line1Start.value.y2 * scale.value + translateTop.value;
+      let line2y1 =
+        n.translationY + line2Start.value.y1 * scale.value + translateTop.value;
       const yPosition = getScaledPosition(n.y, initialHeight, scale);
       if (yPosition < yMargin) {
         nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
-        line1y2 = yMargin * scale.value + translateTop.value;
+        line1y2 = line2y1 = yMargin * scale.value + translateTop.value;
       }
       if (yPosition > initialHeight - yMargin) {
         nodeTranslationY =
@@ -170,10 +172,7 @@ export default App = () => {
           n.translationX +
           line2Start.value.x1 * scale.value +
           translateLeft.value,
-        y1:
-          n.translationY +
-          line2Start.value.y1 * scale.value +
-          translateTop.value,
+        y1: line2y1,
       };
     })
     .onEnd(() => {
