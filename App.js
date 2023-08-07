@@ -142,9 +142,12 @@ export default App = () => {
       if (!isSelectingNode) return;
       const yMargin = (initialHeight - imageHeight) / 2;
       let nodeTranslationY = n.translationY + nodeStart.value.y;
+      let line1OffsetY2 =
+        n.translationY + line1Start.value.y2 * scale.value + translateTop.value;
       const yPosition = getScaledPosition(n.y, initialHeight, scale);
       if (yPosition < yMargin) {
         nodeTranslationY = (yMargin - nodes[selectedNodeIdx].y) * scale.value;
+        line1OffsetY2 = yMargin * scale.value + translateTop.value;
       }
       if (yPosition > initialHeight - yMargin) {
         nodeTranslationY =
@@ -159,10 +162,7 @@ export default App = () => {
           n.translationX +
           line1Start.value.x2 * scale.value +
           translateLeft.value,
-        y2:
-          n.translationY +
-          line1Start.value.y2 * scale.value +
-          translateTop.value,
+        y2: line1OffsetY2,
       };
       line2Offset.value = {
         x1:
