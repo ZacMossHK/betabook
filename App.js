@@ -104,6 +104,12 @@ export default App = () => {
     };
   });
 
+  // get offset distance from centre
+  // x - width / 2
+  // divide by scale because the distance from the centre gets smaller as the scale gets bigger
+  // offsetDistance / scale.value
+  // add bottom half
+  // value + width / 2
   const getScaledPosition = (xyValue, initialSize, scale) =>
     (xyValue - initialSize / 2) / scale.value + initialSize / 2;
 
@@ -111,14 +117,6 @@ export default App = () => {
     const yMargin = (initialHeight - imageHeight * scale.value) / 2;
     if (n.y / scale.value < yMargin || n.y > initialHeight - yMargin) return;
     n.borderColor = "black";
-
-    // get offset distance from centre
-    // x - width / 2
-    // divide by scale because the distance from the centre gets smaller as the scale gets bigger
-    // offsetDistance / scale.value
-    // add bottom half
-    // value + width / 2
-
     n.x = getScaledPosition(n.x, initialWidth, scale);
     n.y = getScaledPosition(n.y, initialHeight, scale);
     setNodes((prevState) => [...prevState, n]);
