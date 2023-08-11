@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useLayoutEffect, useState } from "react";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 import { TouchableWithoutFeedback } from "react-native-gesture-handler";
 import { Text } from "react-native";
@@ -15,20 +15,32 @@ export default MoveNode = ({
   nodeOffset,
   translateTop,
   translateLeft,
+  isMovingNode,
 }) => {
   const animatedStyle = useAnimatedStyle(() => ({
     top: translateTop.value + nodeAttributes.y * scale.value - 25,
     left: translateLeft.value + nodeAttributes.x * scale.value - 25,
   }));
-  const animatedStyleWithTransform = useAnimatedStyle(() => ({
-    top: translateTop.value + nodeAttributes.y * scale.value - 25,
-    left: translateLeft.value + nodeAttributes.x * scale.value - 25,
-    transform: [
-      { translateX: nodeOffset.value.x },
-      { translateY: nodeOffset.value.y },
-    ],
-  }));
-
+  const animatedStyleWithTransform = useAnimatedStyle(() => {
+    if (isMovingNode) {
+      return {
+        top:
+          translateTop.value +
+          nodeOffset.value.y +
+          nodeAttributes.y * scale.value -
+          25,
+        left:
+          translateLeft.value +
+          nodeOffset.value.x +
+          nodeAttributes.x * scale.value -
+          25,
+      };
+    }
+    return {
+      top: translateTop.value + nodeAttributes.y * scale.value - 25,
+      left: translateLeft.value + nodeAttributes.x * scale.value - 25,
+    };
+  });
   return (
     <Animated.View
       style={[
@@ -39,8 +51,8 @@ export default MoveNode = ({
           borderColor: nodeAttributes.borderColor,
           borderWidth: 10,
           position: "absolute",
-          top: nodeAttributes.y - 25,
-          left: nodeAttributes.x - 25,
+          // top: nodeAttributes.y - 25,
+          // left: nodeAttributes.x - 25,
           zIndex: 2,
           backgroundColor: "white",
         },

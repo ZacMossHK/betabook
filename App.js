@@ -248,6 +248,7 @@ export default App = () => {
                   nodeOffset,
                   translateTop,
                   translateLeft,
+                  isMovingNode,
                 }}
               />
             ))}
