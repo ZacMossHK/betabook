@@ -18,23 +18,18 @@ export default MoveNode = ({
   isMovingNode,
 }) => {
   const animatedStyle = useAnimatedStyle(() => {
-    if (isMovingNode && idx === selectedNodeIdx) {
-      return {
-        top:
-          translateTop.value +
-          nodeOffset.value.y +
-          nodeAttributes.y * scale.value -
-          25,
-        left:
-          translateLeft.value +
-          nodeOffset.value.x +
-          nodeAttributes.x * scale.value -
-          25,
-      };
-    }
+    const offSetValueX =
+      isMovingNode && idx === selectedNodeIdx ? nodeOffset.value.x : 0;
+    const offSetValueY =
+      isMovingNode && idx === selectedNodeIdx ? nodeOffset.value.y : 0;
     return {
-      top: translateTop.value + nodeAttributes.y * scale.value - 25,
-      left: translateLeft.value + nodeAttributes.x * scale.value - 25,
+      top:
+        translateTop.value + offSetValueY + nodeAttributes.y * scale.value - 25,
+      left:
+        translateLeft.value +
+        offSetValueX +
+        nodeAttributes.x * scale.value -
+        25,
     };
   });
   return (
