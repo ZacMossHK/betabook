@@ -17,12 +17,8 @@ export default MoveNode = ({
   translateLeft,
   isMovingNode,
 }) => {
-  const animatedStyle = useAnimatedStyle(() => ({
-    top: translateTop.value + nodeAttributes.y * scale.value - 25,
-    left: translateLeft.value + nodeAttributes.x * scale.value - 25,
-  }));
-  const animatedStyleWithTransform = useAnimatedStyle(() => {
-    if (isMovingNode) {
+  const animatedStyle = useAnimatedStyle(() => {
+    if (isMovingNode && idx === selectedNodeIdx) {
       return {
         top:
           translateTop.value +
@@ -51,12 +47,10 @@ export default MoveNode = ({
           borderColor: nodeAttributes.borderColor,
           borderWidth: 10,
           position: "absolute",
-          // top: nodeAttributes.y - 25,
-          // left: nodeAttributes.x - 25,
           zIndex: 2,
           backgroundColor: "white",
         },
-        idx === selectedNodeIdx ? animatedStyleWithTransform : animatedStyle,
+        animatedStyle,
       ]}
     >
       <TouchableWithoutFeedback
