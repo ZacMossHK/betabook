@@ -16,6 +16,7 @@ export default MoveNode = ({
   translateTop,
   translateLeft,
   isMovingNode,
+  panOffset,
 }) => {
   const animatedStyle = useAnimatedStyle(() => {
     const offSetValueX =
@@ -24,10 +25,15 @@ export default MoveNode = ({
       isMovingNode && idx === selectedNodeIdx ? nodeOffset.value.y : 0;
     return {
       top:
-        translateTop.value + offSetValueY + nodeAttributes.y * scale.value - 25,
+        translateTop.value +
+        offSetValueY +
+        panOffset.value.y +
+        nodeAttributes.y * scale.value -
+        25,
       left:
         translateLeft.value +
         offSetValueX +
+        panOffset.value.x +
         nodeAttributes.x * scale.value -
         25,
     };

@@ -65,6 +65,7 @@ export default App = () => {
   const [selectedNodeIdx, setSelectedNodeIdx] = useState(0);
   const [isMovingNode, setIsMovingNode] = useState(false);
   const [imageHeight, setImageHeight] = useState(0);
+  const [imageWidth, setImageWidth] = useState(0);
   const nodeOffset = useSharedValue({ x: 0, y: 0 });
   const nodeStart = useSharedValue({ x: 0, y: 0 });
   const line1Node = useSharedValue({ x2: 0, y2: 0 });
@@ -74,6 +75,12 @@ export default App = () => {
   const animatedImage = useAnimatedRef();
   const baseScale = useSharedValue(1);
   const pinchScale = useSharedValue(1);
+  const panOffsetTranslationX = useSharedValue(0);
+  const panOffsetTranslationY = useSharedValue(0);
+  const panOffsetPositionX = useSharedValue(0);
+  const panOffsetPositionY = useSharedValue(0);
+  const isPanning = useSharedValue(false);
+
   const scale = useDerivedValue(() => baseScale.value * pinchScale.value);
   const translateTop = useDerivedValue(
     () => -1 * ((initialHeight * scale.value - initialHeight) / 2 || 0)
@@ -81,6 +88,11 @@ export default App = () => {
   const translateLeft = useDerivedValue(
     () => -1 * ((initialWidth * scale.value - initialWidth) / 2 || 0)
   );
+
+  const panOffset = useDerivedValue(() => ({
+    x: panOffsetPositionX.value + panOffsetTranslationX.value,
+    y: panOffsetPositionY.value + panOffsetTranslationY.value,
+  }));
 
   useEffect(() => {
     "worklet";
@@ -100,7 +112,21 @@ export default App = () => {
 
   const pinchToZoomAnimatedStyle = useAnimatedStyle(() => {
     return {
-      transform: [{ scale: scale.value }],
+      transform: [
+        {
+          scale: scale.value,
+        },
+        {
+          translateX:
+            (panOffsetTranslationX.value + panOffsetPositionX.value) /
+            scale.value,
+        },
+        {
+          translateY:
+            (panOffsetTranslationY.value + panOffsetPositionY.value) /
+            scale.value,
+        },
+      ],
     };
   });
 
@@ -117,8 +143,8 @@ export default App = () => {
     const yMargin = (initialHeight - imageHeight * scale.value) / 2;
     if (n.y / scale.value < yMargin || n.y > initialHeight - yMargin) return;
     n.borderColor = "black";
-    n.x = getScaledPosition(n.x, initialWidth, scale);
-    n.y = getScaledPosition(n.y, initialHeight, scale);
+    n.x = getScaledPosition(n.x - panOffset.value.x, initialWidth, scale);
+    n.y = getScaledPosition(n.y - panOffset.value.y, initialHeight, scale);
     setNodes((prevState) => [...prevState, n]);
   };
 
@@ -129,7 +155,38 @@ export default App = () => {
     .onStart(applyImage)
     .onEnd(() => setIsSelectingNode(false));
 
-  const pan = Gesture.Pan()
+  const panImage = Gesture.Pan()
+    .enabled(!isSelectingNode)
+    .onStart(() => {
+      "worklet";
+      panOffsetTranslationX.value = 0;
+      panOffsetTranslationY.value = 0;
+    })
+    .onUpdate((n) => {
+      "worklet";
+      if (
+        Math.abs(panOffsetPositionX.value + n.translationX) <
+        Math.abs(translateLeft.value)
+      ) {
+        panOffsetTranslationX.value = n.translationX;
+      }
+      if (
+        Math.abs(panOffsetPositionY.value + n.translationY) <
+          Math.abs(translateTop.value) &&
+        Math.abs(panOffsetPositionY.value + n.translationY) <
+          (imageHeight * scale.value - initialHeight) / 2
+      ) {
+        panOffsetTranslationY.value = n.translationY;
+      }
+    })
+    .onEnd(() => {
+      panOffsetPositionX.value += panOffsetTranslationX.value;
+      panOffsetPositionY.value += panOffsetTranslationY.value;
+      panOffsetTranslationX.value = 0;
+      panOffsetTranslationY.value = 0;
+    });
+
+  const moveNode = Gesture.Pan()
     .runOnJS(true)
     .onStart((n) => {
       if (!isSelectingNode) return;
@@ -221,11 +278,12 @@ export default App = () => {
       pinchScale.value = 1;
     });
 
-  const exclusive = Gesture.Exclusive(longPress, pinch, pan);
+  const panAndZoom = Gesture.Simultaneous(pinch, panImage);
+  const gesture = Gesture.Exclusive(longPress, panAndZoom, moveNode);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector style={{ flex: 1 }} gesture={exclusive}>
+      <GestureDetector style={{ flex: 1 }} gesture={gesture}>
         {/* <SafeAreaView style={{ flex: 1 }}> */}
         <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
           <View
@@ -249,6 +307,7 @@ export default App = () => {
                   translateTop,
                   translateLeft,
                   isMovingNode,
+                  panOffset,
                 }}
               />
             ))}
@@ -269,6 +328,7 @@ export default App = () => {
                       selectedNodeIdx,
                       line1Node,
                       line2Node,
+                      panOffset,
                     }}
                   />
                 );
@@ -298,6 +358,7 @@ export default App = () => {
                   image.nativeEvent.source.height /
                   image.nativeEvent.source.width;
                 setImageHeight(initialWidth * proportion);
+                setImageWidth(initialWidth);
               }
             }}
           />

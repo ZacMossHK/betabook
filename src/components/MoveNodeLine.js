@@ -15,27 +15,28 @@ export default MoveNodeLine = ({
   selectedNodeIdx,
   line1Node,
   line2Node,
+  panOffset,
 }) => {
   const nextNode = nodes[idx + 1];
   const lineAnimatedProps = useAnimatedProps(() => ({
-    x1: translateLeft.value + node.x * scale.value,
-    y1: translateTop.value + node.y * scale.value,
-    x2: translateLeft.value + nextNode.x * scale.value,
-    y2: translateTop.value + nextNode.y * scale.value,
+    x1: translateLeft.value + panOffset.value.x + node.x * scale.value,
+    y1: translateTop.value + panOffset.value.y + node.y * scale.value,
+    x2: translateLeft.value + panOffset.value.x + nextNode.x * scale.value,
+    y2: translateTop.value + panOffset.value.y + nextNode.y * scale.value,
   }));
 
   const line1AnimatedProps = useAnimatedProps(() => ({
-    x1: translateLeft.value + node.x * scale.value,
-    y1: translateTop.value + node.y * scale.value,
-    x2: line1Node.value.x2,
-    y2: line1Node.value.y2,
+    x1: translateLeft.value + panOffset.value.x + node.x * scale.value,
+    y1: translateTop.value + panOffset.value.y + node.y * scale.value,
+    x2: line1Node.value.x2 + panOffset.value.x,
+    y2: line1Node.value.y2 + panOffset.value.y,
   }));
 
   const line2AnimatedProps = useAnimatedProps(() => ({
-    x1: line2Node.value.x1,
-    y1: line2Node.value.y1,
-    x2: translateLeft.value + nextNode.x * scale.value,
-    y2: translateTop.value + nextNode.y * scale.value,
+    x1: line2Node.value.x1 + panOffset.value.x,
+    y1: line2Node.value.y1 + panOffset.value.y,
+    x2: translateLeft.value + panOffset.value.x + nextNode.x * scale.value,
+    y2: translateTop.value + panOffset.value.y + nextNode.y * scale.value,
   }));
 
   if (isMovingNode && selectedNodeIdx === idx) {
@@ -65,10 +66,6 @@ export default MoveNodeLine = ({
       key={idx}
       stroke="black"
       strokeWidth="4"
-      x1={translateLeft.value + node.x * scale.value}
-      y1={translateTop.value + node.y * scale.value}
-      x2={translateLeft.value + nodes[idx + 1].x * scale.value}
-      y2={translateTop.value + nodes[idx + 1].y * scale.value}
     />
   );
 };
