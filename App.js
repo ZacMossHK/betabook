@@ -274,13 +274,13 @@ export default App = () => {
       baseScale.value *= n.scale;
       pinchScale.value = 1;
     });
-  const panAndZoom = Gesture.Simultaneous(pinch, panImage);
-  const gesture = Gesture.Exclusive(panAndZoom, longPress, moveNode);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <GestureDetector style={{ flex: 1 }} gesture={gesture}>
-        {/* <SafeAreaView style={{ flex: 1 }}> */}
+      <GestureDetector
+        style={{ flex: 1 }}
+        gesture={Gesture.Simultaneous(pinch, panImage, longPress, moveNode)}
+      >
         <SafeAreaView style={{ flex: 1, justifyContent: "center" }}>
           <View
             style={{
@@ -336,8 +336,6 @@ export default App = () => {
             source={theCuttingEdge}
             style={[
               {
-                // width: "100%",
-                // height: "100%",
                 width: initialWidth,
                 height: imageHeight,
                 resizeMode: "contain",
