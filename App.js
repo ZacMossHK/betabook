@@ -7,6 +7,7 @@ import Animated, {
   useAnimatedStyle,
   useAnimatedRef,
   useDerivedValue,
+  max,
 } from "react-native-reanimated";
 import {
   Gesture,
@@ -79,6 +80,8 @@ export default App = () => {
   const panOffsetTranslationY = useSharedValue(0);
   const panOffsetPositionX = useSharedValue(0);
   const panOffsetPositionY = useSharedValue(0);
+  const pinchFocalPointStartX = useSharedValue(0);
+  const pinchFocalPointStartY = useSharedValue(0);
   const isPanning = useSharedValue(false);
 
   const scale = useDerivedValue(() => baseScale.value * pinchScale.value);
@@ -89,10 +92,20 @@ export default App = () => {
     () => -1 * ((initialWidth * scale.value - initialWidth) / 2 || 0)
   );
 
-  const panOffset = useDerivedValue(() => ({
-    x: panOffsetPositionX.value + panOffsetTranslationX.value,
-    y: panOffsetPositionY.value + panOffsetTranslationY.value,
-  }));
+  const panOffset = useDerivedValue(() => {
+    let x = panOffsetPositionX.value + panOffsetTranslationX.value;
+    let y = panOffsetPositionY.value + panOffsetTranslationY.value;
+    const widthMaxOffset = (imageWidth * scale.value - imageWidth) / 2;
+    if (x > widthMaxOffset) x = widthMaxOffset;
+    if (x < -widthMaxOffset) x = -widthMaxOffset;
+    const maxHeightOffset = (imageHeight * scale.value - imageHeight) / 2;
+    if (y > maxHeightOffset) y = maxHeightOffset;
+    if (y < -maxHeightOffset) y = -maxHeightOffset;
+    return {
+      x,
+      y,
+    };
+  });
 
   useEffect(() => {
     "worklet";
@@ -117,14 +130,10 @@ export default App = () => {
           scale: scale.value,
         },
         {
-          translateX:
-            (panOffsetTranslationX.value + panOffsetPositionX.value) /
-            scale.value,
+          translateX: panOffset.value.x / scale.value,
         },
         {
-          translateY:
-            (panOffsetTranslationY.value + panOffsetPositionY.value) /
-            scale.value,
+          translateY: panOffset.value.y / scale.value,
         },
       ],
     };
@@ -164,20 +173,8 @@ export default App = () => {
     })
     .onUpdate((n) => {
       "worklet";
-      if (
-        Math.abs(panOffsetPositionX.value + n.translationX) <
-        Math.abs(translateLeft.value)
-      ) {
-        panOffsetTranslationX.value = n.translationX;
-      }
-      if (
-        Math.abs(panOffsetPositionY.value + n.translationY) <
-          Math.abs(translateTop.value) &&
-        Math.abs(panOffsetPositionY.value + n.translationY) <
-          (imageHeight * scale.value - initialHeight) / 2
-      ) {
-        panOffsetTranslationY.value = n.translationY;
-      }
+      panOffsetTranslationX.value = n.translationX;
+      panOffsetTranslationY.value = n.translationY;
     })
     .onEnd(() => {
       panOffsetPositionX.value += panOffsetTranslationX.value;
@@ -245,7 +242,7 @@ export default App = () => {
 
   const pinch = Gesture.Pinch()
     .enabled(!isSelectingNode)
-    .onStart(() => {
+    .onStart((n) => {
       "worklet";
     })
     .onUpdate((n) => {
@@ -277,9 +274,8 @@ export default App = () => {
       baseScale.value *= n.scale;
       pinchScale.value = 1;
     });
-
   const panAndZoom = Gesture.Simultaneous(pinch, panImage);
-  const gesture = Gesture.Exclusive(longPress, panAndZoom, moveNode);
+  const gesture = Gesture.Exclusive(panAndZoom, longPress, moveNode);
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
