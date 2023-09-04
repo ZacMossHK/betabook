@@ -242,9 +242,6 @@ export default App = () => {
 
   const pinch = Gesture.Pinch()
     .enabled(!isSelectingNode)
-    .onStart((n) => {
-      "worklet";
-    })
     .onUpdate((n) => {
       "worklet";
       if (n.scale * baseScale.value <= 1) {
