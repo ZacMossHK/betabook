@@ -256,7 +256,7 @@ export default App = () => {
       }
       pinchScale.value = n.scale;
     })
-    .onFinalize((n) => {
+    .onEnd((n) => {
       "worklet";
       if (n.scale * baseScale.value <= 1) {
         pinchScale.value = 1;
