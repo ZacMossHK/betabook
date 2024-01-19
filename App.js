@@ -498,7 +498,6 @@ const ImageViewer = () => {
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
-  const scale = useDerivedValue(() => pinchScale.value * baseScale.value);
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -509,11 +508,13 @@ const ImageViewer = () => {
       };
     })
     .onChange((event) => {
-      if (event.scale * baseScale.value < 1) {
-        pinchScale.value = 1 - (baseScale.value - 1);
-        return;
+      if (event.scale * baseScale.value <= 1) {
+        pinchScale.value = 1 / baseScale.value;
+      } else if (event.scale * baseScale.value >= 5) {
+        pinchScale.value = 5 / baseScale.value;
+      } else {
+        pinchScale.value = event.scale;
       }
-      pinchScale.value = event.scale;
     })
     .onEnd(() => {
       let matrix = identity3;
