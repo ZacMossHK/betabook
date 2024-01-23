@@ -466,7 +466,14 @@
 // pulled from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 import { useComputedValue } from "@shopify/react-native-skia";
 import React from "react";
-import { StyleSheet, SafeAreaView, View, Button } from "react-native";
+import {
+  StyleSheet,
+  SafeAreaView,
+  View,
+  Button,
+  Image,
+  Dimensions,
+} from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -491,13 +498,44 @@ function scaleMatrix(matrox, value) {
   return multiply3(matrox, [value, 0, 0, 0, value, 0, 0, 0, 1]);
 }
 
+const image = require("./assets/IMG_20230716_184450.jpg");
+// const { width, height } = Image.resolveAssetSource(image);
+const { width, height } = Dimensions.get("window");
+
+// console.log(Image.resolveAssetSource(image));
+
 const ImageViewer = () => {
   const ref = useAnimatedRef();
+  const imageRef = useAnimatedRef();
   const origin = useSharedValue({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
+  const baseTranslation = useSharedValue({ x: 0, y: 0 });
+  const scale = useDerivedValue(() => pinchScale.value * baseScale.value);
+  const isOverBorder = useSharedValue(false);
+  const translationPointAtBorderEdge = useSharedValue({ x: 0, y: 0 });
+  const distancePastBorder = useSharedValue({ x: 0, y: 0 });
+  const maxDistance = useSharedValue({ x: 0, y: 0 });
+
+  const matrixValue = useDerivedValue(() => {
+    // TODO: I moved this here so the gestures and animated style could all use it - but do I need to use a derived value?
+    let matrix = identity3;
+    if (translation.value.x !== 0 || translation.value.y !== 0) {
+      matrix = translateMatrix(
+        matrix,
+        translation.value.x,
+        translation.value.y
+      );
+    }
+    if (pinchScale.value !== 1) {
+      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+      matrix = scaleMatrix(matrix, pinchScale.value);
+      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+    }
+    return multiply3(matrix, transform.value);
+  });
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -508,6 +546,7 @@ const ImageViewer = () => {
       };
     })
     .onChange((event) => {
+      // console.log(measure(ref));
       if (event.scale * baseScale.value <= 1) {
         pinchScale.value = 1 / baseScale.value;
       } else if (event.scale * baseScale.value >= 5) {
@@ -529,8 +568,51 @@ const ImageViewer = () => {
   const pan = Gesture.Pan()
     .averageTouches(true)
     .onChange((event) => {
+      let newTranslationX = event.translationX;
+      /* this clamps the translation to the edge of the image by subtracting the current translation from the furthest recorded point 
+      and then subracting THAT from the recorded edge of the image */
+      if (translationPointAtBorderEdge.value.x) {
+        if (
+          translationPointAtBorderEdge.value.x > 0 &&
+          distancePastBorder.value.x > newTranslationX
+        ) {
+          newTranslationX =
+            translationPointAtBorderEdge.value.x -
+            (distancePastBorder.value.x - event.translationX);
+        }
+        if (
+          translationPointAtBorderEdge.value.x < 0 &&
+          distancePastBorder.value.x < newTranslationX
+        ) {
+          newTranslationX =
+            translationPointAtBorderEdge.value.x -
+            (distancePastBorder.value.x - event.translationX);
+        }
+      }
+      const matrix = multiply3(
+        translateMatrix(identity3, newTranslationX, event.translationY),
+        transform.value
+      );
+      /* This records the translation point where the image is panned to its edge
+      It then records the furthest distance past the border so it can clamp that value on the next pass */
+      if (Math.abs(matrix[2]) >= maxDistance.value.x) {
+        /* TODO:
+        - this doesn't work if you go back and forth between the two sides
+        - it seems to judder a TINY bit - is that in my imagination??
+        */
+        if (!translationPointAtBorderEdge.value.x) {
+          translationPointAtBorderEdge.value.x = newTranslationX;
+        }
+        if (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) {
+          distancePastBorder.value.x = newTranslationX;
+        }
+        if (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX) {
+          distancePastBorder.value.x = newTranslationX;
+        }
+        newTranslationX = translation.value.x;
+      }
       translation.value = {
-        x: event.translationX,
+        x: newTranslationX,
         y: event.translationY,
       };
     })
@@ -543,27 +625,28 @@ const ImageViewer = () => {
       );
       transform.value = multiply3(matrix, transform.value);
       translation.value = { x: 0, y: 0 };
+      distancePastBorder.value.x = 0;
+      translationPointAtBorderEdge.value.x = 0;
     });
 
   const animatedStyle = useAnimatedStyle(() => {
-    let matrix = identity3;
+    let matrix = matrixValue.value;
+    const measured = measure(ref);
+    if (measured) {
+      // TODO: get this working with the y axis as well
+      const imageHeight = measured.width * 1.33333333;
+      // if (imageHeight * scale.value < measured.height) {
+      //   matrix[5] = 0;
+      // }
+      // isOverBorder.value = false;
 
-    if (translation.value.x !== 0 || translation.value.y !== 0) {
-      matrix = translateMatrix(
-        matrix,
-        translation.value.x,
-        translation.value.y
-      );
+      // TODO: is this the berst place to put this?? Does this need to be a shared value?
+      maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
+      if (Math.abs(matrix[2]) > maxDistance.value.x) {
+        // this is necessary to clamp the image but it does not adjust the translation values
+        matrix[2] = maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
+      }
     }
-
-    if (pinchScale.value !== 1) {
-      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-      matrix = scaleMatrix(matrix, pinchScale.value);
-      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
-    }
-
-    matrix = multiply3(matrix, transform.value);
-
     return {
       transform: [
         { translateX: matrix[2] },
@@ -572,33 +655,18 @@ const ImageViewer = () => {
         { scaleY: matrix[4] },
       ],
     };
-  });
+  });``
 
   return (
-    <>
-      <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-        <Animated.View
-          ref={ref}
-          collapsable={false}
-          style={[styles.fullscreen]}
-        >
-          <Animated.Image
-            source={require("./assets/IMG_20230716_184450.jpg")}
-            resizeMode={"contain"}
-            style={[styles.fullscreen, animatedStyle]}
-          />
-        </Animated.View>
-      </GestureDetector>
-
-      <View style={{ position: "absolute", end: 0, backgroundColor: "black" }}>
-        <Button
-          title="RESET"
-          onPress={() => {
-            transform.value = identity3;
-          }}
+    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
+      <Animated.View ref={ref} collapsable={false} style={[styles.fullscreen]}>
+        <Animated.Image
+          source={image}
+          resizeMode={"contain"}
+          style={[styles.fullscreen, animatedStyle]}
         />
-      </View>
-    </>
+      </Animated.View>
+    </GestureDetector>
   );
 };
 
@@ -610,22 +678,12 @@ const styles = StyleSheet.create({
     height: "100%",
     resizeMode: "contain",
   },
-
-  pointer: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
-    backgroundColor: "red",
-    position: "absolute",
-    marginStart: -30,
-    marginTop: -30,
-  },
 });
 
 const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "red" }}>
         <ImageViewer />
       </SafeAreaView>
     </GestureHandlerRootView>
