@@ -568,16 +568,10 @@ const ImageViewer = () => {
       and then subracting THAT from the recorded edge of the image */
       if (translationPointAtBorderEdge.value.x) {
         if (
-          translationPointAtBorderEdge.value.x > 0 &&
-          distancePastBorder.value.x > newTranslationX
-        ) {
-          newTranslationX =
-            translationPointAtBorderEdge.value.x -
-            (distancePastBorder.value.x - event.translationX);
-        }
-        if (
-          translationPointAtBorderEdge.value.x < 0 &&
-          distancePastBorder.value.x < newTranslationX
+          (translationPointAtBorderEdge.value.x > 0 &&
+            distancePastBorder.value.x > newTranslationX) ||
+          (translationPointAtBorderEdge.value.x < 0 &&
+            distancePastBorder.value.x < newTranslationX)
         ) {
           newTranslationX =
             translationPointAtBorderEdge.value.x -
@@ -591,9 +585,10 @@ const ImageViewer = () => {
       /* This records the translation point where the image is panned to its edge
       It then records the furthest distance past the border so it can clamp that value on the next pass */
       if (Math.abs(matrix[2]) >= maxDistance.value.x) {
+        console.log(true, matrix[2]);
+        // console.log(true);
         /* TODO:
         - this doesn't work if you go back and forth between the two sides
-        - it seems to judder a TINY bit - is that in my imagination??
         */
         if (!translationPointAtBorderEdge.value.x) {
           translationPointAtBorderEdge.value.x = newTranslationX;
@@ -604,12 +599,15 @@ const ImageViewer = () => {
         if (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX) {
           distancePastBorder.value.x = newTranslationX;
         }
-        newTranslationX = translation.value.x;
+        newTranslationX = translationPointAtBorderEdge.value.x;
+      } else {
+        console.log(matrix[2]);
       }
       translation.value = {
         x: newTranslationX,
         y: event.translationY,
       };
+      // console.log(translation.value);
     })
     .onEnd(() => {
       let matrix = identity3;
@@ -622,6 +620,7 @@ const ImageViewer = () => {
       translation.value = { x: 0, y: 0 };
       distancePastBorder.value.x = 0;
       translationPointAtBorderEdge.value.x = 0;
+      console.log("STOP");
     });
 
   const animatedStyle = useAnimatedStyle(() => {
