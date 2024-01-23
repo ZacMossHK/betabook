@@ -463,17 +463,10 @@
 //   );
 // };
 
-// pulled from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
-import { useComputedValue } from "@shopify/react-native-skia";
+// forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
+
 import React from "react";
-import {
-  StyleSheet,
-  SafeAreaView,
-  View,
-  Button,
-  Image,
-  Dimensions,
-} from "react-native";
+import { StyleSheet, SafeAreaView } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -486,7 +479,7 @@ import Animated, {
   measure,
   useDerivedValue,
 } from "react-native-reanimated";
-import { identity3, Matrix3, multiply3 } from "react-native-redash";
+import { identity3, multiply3 } from "react-native-redash";
 
 function translateMatrix(matrix, x, y) {
   "worklet";
@@ -499,10 +492,6 @@ function scaleMatrix(matrox, value) {
 }
 
 const image = require("./assets/IMG_20230716_184450.jpg");
-// const { width, height } = Image.resolveAssetSource(image);
-const { width, height } = Dimensions.get("window");
-
-// console.log(Image.resolveAssetSource(image));
 
 const ImageViewer = () => {
   const ref = useAnimatedRef();
