@@ -1,3 +1,214 @@
+// forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
+
+import React from "react";
+import { StyleSheet, SafeAreaView } from "react-native";
+import {
+  Gesture,
+  GestureDetector,
+  GestureHandlerRootView,
+} from "react-native-gesture-handler";
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  useAnimatedRef,
+  measure,
+  useDerivedValue,
+} from "react-native-reanimated";
+import { identity3, multiply3 } from "react-native-redash";
+
+function translateMatrix(matrix, x, y) {
+  "worklet";
+  return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
+}
+
+function scaleMatrix(matrox, value) {
+  "worklet";
+  return multiply3(matrox, [value, 0, 0, 0, value, 0, 0, 0, 1]);
+}
+
+const image = require("./assets/IMG_20230716_184450.jpg");
+const ImageViewer = () => {
+  const ref = useAnimatedRef();
+  const origin = useSharedValue({ x: 0, y: 0 });
+  const transform = useSharedValue(identity3);
+  const pinchScale = useSharedValue(1);
+  const baseScale = useSharedValue(1);
+  const translation = useSharedValue({ x: 0, y: 0 });
+  const translationPointAtBorderEdge = useSharedValue({ x: 0, y: 0 });
+  const distancePastBorder = useSharedValue({ x: 0, y: 0 });
+  const maxDistance = useSharedValue({ x: 0, y: 0 });
+
+  const matrixValue = useDerivedValue(() => {
+    // TODO: I moved this here so the gestures and animated style could all use it - but do I need to use a derived value?
+    let matrix = identity3;
+    if (translation.value.x !== 0 || translation.value.y !== 0) {
+      matrix = translateMatrix(
+        matrix,
+        translation.value.x,
+        translation.value.y
+      );
+    }
+    if (pinchScale.value !== 1) {
+      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+      matrix = scaleMatrix(matrix, pinchScale.value);
+      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+    }
+    return multiply3(matrix, transform.value);
+  });
+
+  const pinch = Gesture.Pinch()
+    .onStart((event) => {
+      const measured = measure(ref);
+      origin.value = {
+        x: event.focalX - measured.width / 2,
+        y: event.focalY - measured.height / 2,
+      };
+    })
+    .onChange((event) => {
+      if (event.scale * baseScale.value <= 1) {
+        pinchScale.value = 1 / baseScale.value;
+      } else if (event.scale * baseScale.value >= 5) {
+        pinchScale.value = 5 / baseScale.value;
+      } else {
+        pinchScale.value = event.scale;
+      }
+    })
+    .onEnd(() => {
+      let matrix = identity3;
+      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+      matrix = scaleMatrix(matrix, pinchScale.value);
+      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+      transform.value = multiply3(matrix, transform.value);
+      baseScale.value *= pinchScale.value;
+      pinchScale.value = 1;
+    });
+
+  const pan = Gesture.Pan()
+    .averageTouches(true)
+    .onChange((event) => {
+      /* TODO:
+      - this doesn't work if you go back and forth between the two left and right side
+      - scaling and panning doesn't work properly. I think it's because translationPointAtBorderEdge.value.x and distancePastBorder.value.x don't scale?
+        maybe they could record scale at the time they record their value, and then multiply by the change in scale? or divide?? MATHS!
+      - implement clamping values on the y axis
+      - if you go beyond the edge several times it will skip to the middle. WHY? */
+      let newTranslationX = event.translationX;
+      /* this clamps the translation to the edge of the image by subtracting the current translation from the furthest recorded point 
+      and then subracting THAT from the recorded edge of the image */
+      if (translationPointAtBorderEdge.value.x) {
+        if (
+          (translationPointAtBorderEdge.value.x > 0 &&
+            distancePastBorder.value.x > newTranslationX) ||
+          (translationPointAtBorderEdge.value.x < 0 &&
+            distancePastBorder.value.x < newTranslationX)
+        ) {
+          newTranslationX =
+            translationPointAtBorderEdge.value.x -
+            (distancePastBorder.value.x - event.translationX);
+        }
+      }
+      const matrix = multiply3(
+        translateMatrix(identity3, newTranslationX, event.translationY),
+        transform.value
+      );
+      /* This records the translation point where the image is panned to its edge
+      It then records the furthest distance past the border so it can clamp that value on the next pass */
+      if (Math.abs(matrix[2]) >= maxDistance.value.x) {
+        // TODO: for the calls here, should it be newTranslationX or event.translationX? They're the same but which is easier to figure out?
+        if (!translationPointAtBorderEdge.value.x) {
+          translationPointAtBorderEdge.value.x = newTranslationX;
+        }
+        if (
+          (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) ||
+          (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX)
+        ) {
+          distancePastBorder.value.x = newTranslationX;
+        }
+        newTranslationX = translationPointAtBorderEdge.value.x;
+      }
+      translation.value = {
+        x: newTranslationX,
+        y: event.translationY,
+      };
+    })
+    .onEnd(() => {
+      let matrix = identity3;
+      matrix = translateMatrix(
+        matrix,
+        translation.value.x,
+        translation.value.y
+      );
+      transform.value = multiply3(matrix, transform.value);
+      translation.value = { x: 0, y: 0 };
+      distancePastBorder.value.x = 0;
+      translationPointAtBorderEdge.value.x = 0;
+    });
+
+  const animatedStyle = useAnimatedStyle(() => {
+    let matrix = matrixValue.value;
+    const measured = measure(ref);
+    if (measured) {
+      // TODO: get this working with the y axis as well
+      const imageHeight = measured.width * 1.33333333;
+      // if (imageHeight * scale.value < measured.height) {
+      //   matrix[5] = 0;
+      // }
+      // isOverBorder.value = false;
+
+      // TODO: is this the best place to put this?? Does this need to be a shared value?
+      maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
+      if (Math.abs(matrix[2]) > maxDistance.value.x) {
+        // this is necessary to clamp the image but it does not adjust the translation values
+        matrix[2] = maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
+      }
+    }
+    return {
+      transform: [
+        { translateX: matrix[2] },
+        { translateY: matrix[5] },
+        { scaleX: matrix[0] },
+        { scaleY: matrix[4] },
+      ],
+    };
+  });
+
+  return (
+    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
+      <Animated.View ref={ref} collapsable={false} style={[styles.fullscreen]}>
+        <Animated.Image
+          source={image}
+          resizeMode={"contain"}
+          style={[styles.fullscreen, animatedStyle]}
+        />
+      </Animated.View>
+    </GestureDetector>
+  );
+};
+
+const styles = StyleSheet.create({
+  fullscreen: {
+    ...StyleSheet.absoluteFillObject,
+    flex: 1,
+    width: "100%",
+    height: "100%",
+    resizeMode: "contain",
+  },
+});
+
+const App = () => {
+  return (
+    <GestureHandlerRootView style={{ flex: 1 }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "red" }}>
+        <ImageViewer />
+      </SafeAreaView>
+    </GestureHandlerRootView>
+  );
+};
+
+export default App;
+
+// ↓↓↓↓↓↓ OLD CODE BELOW!!! ↓↓↓↓↓↓
+
 // import { View, SafeAreaView, Dimensions, Image, Text } from "react-native";
 // // import theCuttingEdge from "./assets/IMG_20230716_184450.jpg";
 // import React, { useEffect, useState } from "react";
@@ -462,213 +673,3 @@
 //     </GestureHandlerRootView>
 //   );
 // };
-
-// forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
-
-import React from "react";
-import { StyleSheet, SafeAreaView } from "react-native";
-import {
-  Gesture,
-  GestureDetector,
-  GestureHandlerRootView,
-} from "react-native-gesture-handler";
-import Animated, {
-  useAnimatedStyle,
-  useSharedValue,
-  useAnimatedRef,
-  measure,
-  useDerivedValue,
-} from "react-native-reanimated";
-import { identity3, multiply3 } from "react-native-redash";
-
-function translateMatrix(matrix, x, y) {
-  "worklet";
-  return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
-}
-
-function scaleMatrix(matrox, value) {
-  "worklet";
-  return multiply3(matrox, [value, 0, 0, 0, value, 0, 0, 0, 1]);
-}
-
-const image = require("./assets/IMG_20230716_184450.jpg");
-
-const ImageViewer = () => {
-  const ref = useAnimatedRef();
-  const origin = useSharedValue({ x: 0, y: 0 });
-  const transform = useSharedValue(identity3);
-  const pinchScale = useSharedValue(1);
-  const baseScale = useSharedValue(1);
-  const translation = useSharedValue({ x: 0, y: 0 });
-  const translationPointAtBorderEdge = useSharedValue({ x: 0, y: 0 });
-  const distancePastBorder = useSharedValue({ x: 0, y: 0 });
-  const maxDistance = useSharedValue({ x: 0, y: 0 });
-
-  const matrixValue = useDerivedValue(() => {
-    // TODO: I moved this here so the gestures and animated style could all use it - but do I need to use a derived value?
-    let matrix = identity3;
-    if (translation.value.x !== 0 || translation.value.y !== 0) {
-      matrix = translateMatrix(
-        matrix,
-        translation.value.x,
-        translation.value.y
-      );
-    }
-    if (pinchScale.value !== 1) {
-      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-      matrix = scaleMatrix(matrix, pinchScale.value);
-      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
-    }
-    return multiply3(matrix, transform.value);
-  });
-
-  const pinch = Gesture.Pinch()
-    .onStart((event) => {
-      const measured = measure(ref);
-      origin.value = {
-        x: event.focalX - measured.width / 2,
-        y: event.focalY - measured.height / 2,
-      };
-    })
-    .onChange((event) => {
-      if (event.scale * baseScale.value <= 1) {
-        pinchScale.value = 1 / baseScale.value;
-      } else if (event.scale * baseScale.value >= 5) {
-        pinchScale.value = 5 / baseScale.value;
-      } else {
-        pinchScale.value = event.scale;
-      }
-    })
-    .onEnd(() => {
-      let matrix = identity3;
-      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-      matrix = scaleMatrix(matrix, pinchScale.value);
-      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
-      transform.value = multiply3(matrix, transform.value);
-      baseScale.value *= pinchScale.value;
-      pinchScale.value = 1;
-    });
-
-  const pan = Gesture.Pan()
-    .averageTouches(true)
-    .onChange((event) => {
-      /* TODO:
-      - this doesn't work if you go back and forth between the two left and right side
-      - scaling and panning doesn't work properly. I think it's because translationPointAtBorderEdge.value.x and distancePastBorder.value.x don't scale?
-        maybe they could record scale at the time they record their value, and then multiply by the change in scale? or divide?? MATHS!
-      - implement clamping values on the y axis
-      - if you go beyond the edge several times it will skip to the middle. WHY? */
-      let newTranslationX = event.translationX;
-      /* this clamps the translation to the edge of the image by subtracting the current translation from the furthest recorded point 
-      and then subracting THAT from the recorded edge of the image */
-      if (translationPointAtBorderEdge.value.x) {
-        if (
-          (translationPointAtBorderEdge.value.x > 0 &&
-            distancePastBorder.value.x > newTranslationX) ||
-          (translationPointAtBorderEdge.value.x < 0 &&
-            distancePastBorder.value.x < newTranslationX)
-        ) {
-          newTranslationX =
-            translationPointAtBorderEdge.value.x -
-            (distancePastBorder.value.x - event.translationX);
-        }
-      }
-      const matrix = multiply3(
-        translateMatrix(identity3, newTranslationX, event.translationY),
-        transform.value
-      );
-      /* This records the translation point where the image is panned to its edge
-      It then records the furthest distance past the border so it can clamp that value on the next pass */
-      if (Math.abs(matrix[2]) >= maxDistance.value.x) {
-        // TODO: for the calls here, should it be newTranslationX or event.translationX? They're the same but which is easier to figure out?
-        if (!translationPointAtBorderEdge.value.x) {
-          translationPointAtBorderEdge.value.x = newTranslationX;
-        }
-        if (
-          (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) ||
-          (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX)
-        ) {
-          distancePastBorder.value.x = newTranslationX;
-        }
-        newTranslationX = translationPointAtBorderEdge.value.x;
-      }
-      translation.value = {
-        x: newTranslationX,
-        y: event.translationY,
-      };
-    })
-    .onEnd(() => {
-      let matrix = identity3;
-      matrix = translateMatrix(
-        matrix,
-        translation.value.x,
-        translation.value.y
-      );
-      transform.value = multiply3(matrix, transform.value);
-      translation.value = { x: 0, y: 0 };
-      distancePastBorder.value.x = 0;
-      translationPointAtBorderEdge.value.x = 0;
-    });
-
-  const animatedStyle = useAnimatedStyle(() => {
-    let matrix = matrixValue.value;
-    const measured = measure(ref);
-    if (measured) {
-      // TODO: get this working with the y axis as well
-      const imageHeight = measured.width * 1.33333333;
-      // if (imageHeight * scale.value < measured.height) {
-      //   matrix[5] = 0;
-      // }
-      // isOverBorder.value = false;
-
-      // TODO: is this the best place to put this?? Does this need to be a shared value?
-      maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
-      if (Math.abs(matrix[2]) > maxDistance.value.x) {
-        // this is necessary to clamp the image but it does not adjust the translation values
-        matrix[2] = maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
-      }
-    }
-    return {
-      transform: [
-        { translateX: matrix[2] },
-        { translateY: matrix[5] },
-        { scaleX: matrix[0] },
-        { scaleY: matrix[4] },
-      ],
-    };
-  });
-
-  return (
-    <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-      <Animated.View ref={ref} collapsable={false} style={[styles.fullscreen]}>
-        <Animated.Image
-          source={image}
-          resizeMode={"contain"}
-          style={[styles.fullscreen, animatedStyle]}
-        />
-      </Animated.View>
-    </GestureDetector>
-  );
-};
-
-const styles = StyleSheet.create({
-  fullscreen: {
-    ...StyleSheet.absoluteFillObject,
-    flex: 1,
-    width: "100%",
-    height: "100%",
-    resizeMode: "contain",
-  },
-});
-
-const App = () => {
-  return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "red" }}>
-        <ImageViewer />
-      </SafeAreaView>
-    </GestureHandlerRootView>
-  );
-};
-
-export default App;
