@@ -506,15 +506,11 @@ const { width, height } = Dimensions.get("window");
 
 const ImageViewer = () => {
   const ref = useAnimatedRef();
-  const imageRef = useAnimatedRef();
   const origin = useSharedValue({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
-  const baseTranslation = useSharedValue({ x: 0, y: 0 });
-  const scale = useDerivedValue(() => pinchScale.value * baseScale.value);
-  const isOverBorder = useSharedValue(false);
   const translationPointAtBorderEdge = useSharedValue({ x: 0, y: 0 });
   const distancePastBorder = useSharedValue({ x: 0, y: 0 });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
@@ -546,7 +542,6 @@ const ImageViewer = () => {
       };
     })
     .onChange((event) => {
-      // console.log(measure(ref));
       if (event.scale * baseScale.value <= 1) {
         pinchScale.value = 1 / baseScale.value;
       } else if (event.scale * baseScale.value >= 5) {
@@ -655,7 +650,8 @@ const ImageViewer = () => {
         { scaleY: matrix[4] },
       ],
     };
-  });``
+  });
+  ``;
 
   return (
     <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
