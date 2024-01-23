@@ -563,6 +563,12 @@ const ImageViewer = () => {
   const pan = Gesture.Pan()
     .averageTouches(true)
     .onChange((event) => {
+      /* TODO:
+      - this doesn't work if you go back and forth between the two left and right side
+      - scaling and panning doesn't work properly. I think it's because translationPointAtBorderEdge.value.x and distancePastBorder.value.x don't scale?
+        maybe they could record scale at the time they record their value, and then multiply by the change in scale? or divide?? MATHS!
+      - implement clamping values on the y axis
+      - if you go beyond the edge several times it will skip to the middle. WHY? */
       let newTranslationX = event.translationX;
       /* this clamps the translation to the edge of the image by subtracting the current translation from the furthest recorded point 
       and then subracting THAT from the recorded edge of the image */
@@ -585,29 +591,22 @@ const ImageViewer = () => {
       /* This records the translation point where the image is panned to its edge
       It then records the furthest distance past the border so it can clamp that value on the next pass */
       if (Math.abs(matrix[2]) >= maxDistance.value.x) {
-        console.log(true, matrix[2]);
-        // console.log(true);
-        /* TODO:
-        - this doesn't work if you go back and forth between the two sides
-        */
+        // TODO: for the calls here, should it be newTranslationX or event.translationX? They're the same but which is easier to figure out?
         if (!translationPointAtBorderEdge.value.x) {
           translationPointAtBorderEdge.value.x = newTranslationX;
         }
-        if (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) {
-          distancePastBorder.value.x = newTranslationX;
-        }
-        if (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX) {
+        if (
+          (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) ||
+          (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX)
+        ) {
           distancePastBorder.value.x = newTranslationX;
         }
         newTranslationX = translationPointAtBorderEdge.value.x;
-      } else {
-        console.log(matrix[2]);
       }
       translation.value = {
         x: newTranslationX,
         y: event.translationY,
       };
-      // console.log(translation.value);
     })
     .onEnd(() => {
       let matrix = identity3;
@@ -620,7 +619,6 @@ const ImageViewer = () => {
       translation.value = { x: 0, y: 0 };
       distancePastBorder.value.x = 0;
       translationPointAtBorderEdge.value.x = 0;
-      console.log("STOP");
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -634,7 +632,7 @@ const ImageViewer = () => {
       // }
       // isOverBorder.value = false;
 
-      // TODO: is this the berst place to put this?? Does this need to be a shared value?
+      // TODO: is this the best place to put this?? Does this need to be a shared value?
       maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
       if (Math.abs(matrix[2]) > maxDistance.value.x) {
         // this is necessary to clamp the image but it does not adjust the translation values
@@ -650,7 +648,6 @@ const ImageViewer = () => {
       ],
     };
   });
-  ``;
 
   return (
     <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
