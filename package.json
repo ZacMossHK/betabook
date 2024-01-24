@@ -11,7 +11,7 @@
   "dependencies": {
     "@openspacelabs/react-native-zoomable-view": "^2.1.1",
     "@shopify/react-native-skia": "0.1.221",
-    "expo": "~50.0.2",
+    "expo": "~50.0.3",
     "expo-status-bar": "~1.11.1",
     "react": "18.2.0",
     "react-native": "0.73.2",
