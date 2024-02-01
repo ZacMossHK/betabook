@@ -34,27 +34,31 @@ const ImageViewer = () => {
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
-  const translationPointAtBorderEdge = useSharedValue({ x: 0, y: 0 });
-  const distancePastBorder = useSharedValue({ x: 0, y: 0 });
+  const coordsPastBorder = useSharedValue({
+    translation: { x: 0, y: 0 },
+    origin: { x: 0, y: 0 },
+    pinchScale: 1,
+  });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
+  const coordsAtBorderCrossing = useSharedValue({ x: 0, y: 0 });
+  const finalValueX = useSharedValue(null);
+  const useFinalValue = useSharedValue(false);
 
-  const matrixValue = useDerivedValue(() => {
-    // TODO: I moved this here so the gestures and animated style could all use it - but do I need to use a derived value?
+  const adjustedForBorderX = useSharedValue(0);
+
+  const getMatrix = (translation, origin, pinchScale) => {
+    "worklet";
     let matrix = identity3;
-    if (translation.value.x !== 0 || translation.value.y !== 0) {
-      matrix = translateMatrix(
-        matrix,
-        translation.value.x,
-        translation.value.y
-      );
+    if (translation.x !== 0 || translation.y !== 0) {
+      matrix = translateMatrix(matrix, translation.x, translation.y);
     }
-    if (pinchScale.value !== 1) {
-      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-      matrix = scaleMatrix(matrix, pinchScale.value);
-      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+    if (pinchScale !== 1) {
+      matrix = translateMatrix(matrix, origin.x, origin.y);
+      matrix = scaleMatrix(matrix, pinchScale);
+      matrix = translateMatrix(matrix, -origin.x, -origin.y);
     }
     return multiply3(matrix, transform.value);
-  });
+  };
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -74,6 +78,7 @@ const ImageViewer = () => {
       }
     })
     .onEnd(() => {
+      console.log("pinch");
       let matrix = identity3;
       matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
       matrix = scaleMatrix(matrix, pinchScale.value);
@@ -86,50 +91,27 @@ const ImageViewer = () => {
   const pan = Gesture.Pan()
     .averageTouches(true)
     .onChange((event) => {
-      /* TODO:
-      - this doesn't work if you go back and forth between the two left and right side
-      - scaling and panning doesn't work properly. I think it's because translationPointAtBorderEdge.value.x and distancePastBorder.value.x don't scale?
-        maybe they could record scale at the time they record their value, and then multiply by the change in scale? or divide?? MATHS!
-      - implement clamping values on the y axis
-      - if you go beyond the edge several times it will skip to the middle. WHY? */
-      let newTranslationX = event.translationX;
-      /* this clamps the translation to the edge of the image by subtracting the current translation from the furthest recorded point 
-      and then subracting THAT from the recorded edge of the image */
-      if (translationPointAtBorderEdge.value.x) {
-        if (
-          (translationPointAtBorderEdge.value.x > 0 &&
-            distancePastBorder.value.x > newTranslationX) ||
-          (translationPointAtBorderEdge.value.x < 0 &&
-            distancePastBorder.value.x < newTranslationX)
-        ) {
-          newTranslationX =
-            translationPointAtBorderEdge.value.x -
-            (distancePastBorder.value.x - event.translationX);
-        }
-      }
-      const matrix = multiply3(
-        translateMatrix(identity3, newTranslationX, event.translationY),
-        transform.value
+      const scaledOriginalMatrix = getMatrix(
+        { x: 0, y: 0 },
+        origin.value,
+        pinchScale.value
       );
-      /* This records the translation point where the image is panned to its edge
-      It then records the furthest distance past the border so it can clamp that value on the next pass */
-      if (Math.abs(matrix[2]) >= maxDistance.value.x) {
-        // TODO: for the calls here, should it be newTranslationX or event.translationX? They're the same but which is easier to figure out?
-        if (!translationPointAtBorderEdge.value.x) {
-          translationPointAtBorderEdge.value.x = newTranslationX;
-        }
-        if (
-          (matrix[2] > 0 && distancePastBorder.value.x < newTranslationX) ||
-          (matrix[2] < 0 && distancePastBorder.value.x > newTranslationX)
-        ) {
-          distancePastBorder.value.x = newTranslationX;
-        }
-        newTranslationX = translationPointAtBorderEdge.value.x;
+      if (
+        (scaledOriginalMatrix[2] + event.translationX > maxDistance.value.x &&
+          event.changeX < 0) ||
+        adjustedForBorderX.value
+      ) {
+        if (!adjustedForBorderX.value)
+          adjustedForBorderX.value =
+            maxDistance.value.x - scaledOriginalMatrix[2];
+        adjustedForBorderX.value += event.changeX;
+        console.log(event.changeX);
       }
       translation.value = {
-        x: newTranslationX,
+        x: adjustedForBorderX.value || event.translationX,
         y: event.translationY,
       };
+      return;
     })
     .onEnd(() => {
       let matrix = identity3;
@@ -140,31 +122,84 @@ const ImageViewer = () => {
       );
       transform.value = multiply3(matrix, transform.value);
       translation.value = { x: 0, y: 0 };
-      distancePastBorder.value.x = 0;
-      translationPointAtBorderEdge.value.x = 0;
+      adjustedForBorderX.value = 0;
     });
 
   const animatedStyle = useAnimatedStyle(() => {
-    let matrix = matrixValue.value;
     const measured = measure(ref);
-    if (measured) {
-      // TODO: get this working with the y axis as well
-      const imageHeight = measured.width * 1.33333333;
-      // if (imageHeight * scale.value < measured.height) {
-      //   matrix[5] = 0;
-      // }
-      // isOverBorder.value = false;
-
-      // TODO: is this the best place to put this?? Does this need to be a shared value?
-      maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
-      if (Math.abs(matrix[2]) > maxDistance.value.x) {
-        // this is necessary to clamp the image but it does not adjust the translation values
-        matrix[2] = maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
+    if (!measured) return {};
+    if (
+      !translation.value.x &&
+      !translation.value.y &&
+      pinchScale.value === 1 &&
+      transform.value[2] > maxDistance.value.x
+    ) {
+      // this resets the transform at the edge if trying to pan outside of the image's boundaries
+      transform.value[2] = coordsAtBorderCrossing.value.x;
+      if (useFinalValue.value) {
+        transform.value[2] = finalValueX.value;
       }
+
+      coordsAtBorderCrossing.value.x = 0;
+      coordsPastBorder.value = {
+        translation: { x: 0, y: 0 },
+        origin: { x: 0, y: 0 },
+        pinchScale: 1,
+      };
+      useFinalValue.value = false;
     }
+    let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
+    maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
+    coordsAtBorderCrossing.value.x =
+      maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
+    // TODO: get this working with the y axis as well
+    const imageHeight = measured.width * 1.33333333;
+    // if (imageHeight * scale.value < measured.height) {
+    //   matrix[5] = 0;
+    // }
+    // isOverBorder.value = false;
+
+    // TODO: is this the best place to put maxDistance? Does this need to be a shared value?
+    // console.log(matrix[2] > maxDistance.value.x);
+
+    const coordsPastBorderMatrix = getMatrix(
+      coordsPastBorder.value.translation,
+      coordsPastBorder.value.origin,
+      coordsPastBorder.value.pinchScale
+    );
+    finalValueX.value =
+      maxDistance.value.x - (coordsPastBorderMatrix[2] - matrix[2]);
+    if (matrix[2] > maxDistance.value.x) {
+      // console.log(Date.now());
+      if (matrix[2] > coordsPastBorderMatrix[2]) {
+        // this value sets the furthest point past the border so that we can then subtract the distance between there and the border to get our new position
+        // border - (coordsPastBorderTranslation - current translation)
+        coordsPastBorder.value = {
+          translation: { ...translation.value },
+          origin: { ...origin.value },
+          pinchScale: pinchScale.value,
+        };
+        useFinalValue.value = false;
+      } else {
+        // useFinalValue.value = true; // this is causing an issue!!!
+      }
+      matrix[2] = coordsAtBorderCrossing.value.x;
+    }
+
+    if (useFinalValue.value) matrix[2] = finalValueX.value;
+    // if (matrix[2] < -maxDistance.value.x) {
+    //   console.log("HI");
+    //   matrix[2] = -maxDistance.value.x;
+    // }
+
     return {
       transform: [
-        { translateX: matrix[2] },
+        {
+          translateX: Math.max(
+            -maxDistance.value.x,
+            Math.min(maxDistance.value.x, matrix[2])
+          ),
+        },
         { translateY: matrix[5] },
         { scaleX: matrix[0] },
         { scaleY: matrix[4] },
