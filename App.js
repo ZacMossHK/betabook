@@ -86,22 +86,27 @@ const ImageViewer = () => {
         origin.value,
         pinchScale.value
       );
+      const currentPosition = {
+        x: scaledOriginalMatrix[2] + event.translationX,
+      };
       if (
-        (scaledOriginalMatrix[2] + event.translationX > maxDistance.value.x &&
-          event.changeX < 0) ||
+        Math.abs(currentPosition.x) > maxDistance.value.x ||
         adjustedTranslationX.value
       ) {
         /* this prevents overpanning the image past the border, and immediately pans back once the direction is reversed
         working out overpanning took countless late nights to work out and I am extremely proud of this */
-        const translationXAtBorder =
-          maxDistance.value.x - scaledOriginalMatrix[2];
+        const maxDistanceTranslationX =
+          maxDistance.value.x * (currentPosition.x > 0 ? 1 : -1) -
+          scaledOriginalMatrix[2];
         if (
           !adjustedTranslationX.value ||
-          (adjustedTranslationX.value > translationXAtBorder &&
-            event.changeX < 0)
+          (adjustedTranslationX.value > maxDistanceTranslationX &&
+            currentPosition.x > 0) ||
+          (adjustedTranslationX.value < maxDistanceTranslationX &&
+            currentPosition.x < 0)
         ) {
-          // this resets the position every time the image is dragged back away from the border after overpanning
-          adjustedTranslationX.value = translationXAtBorder;
+          // this sets adjustedTranslationX to the border if it overpans
+          adjustedTranslationX.value = maxDistanceTranslationX;
         }
         adjustedTranslationX.value += event.changeX;
       }
