@@ -44,7 +44,7 @@ const ImageViewer = () => {
   const finalValueX = useSharedValue(null);
   const useFinalValue = useSharedValue(false);
 
-  const adjustedForBorderX = useSharedValue(0);
+  const adjustedTranslationX = useSharedValue(0);
 
   const getMatrix = (translation, origin, pinchScale) => {
     "worklet";
@@ -99,16 +99,22 @@ const ImageViewer = () => {
       if (
         (scaledOriginalMatrix[2] + event.translationX > maxDistance.value.x &&
           event.changeX < 0) ||
-        adjustedForBorderX.value
+        adjustedTranslationX.value
       ) {
-        if (!adjustedForBorderX.value)
-          adjustedForBorderX.value =
-            maxDistance.value.x - scaledOriginalMatrix[2];
-        adjustedForBorderX.value += event.changeX;
-        console.log(event.changeX);
+        /* this prevents overpanning the image past the border, and immediately pans back once the direction is reversed
+        working out overpanning took countless late nights to work out and I am extremely proud of this */
+        const translationXAtBorder =
+          maxDistance.value.x - scaledOriginalMatrix[2];
+        if (
+          !adjustedTranslationX.value ||
+          (adjustedTranslationX.value > translationXAtBorder && event.changeX < 0)
+        )
+          // this resets the position every time the image is dragged back away from the border after overpanning
+          adjustedTranslationX.value = translationXAtBorder;
+        adjustedTranslationX.value += event.changeX;
       }
       translation.value = {
-        x: adjustedForBorderX.value || event.translationX,
+        x: adjustedTranslationX.value || event.translationX,
         y: event.translationY,
       };
       return;
@@ -122,7 +128,7 @@ const ImageViewer = () => {
       );
       transform.value = multiply3(matrix, transform.value);
       translation.value = { x: 0, y: 0 };
-      adjustedForBorderX.value = 0;
+      adjustedTranslationX.value = 0;
     });
 
   const animatedStyle = useAnimatedStyle(() => {
