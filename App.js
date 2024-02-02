@@ -139,22 +139,19 @@ const ImageViewer = () => {
       coordsAtBorderCrossing.value.x = 0;
     }
     let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
-    maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
+    const imageHeight = measured.width * 1.33333333;
+    // maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
+    maxDistance.value = {
+      x: (measured.width * matrix[0] - measured.width) / 2,
+      y: (imageHeight * matrix[0] - imageHeight) / 2,
+    };
     coordsAtBorderCrossing.value.x =
       maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
     // TODO: get this working with the y axis as well
-    const imageHeight = measured.width * 1.33333333;
     // if (imageHeight * scale.value < measured.height) {
     //   matrix[5] = 0;
     // }
     // isOverBorder.value = false;
-
-    // TODO: is this the best place to put maxDistance? Does this need to be a shared value?
-    // console.log(matrix[2] > maxDistance.value.x);
-
-    if (matrix[2] > maxDistance.value.x) {
-      matrix[2] = coordsAtBorderCrossing.value.x;
-    }
 
     return {
       transform: [
