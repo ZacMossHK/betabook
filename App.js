@@ -34,16 +34,8 @@ const ImageViewer = () => {
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
-  const coordsPastBorder = useSharedValue({
-    translation: { x: 0, y: 0 },
-    origin: { x: 0, y: 0 },
-    pinchScale: 1,
-  });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
   const coordsAtBorderCrossing = useSharedValue({ x: 0, y: 0 });
-  const finalValueX = useSharedValue(null);
-  const useFinalValue = useSharedValue(false);
-
   const adjustedTranslationX = useSharedValue(0);
 
   const getMatrix = (translation, origin, pinchScale) => {
@@ -107,10 +99,12 @@ const ImageViewer = () => {
           maxDistance.value.x - scaledOriginalMatrix[2];
         if (
           !adjustedTranslationX.value ||
-          (adjustedTranslationX.value > translationXAtBorder && event.changeX < 0)
-        )
+          (adjustedTranslationX.value > translationXAtBorder &&
+            event.changeX < 0)
+        ) {
           // this resets the position every time the image is dragged back away from the border after overpanning
           adjustedTranslationX.value = translationXAtBorder;
+        }
         adjustedTranslationX.value += event.changeX;
       }
       translation.value = {
@@ -142,17 +136,7 @@ const ImageViewer = () => {
     ) {
       // this resets the transform at the edge if trying to pan outside of the image's boundaries
       transform.value[2] = coordsAtBorderCrossing.value.x;
-      if (useFinalValue.value) {
-        transform.value[2] = finalValueX.value;
-      }
-
       coordsAtBorderCrossing.value.x = 0;
-      coordsPastBorder.value = {
-        translation: { x: 0, y: 0 },
-        origin: { x: 0, y: 0 },
-        pinchScale: 1,
-      };
-      useFinalValue.value = false;
     }
     let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
     maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
@@ -168,35 +152,9 @@ const ImageViewer = () => {
     // TODO: is this the best place to put maxDistance? Does this need to be a shared value?
     // console.log(matrix[2] > maxDistance.value.x);
 
-    const coordsPastBorderMatrix = getMatrix(
-      coordsPastBorder.value.translation,
-      coordsPastBorder.value.origin,
-      coordsPastBorder.value.pinchScale
-    );
-    finalValueX.value =
-      maxDistance.value.x - (coordsPastBorderMatrix[2] - matrix[2]);
     if (matrix[2] > maxDistance.value.x) {
-      // console.log(Date.now());
-      if (matrix[2] > coordsPastBorderMatrix[2]) {
-        // this value sets the furthest point past the border so that we can then subtract the distance between there and the border to get our new position
-        // border - (coordsPastBorderTranslation - current translation)
-        coordsPastBorder.value = {
-          translation: { ...translation.value },
-          origin: { ...origin.value },
-          pinchScale: pinchScale.value,
-        };
-        useFinalValue.value = false;
-      } else {
-        // useFinalValue.value = true; // this is causing an issue!!!
-      }
       matrix[2] = coordsAtBorderCrossing.value.x;
     }
-
-    if (useFinalValue.value) matrix[2] = finalValueX.value;
-    // if (matrix[2] < -maxDistance.value.x) {
-    //   console.log("HI");
-    //   matrix[2] = -maxDistance.value.x;
-    // }
 
     return {
       transform: [
