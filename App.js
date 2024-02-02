@@ -12,21 +12,21 @@ import Animated, {
   useSharedValue,
   useAnimatedRef,
   measure,
-  useDerivedValue,
 } from "react-native-reanimated";
 import { identity3, multiply3 } from "react-native-redash";
 
-function translateMatrix(matrix, x, y) {
+const translateMatrix = (matrix, x, y) => {
   "worklet";
   return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
-}
+};
 
-function scaleMatrix(matrox, value) {
+const scaleMatrix = (matrix, value) => {
   "worklet";
-  return multiply3(matrox, [value, 0, 0, 0, value, 0, 0, 0, 1]);
-}
+  return multiply3(matrix, [value, 0, 0, 0, value, 0, 0, 0, 1]);
+};
 
 const image = require("./assets/IMG_20230716_184450.jpg");
+
 const ImageViewer = () => {
   const ref = useAnimatedRef();
   const origin = useSharedValue({ x: 0, y: 0 });
@@ -35,7 +35,6 @@ const ImageViewer = () => {
   const baseScale = useSharedValue(1);
   const translation = useSharedValue({ x: 0, y: 0 });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
-  const coordsAtBorderCrossing = useSharedValue({ x: 0, y: 0 });
   const adjustedTranslationX = useSharedValue(0);
 
   const getMatrix = (translation, origin, pinchScale) => {
@@ -70,7 +69,6 @@ const ImageViewer = () => {
       }
     })
     .onEnd(() => {
-      console.log("pinch");
       let matrix = identity3;
       matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
       matrix = scaleMatrix(matrix, pinchScale.value);
@@ -127,31 +125,34 @@ const ImageViewer = () => {
 
   const animatedStyle = useAnimatedStyle(() => {
     const measured = measure(ref);
+
     if (!measured) return {};
+
     if (
       !translation.value.x &&
       !translation.value.y &&
-      pinchScale.value === 1 &&
-      transform.value[2] > maxDistance.value.x
+      pinchScale.value === 1
     ) {
       // this resets the transform at the edge if trying to pan outside of the image's boundaries
-      transform.value[2] = coordsAtBorderCrossing.value.x;
-      coordsAtBorderCrossing.value.x = 0;
+      if (Math.abs(transform.value[2]) > maxDistance.value.x) {
+        transform.value[2] =
+          maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
+      }
     }
+
     let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
-    const imageHeight = measured.width * 1.33333333;
-    // maxDistance.value.x = (measured.width * matrix[0] - measured.width) / 2;
-    maxDistance.value = {
-      x: (measured.width * matrix[0] - measured.width) / 2,
-      y: (imageHeight * matrix[0] - imageHeight) / 2,
+
+    const getMaxDistance = (dimension) => {
+      "worklet";
+      return (dimension * matrix[0] - dimension) / 2;
     };
-    coordsAtBorderCrossing.value.x =
-      maxDistance.value.x * (matrix[2] >= 0 ? 1 : -1);
-    // TODO: get this working with the y axis as well
-    // if (imageHeight * scale.value < measured.height) {
-    //   matrix[5] = 0;
-    // }
-    // isOverBorder.value = false;
+
+    const imageHeight = measured.width * 1.33333333;
+
+    maxDistance.value = {
+      x: getMaxDistance(measured.width),
+      y: getMaxDistance(imageHeight),
+    };
 
     return {
       transform: [
