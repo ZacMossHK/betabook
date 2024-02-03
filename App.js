@@ -114,7 +114,6 @@ const ImageViewer = () => {
         x: adjustedTranslationX.value || event.translationX,
         y: event.translationY,
       };
-      return;
     })
     .onEnd(() => {
       let matrix = identity3;
@@ -138,25 +137,22 @@ const ImageViewer = () => {
       !translation.value.y &&
       pinchScale.value === 1
     ) {
-      // this resets the transform at the edge if trying to pan outside of the image's boundaries
       if (Math.abs(transform.value[2]) > maxDistance.value.x) {
+        // this resets the transform at the edge if trying to pan outside of the image's boundaries
         transform.value[2] =
           maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
+      } else {
+        return; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
       }
     }
 
     let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
-
-    const getMaxDistance = (dimension) => {
-      "worklet";
-      return (dimension * matrix[0] - dimension) / 2;
-    };
-
     const imageHeight = measured.width * 1.33333333;
-
     maxDistance.value = {
-      x: getMaxDistance(measured.width),
-      y: getMaxDistance(imageHeight),
+      x: (measured.width * matrix[0] - measured.width) / 2,
+      // the max distance for y will be a negative number so needs .abs to turn it into a positive number
+      // TODO: This will NOT work if the image is landscape rather than portrait!
+      y: Math.abs(Math.min((measured.height - imageHeight * matrix[0]) / 2, 0)),
     };
 
     return {
@@ -167,7 +163,9 @@ const ImageViewer = () => {
             Math.min(maxDistance.value.x, matrix[2])
           ),
         },
-        { translateY: matrix[5] },
+        {
+          translateY: matrix[5],
+        },
         { scaleX: matrix[0] },
         { scaleY: matrix[4] },
       ],
