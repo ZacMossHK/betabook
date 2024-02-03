@@ -36,6 +36,7 @@ const ImageViewer = () => {
   const translation = useSharedValue({ x: 0, y: 0 });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
   const adjustedTranslationX = useSharedValue(0);
+  const isViewRendered = useSharedValue(false);
 
   const getMatrix = (translation, origin, pinchScale) => {
     "worklet";
@@ -128,6 +129,9 @@ const ImageViewer = () => {
     });
 
   const animatedStyle = useAnimatedStyle(() => {
+    // necessary as measuring a view that has not rendered properly will produce a warning
+    if (!isViewRendered.value) return {};
+
     const measured = measure(ref);
 
     if (!measured) return {};
@@ -154,7 +158,7 @@ const ImageViewer = () => {
       // TODO: This will NOT work if the image is landscape rather than portrait!
       y: Math.abs(Math.min((measured.height - imageHeight * matrix[0]) / 2, 0)),
     };
-
+    console.log(matrix[5]);
     return {
       transform: [
         {
@@ -174,7 +178,14 @@ const ImageViewer = () => {
 
   return (
     <GestureDetector gesture={Gesture.Simultaneous(pinch, pan)}>
-      <Animated.View ref={ref} collapsable={false} style={[styles.fullscreen]}>
+      <Animated.View
+        onLayout={() => {
+          if (ref.current) isViewRendered.value = true;
+        }}
+        ref={ref}
+        collapsable={false}
+        style={[styles.fullscreen]}
+      >
         <Animated.Image
           source={image}
           resizeMode={"contain"}
