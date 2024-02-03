@@ -190,6 +190,7 @@ const ImageViewer = () => {
           source={image}
           resizeMode={"contain"}
           style={[styles.fullscreen, animatedStyle]}
+          fadeDuration={0}
         />
       </Animated.View>
     </GestureDetector>
