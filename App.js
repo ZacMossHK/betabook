@@ -12,7 +12,6 @@ import Animated, {
   useSharedValue,
   useAnimatedRef,
   measure,
-  interpolate,
 } from "react-native-reanimated";
 import { identity3, multiply3 } from "react-native-redash";
 
@@ -73,11 +72,6 @@ const ImageViewer = () => {
       const measured = measure(ref);
 
       if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
-      const currentScale = getMatrix(
-        translation.value,
-        origin.value,
-        pinchScale.value
-      )[0];
 
       if (maxDistance.value.y && !origin.value.y) {
         transform.value = multiply3(
