@@ -90,6 +90,7 @@ const ImageViewer = () => {
 
       const scaleChangeSinceStart = adjustedScale.value || event.scale;
 
+      // TODO: replace baseScale with the actual current scale from matrix[0]
       if (scaleChangeSinceStart * baseScale.value <= 1) {
         pinchScale.value = 1 / baseScale.value;
       } else if (scaleChangeSinceStart * baseScale.value >= 5) {
@@ -116,8 +117,13 @@ const ImageViewer = () => {
         origin.value,
         pinchScale.value
       );
+      // adjustedTranslationY.value is always 0 unless vertical translation is valid
+      adjustedTranslationY.value = maxDistance.value.y
+        ? adjustedTranslationY.value + event.changeY
+        : 0;
       const currentPosition = {
         x: scaledOriginalMatrix[2] + event.translationX,
+        y: scaledOriginalMatrix[5] + adjustedTranslationY.value,
       };
 
       if (
@@ -142,10 +148,13 @@ const ImageViewer = () => {
         adjustedTranslationX.value += event.changeX;
       }
 
-      // adjustedTranslationY.value is always 0 unless vertical translation is valid
-      adjustedTranslationY.value = maxDistance.value.y
-        ? adjustedTranslationY.value + event.changeY
-        : 0;
+      if (Math.abs(currentPosition.y) > maxDistance.value.y) {
+        // this allows an overpanned image to immediately pan back vertically once the vertical direction is reverse away from the border
+        adjustedTranslationY.value =
+          maxDistance.value.y * (currentPosition.y > 0 ? 1 : -1) -
+          scaledOriginalMatrix[5];
+      }
+
       translation.value = {
         x: adjustedTranslationX.value || event.translationX,
         y: adjustedTranslationY.value,
@@ -187,7 +196,7 @@ const ImageViewer = () => {
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
 
-    let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
+    const matrix = getMatrix(translation.value, origin.value, pinchScale.value);
     const imageHeight = measured.width * 1.33333333;
     maxDistance.value = {
       x: (measured.width * matrix[0] - measured.width) / 2,
