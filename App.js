@@ -26,6 +26,13 @@ const scaleMatrix = (matrix, value) => {
   return multiply3(matrix, [value, 0, 0, 0, value, 0, 0, 0, 1]);
 };
 
+const translateAndScaleMatrix = (matrix, origin, pinchScale) => {
+  "worklet";
+  matrix = translateMatrix(matrix, origin.x, origin.y);
+  matrix = scaleMatrix(matrix, pinchScale);
+  return translateMatrix(matrix, -origin.x, -origin.y);
+};
+
 const image = require("./assets/IMG_20230716_184450.jpg");
 
 const ImageViewer = () => {
@@ -48,9 +55,7 @@ const ImageViewer = () => {
       matrix = translateMatrix(matrix, translation.x, translation.y);
     }
     if (pinchScale !== 1) {
-      matrix = translateMatrix(matrix, origin.x, origin.y);
-      matrix = scaleMatrix(matrix, pinchScale);
-      matrix = translateMatrix(matrix, -origin.x, -origin.y);
+      matrix = translateAndScaleMatrix(matrix, origin, pinchScale);
     }
     return multiply3(matrix, transform.value);
   };
@@ -75,11 +80,10 @@ const ImageViewer = () => {
       )[0];
 
       if (maxDistance.value.y && !origin.value.y) {
-        let matrix = identity3;
-        matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-        matrix = scaleMatrix(matrix, pinchScale.value);
-        matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
-        transform.value = multiply3(matrix, transform.value);
+        transform.value = multiply3(
+          translateAndScaleMatrix(identity3, origin.value, pinchScale.value),
+          transform.value
+        );
         baseScale.value *= pinchScale.value;
         pinchScale.value = 1;
         origin.value.y = event.focalY - measured.height / 2;
@@ -101,11 +105,10 @@ const ImageViewer = () => {
       }
     })
     .onEnd(() => {
-      let matrix = identity3;
-      matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
-      matrix = scaleMatrix(matrix, pinchScale.value);
-      matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
-      transform.value = multiply3(matrix, transform.value);
+      transform.value = multiply3(
+        translateAndScaleMatrix(identity3, origin.value, pinchScale.value),
+        transform.value
+      );
       baseScale.value *= pinchScale.value;
       pinchScale.value = 1;
       adjustedScale.value = 0;
@@ -155,13 +158,10 @@ const ImageViewer = () => {
       };
     })
     .onEnd(() => {
-      let matrix = identity3;
-      matrix = translateMatrix(
-        matrix,
-        translation.value.x,
-        translation.value.y
+      transform.value = multiply3(
+        translateMatrix(identity3, translation.value.x, translation.value.y),
+        transform.value
       );
-      transform.value = multiply3(matrix, transform.value);
       translation.value = { x: 0, y: 0 };
       adjustedTranslationX.value = 0;
       adjustedTranslationY.value = 0;
