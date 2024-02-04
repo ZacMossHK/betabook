@@ -12,6 +12,7 @@ import Animated, {
   useSharedValue,
   useAnimatedRef,
   measure,
+  interpolate,
 } from "react-native-reanimated";
 import { identity3, multiply3 } from "react-native-redash";
 
@@ -36,7 +37,9 @@ const ImageViewer = () => {
   const translation = useSharedValue({ x: 0, y: 0 });
   const maxDistance = useSharedValue({ x: 0, y: 0 });
   const adjustedTranslationX = useSharedValue(0);
+  const adjustedTranslationY = useSharedValue(0);
   const isViewRendered = useSharedValue(false);
+  const adjustedScale = useSharedValue(0);
 
   const getMatrix = (translation, origin, pinchScale) => {
     "worklet";
@@ -57,16 +60,44 @@ const ImageViewer = () => {
       const measured = measure(ref);
       origin.value = {
         x: event.focalX - measured.width / 2,
-        y: event.focalY - measured.height / 2,
+        // TODO: this will NOT work if the image is landscape instead of portrait!
+        y: maxDistance.value.y ? event.focalY - measured.height / 2 : 0,
       };
     })
     .onChange((event) => {
-      if (event.scale * baseScale.value <= 1) {
+      const measured = measure(ref);
+
+      if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
+      const currentScale = getMatrix(
+        translation.value,
+        origin.value,
+        pinchScale.value
+      )[0];
+
+      if (maxDistance.value.y && !origin.value.y) {
+        let matrix = identity3;
+        matrix = translateMatrix(matrix, origin.value.x, origin.value.y);
+        matrix = scaleMatrix(matrix, pinchScale.value);
+        matrix = translateMatrix(matrix, -origin.value.x, -origin.value.y);
+        transform.value = multiply3(matrix, transform.value);
+        baseScale.value *= pinchScale.value;
+        pinchScale.value = 1;
+        origin.value.y = event.focalY - measured.height / 2;
+        adjustedScale.value = 1;
+      }
+
+      if (!maxDistance.value.y && adjustedScale.value) {
+        origin.value.y = 0;
+      }
+
+      const scaleChangeSinceStart = adjustedScale.value || event.scale;
+
+      if (scaleChangeSinceStart * baseScale.value <= 1) {
         pinchScale.value = 1 / baseScale.value;
-      } else if (event.scale * baseScale.value >= 5) {
+      } else if (scaleChangeSinceStart * baseScale.value >= 5) {
         pinchScale.value = 5 / baseScale.value;
       } else {
-        pinchScale.value = event.scale;
+        pinchScale.value = scaleChangeSinceStart;
       }
     })
     .onEnd(() => {
@@ -77,6 +108,7 @@ const ImageViewer = () => {
       transform.value = multiply3(matrix, transform.value);
       baseScale.value *= pinchScale.value;
       pinchScale.value = 1;
+      adjustedScale.value = 0;
     });
 
   const pan = Gesture.Pan()
@@ -90,6 +122,7 @@ const ImageViewer = () => {
       const currentPosition = {
         x: scaledOriginalMatrix[2] + event.translationX,
       };
+
       if (
         Math.abs(currentPosition.x) > maxDistance.value.x ||
         adjustedTranslationX.value
@@ -111,9 +144,14 @@ const ImageViewer = () => {
         }
         adjustedTranslationX.value += event.changeX;
       }
+
+      // adjustedTranslationY.value is always 0 unless vertical translation is valid
+      adjustedTranslationY.value = maxDistance.value.y
+        ? adjustedTranslationY.value + event.changeY
+        : 0;
       translation.value = {
         x: adjustedTranslationX.value || event.translationX,
-        y: event.translationY,
+        y: adjustedTranslationY.value,
       };
     })
     .onEnd(() => {
@@ -126,6 +164,7 @@ const ImageViewer = () => {
       transform.value = multiply3(matrix, transform.value);
       translation.value = { x: 0, y: 0 };
       adjustedTranslationX.value = 0;
+      adjustedTranslationY.value = 0;
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -145,9 +184,13 @@ const ImageViewer = () => {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
         transform.value[2] =
           maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
-      } else {
-        return; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
       }
+      if (Math.abs(transform.value[5]) > maxDistance.value.y) {
+        // this resets the transform at the edge if trying to pan outside of the image's boundaries
+        transform.value[5] =
+          maxDistance.value.y * (transform.value[5] > 0 ? 1 : -1);
+      }
+      return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
 
     let matrix = getMatrix(translation.value, origin.value, pinchScale.value);
@@ -158,7 +201,6 @@ const ImageViewer = () => {
       // TODO: This will NOT work if the image is landscape rather than portrait!
       y: Math.abs(Math.min((measured.height - imageHeight * matrix[0]) / 2, 0)),
     };
-    console.log(matrix[5]);
     return {
       transform: [
         {
@@ -168,7 +210,10 @@ const ImageViewer = () => {
           ),
         },
         {
-          translateY: matrix[5],
+          translateY: Math.max(
+            -maxDistance.value.y,
+            Math.min(maxDistance.value.y, matrix[5])
+          ),
         },
         { scaleX: matrix[0] },
         { scaleY: matrix[4] },
