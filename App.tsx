@@ -1,7 +1,7 @@
 // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
 import React from "react";
-import { StyleSheet, SafeAreaView } from "react-native";
+import { StyleSheet, SafeAreaView, TransformsStyle } from "react-native";
 import {
   Gesture,
   GestureDetector,
@@ -13,19 +13,23 @@ import Animated, {
   useAnimatedRef,
   measure,
 } from "react-native-reanimated";
-import { identity3, multiply3 } from "react-native-redash";
+import { Matrix3, identity3, multiply3 } from "react-native-redash";
 
-const translateMatrix = (matrix, x, y) => {
+const translateMatrix = (matrix: Matrix3, x: number, y: number): Matrix3 => {
   "worklet";
   return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
 };
 
-const scaleMatrix = (matrix, value) => {
+const scaleMatrix = (matrix: Matrix3, value: number): Matrix3 => {
   "worklet";
   return multiply3(matrix, [value, 0, 0, 0, value, 0, 0, 0, 1]);
 };
 
-const translateAndScaleMatrix = (matrix, origin, pinchScale) => {
+const translateAndScaleMatrix = (
+  matrix: Matrix3,
+  origin: Coordinates,
+  pinchScale: number
+): Matrix3 => {
   "worklet";
   matrix = translateMatrix(matrix, origin.x, origin.y);
   matrix = scaleMatrix(matrix, pinchScale);
@@ -34,20 +38,41 @@ const translateAndScaleMatrix = (matrix, origin, pinchScale) => {
 
 const image = require("./assets/IMG_20230716_184450.jpg");
 
+interface Coordinates {
+  x: number;
+  y: number;
+}
+
+type TransformableMatrix3 = [
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number,
+  number
+];
+
 const ImageViewer = () => {
   const ref = useAnimatedRef();
-  const origin = useSharedValue({ x: 0, y: 0 });
+  const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
   const baseScale = useSharedValue(1);
-  const translation = useSharedValue({ x: 0, y: 0 });
-  const maxDistance = useSharedValue({ x: 0, y: 0 });
+  const translation = useSharedValue<Coordinates>({ x: 0, y: 0 });
+  const maxDistance = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const isViewRendered = useSharedValue(false);
   const adjustedScale = useSharedValue(0);
 
-  const getMatrix = (translation, origin, pinchScale) => {
+  const getMatrix = (
+    translation: Coordinates,
+    origin: Coordinates,
+    pinchScale: number
+  ): Matrix3 => {
     "worklet";
     let matrix = identity3;
     if (translation.x !== 0 || translation.y !== 0) {
@@ -62,6 +87,7 @@ const ImageViewer = () => {
   const pinch = Gesture.Pinch()
     .onStart((event) => {
       const measured = measure(ref);
+      if (!measured) return;
       origin.value = {
         x: event.focalX - measured.width / 2,
         // TODO: this will NOT work if the image is landscape instead of portrait!
@@ -70,6 +96,7 @@ const ImageViewer = () => {
     })
     .onChange((event) => {
       const measured = measure(ref);
+      if (!measured) return;
 
       if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
 
@@ -170,7 +197,7 @@ const ImageViewer = () => {
       adjustedTranslationY.value = 0;
     });
 
-  const animatedStyle = useAnimatedStyle(() => {
+  const animatedStyle = useAnimatedStyle((): TransformsStyle => {
     // necessary as measuring a view that has not rendered properly will produce a warning
     if (!isViewRendered.value) return {};
 
@@ -183,16 +210,17 @@ const ImageViewer = () => {
       !translation.value.y &&
       pinchScale.value === 1
     ) {
+      const newMatrix = [...transform.value] as TransformableMatrix3;
+
       if (Math.abs(transform.value[2]) > maxDistance.value.x) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
-        transform.value[2] =
-          maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
+        newMatrix[2] = maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
       }
       if (Math.abs(transform.value[5]) > maxDistance.value.y) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
-        transform.value[5] =
-          maxDistance.value.y * (transform.value[5] > 0 ? 1 : -1);
+        newMatrix[5] = maxDistance.value.y * (transform.value[5] > 0 ? 1 : -1);
       }
+      transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
 
