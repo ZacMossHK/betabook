@@ -19,6 +19,7 @@ import Animated, {
   useSharedValue,
   useAnimatedRef,
   measure,
+  useDerivedValue,
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
 
@@ -45,7 +46,7 @@ const translateAndScaleMatrix = (
 
 const image = require("./assets/IMG_20230716_184450.jpg");
 
-interface Coordinates {
+export interface Coordinates {
   x: number;
   y: number;
 }
@@ -75,7 +76,6 @@ const ImageViewer = () => {
   const isViewRendered = useSharedValue(false);
   const adjustedScale = useSharedValue(0);
   const nodePosition = useSharedValue<Coordinates>({ x: 100, y: 100 });
-  const nodeTransform = useSharedValue(identity3);
   const isNodeVisible = useSharedValue(false);
 
   const getMatrix = (
@@ -93,6 +93,10 @@ const ImageViewer = () => {
     }
     return multiply3(matrix, transform.value);
   };
+
+  const imageMatrix = useDerivedValue(() =>
+    getMatrix(translation.value, origin.value, pinchScale.value)
+  );
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -214,21 +218,6 @@ const ImageViewer = () => {
     .onStart((e) => {
       const offset = 25;
       nodePosition.value = { x: e.x - offset, y: e.y - offset };
-      const currentPosition = getMatrix(
-        translation.value,
-        origin.value,
-        pinchScale.value
-      );
-      const newNodeTransform = [...identity3] as TransformableMatrix3;
-      newNodeTransform[0] = currentPosition[0];
-      newNodeTransform[2] = e.x - 25;
-      newNodeTransform[4] = currentPosition[4];
-      newNodeTransform[5] = e.y - 25;
-      // nodeTransform.value = scaleMatrix(
-      //   newNodeTransform as Matrix3,
-      //   currentPosition[0]
-      // );
-      nodeTransform.value = newNodeTransform;
       isNodeVisible.value = true;
     });
   // .onEnd(() => setIsSelectingNode(false));
@@ -260,30 +249,31 @@ const ImageViewer = () => {
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
 
-    const matrix = getMatrix(translation.value, origin.value, pinchScale.value);
     const imageHeight = measured.width * 1.33333333;
     maxDistance.value = {
-      x: (measured.width * matrix[0] - measured.width) / 2,
+      x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
       // the max distance for y will be a negative number so needs .abs to turn it into a positive number
       // TODO: This will NOT work if the image is landscape rather than portrait!
-      y: Math.abs(Math.min((measured.height - imageHeight * matrix[0]) / 2, 0)),
+      y: Math.abs(
+        Math.min((measured.height - imageHeight * imageMatrix.value[0]) / 2, 0)
+      ),
     };
     return {
       transform: [
         {
           translateX: Math.max(
             -maxDistance.value.x,
-            Math.min(maxDistance.value.x, matrix[2])
+            Math.min(maxDistance.value.x, imageMatrix.value[2])
           ),
         },
         {
           translateY: Math.max(
             -maxDistance.value.y,
-            Math.min(maxDistance.value.y, matrix[5])
+            Math.min(maxDistance.value.y, imageMatrix.value[5])
           ),
         },
-        { scaleX: matrix[0] },
-        { scaleY: matrix[4] },
+        { scaleX: imageMatrix.value[0] },
+        { scaleY: imageMatrix.value[4] },
       ],
     };
   });
@@ -300,11 +290,6 @@ const ImageViewer = () => {
               if (!isViewRendered.value) return {};
               const measured = measure(ref);
               if (!measured) return {};
-              const currentPosition = getMatrix(
-                translation.value,
-                origin.value,
-                pinchScale.value
-              );
               /* This View is the container for all the Move Nodes, and its movement should track along with the image.
               The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
               Instead, the node coordinates are scaled according to the scale of the image,
@@ -319,18 +304,19 @@ const ImageViewer = () => {
                     translateX:
                       Math.max(
                         -maxDistance.value.x,
-                        Math.min(maxDistance.value.x, currentPosition[2])
+                        Math.min(maxDistance.value.x, imageMatrix.value[2])
                       ) -
-                      (measured.width * currentPosition[0] - measured.width) /
+                      (measured.width * imageMatrix.value[0] - measured.width) /
                         2,
                   },
                   {
                     translateY:
                       Math.max(
                         -maxDistance.value.y,
-                        Math.min(maxDistance.value.y, currentPosition[5])
+                        Math.min(maxDistance.value.y, imageMatrix.value[5])
                       ) -
-                      (measured.height * currentPosition[0] - measured.height) /
+                      (measured.height * imageMatrix.value[0] -
+                        measured.height) /
                         2,
                   },
                 ],
@@ -351,19 +337,10 @@ const ImageViewer = () => {
                 flex: 1,
               },
               useAnimatedStyle(() => {
-                if (!isNodeVisible.value) return {};
-                const getCurrentNodePosition = (coordinate: number) => {
-                  const currentPosition = getMatrix(
-                    translation.value,
-                    origin.value,
-                    pinchScale.value
-                  );
-                  return (
-                    coordinate * currentPosition[0] +
-                    25 * currentPosition[0] -
-                    25
-                  );
-                };
+                const getCurrentNodePosition = (coordinate: number) =>
+                  coordinate * imageMatrix.value[0] +
+                  25 * imageMatrix.value[0] -
+                  25;
                 return {
                   top: getCurrentNodePosition(nodePosition.value.y),
                   left: getCurrentNodePosition(nodePosition.value.x),
