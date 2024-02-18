@@ -215,9 +215,32 @@ const ImageViewer = () => {
     // .enabled(!isSelectingNode)
     .minDuration(300)
     // .onStart(applyImage)
-    .onStart((e) => {
-      const offset = 25;
-      nodePosition.value = { x: e.x - offset, y: e.y - offset };
+    .onStart((event) => {
+      const measured = measure(ref);
+      if (!measured) return {};
+      const nodeSizeOffset = 25;
+
+      const getNewNodePosition = (
+        dimensionMeasurement: number,
+        imagePositionCoordinate: number,
+        eventCoordinate: number
+      ) => {
+        /* TODO:  (dimensionMeasurement * imageMatrix.value[0] - dimensionMeasurement) / 2 
+        This formulae matches the one from maxDistance, can this be refactored? */
+        const imageEdgeOffset =
+          (dimensionMeasurement * imageMatrix.value[0] - dimensionMeasurement) /
+            2 -
+          imagePositionCoordinate;
+        return (
+          (imageEdgeOffset + eventCoordinate) / imageMatrix.value[0] -
+          nodeSizeOffset
+        );
+      };
+
+      nodePosition.value = {
+        x: getNewNodePosition(measured.width, imageMatrix.value[2], event.x),
+        y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
+      };
       isNodeVisible.value = true;
     });
   // .onEnd(() => setIsSelectingNode(false));
@@ -298,7 +321,6 @@ const ImageViewer = () => {
               The formulae for working out how far the View has to move to match the position of the scale image is:
               distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
               return {
-                display: isNodeVisible.value ? "flex" : "none",
                 transform: [
                   {
                     translateX:
