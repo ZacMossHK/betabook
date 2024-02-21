@@ -1,6 +1,6 @@
 // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
-import React from "react";
+import React, { useState } from "react";
 import {
   StyleSheet,
   SafeAreaView,
@@ -20,8 +20,10 @@ import Animated, {
   useAnimatedRef,
   measure,
   useDerivedValue,
+  runOnJS,
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
+import MovementNode from "./src/components/MovementNode";
 
 const translateMatrix = (matrix: Matrix3, x: number, y: number): Matrix3 => {
   "worklet";
@@ -76,7 +78,10 @@ const ImageViewer = () => {
   const isViewRendered = useSharedValue(false);
   const adjustedScale = useSharedValue(0);
   const nodePosition = useSharedValue<Coordinates>({ x: 100, y: 100 });
+  const nodePositions = useSharedValue<Coordinates[]>([]);
   const isNodeVisible = useSharedValue(false);
+
+  const [nodes, setNodes] = useState<any[]>([]);
 
   const getMatrix = (
     translation: Coordinates,
@@ -236,15 +241,15 @@ const ImageViewer = () => {
           nodeSizeOffset
         );
       };
-
-      nodePosition.value = {
-        x: getNewNodePosition(measured.width, imageMatrix.value[2], event.x),
-        y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
-      };
-      isNodeVisible.value = true;
+      runOnJS(setNodes)([
+        ...nodes,
+        {
+          x: getNewNodePosition(measured.width, imageMatrix.value[2], event.x),
+          y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
+        },
+      ]);
     });
   // .onEnd(() => setIsSelectingNode(false));
-
   const animatedStyle = useAnimatedStyle((): TransformsStyle => {
     // necessary as measuring a view that has not rendered properly will produce a warning
     if (!isViewRendered.value) return {};
@@ -300,115 +305,120 @@ const ImageViewer = () => {
       ],
     };
   });
-
-  return (
-    <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
-      <View style={{ flex: 1 }}>
+  
+  const MovementNodeContainer = () => (
+    <Animated.View
+      style={[
+        {
+          zIndex: 2,
+        },
+        useAnimatedStyle(() => {
+          if (!isViewRendered.value) return {};
+          const measured = measure(ref);
+          if (!measured) return {};
+          /* This View is the container for all the Move Nodes, and its movement should track along with the image.
+      The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
+      Instead, the node coordinates are scaled according to the scale of the image,
+      and the move node container then moves so that the coordinates 'appear' to stay in the same place.
+      
+      The formulae for working out how far the View has to move to match the position of the scale image is:
+      distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
+          return {
+            transform: [
+              {
+                translateX:
+                  Math.max(
+                    -maxDistance.value.x,
+                    Math.min(maxDistance.value.x, imageMatrix.value[2])
+                  ) -
+                  (measured.width * imageMatrix.value[0] - measured.width) / 2,
+              },
+              {
+                translateY:
+                  Math.max(
+                    -maxDistance.value.y,
+                    Math.min(maxDistance.value.y, imageMatrix.value[5])
+                  ) -
+                  (measured.height * imageMatrix.value[0] - measured.height) /
+                    2,
+              },
+            ],
+          };
+        }),
+      ]}
+    >
+      {nodes.map((nodePosition, index) => (
         <Animated.View
+          key={index}
           style={[
             {
-              zIndex: 2,
+              width: 50,
+              height: 50,
+              borderRadius: 50,
+              borderColor: "black",
+              borderWidth: 10,
+              position: "absolute",
+              backgroundColor: "white",
+              flex: 1,
             },
             useAnimatedStyle(() => {
-              if (!isViewRendered.value) return {};
-              const measured = measure(ref);
-              if (!measured) return {};
-              /* This View is the container for all the Move Nodes, and its movement should track along with the image.
-              The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
-              Instead, the node coordinates are scaled according to the scale of the image,
-              and the move node container then moves so that the coordinates 'appear' to stay in the same place.
-
-              The formulae for working out how far the View has to move to match the position of the scale image is:
-              distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
+              const getCurrentNodePosition = (coordinate: number) =>
+                coordinate * imageMatrix.value[0] +
+                25 * imageMatrix.value[0] -
+                25;
               return {
-                transform: [
-                  {
-                    translateX:
-                      Math.max(
-                        -maxDistance.value.x,
-                        Math.min(maxDistance.value.x, imageMatrix.value[2])
-                      ) -
-                      (measured.width * imageMatrix.value[0] - measured.width) /
-                        2,
-                  },
-                  {
-                    translateY:
-                      Math.max(
-                        -maxDistance.value.y,
-                        Math.min(maxDistance.value.y, imageMatrix.value[5])
-                      ) -
-                      (measured.height * imageMatrix.value[0] -
-                        measured.height) /
-                        2,
-                  },
-                ],
+                top: getCurrentNodePosition(nodePosition.y),
+                left: getCurrentNodePosition(nodePosition.x),
               };
             }),
           ]}
         >
-          <Animated.View
-            style={[
-              {
-                width: 50,
-                height: 50,
-                borderRadius: 50,
-                borderColor: "black",
-                borderWidth: 10,
-                position: "absolute",
-                backgroundColor: "white",
-                flex: 1,
-              },
-              useAnimatedStyle(() => {
-                const getCurrentNodePosition = (coordinate: number) =>
-                  coordinate * imageMatrix.value[0] +
-                  25 * imageMatrix.value[0] -
-                  25;
-                return {
-                  top: getCurrentNodePosition(nodePosition.value.y),
-                  left: getCurrentNodePosition(nodePosition.value.x),
-                };
-              }),
-            ]}
+          <TouchableWithoutFeedback
+            style={{
+              width: "100%",
+              height: "100%",
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+            // delayLongPress={650}
+            // onPressIn={() => {
+            //   setSelectedNodeIdx(idx);
+            //   setIsSelectingNode(true);
+            //   setIsPanEnabled(true);
+            //   setNodes((prevState) => {
+            //     prevState[idx].borderColor = "red";
+            //     return prevState;
+            //   });
+            // }}
+            // onPress={() => {
+            //   setIsSelectingNode(false);
+            //   setNodes((prevState) => {
+            //     prevState[idx].borderColor = "red";
+            //     return prevState;
+            //   });
+            // }}
+            // onLongPress={() => {
+            //   setNodes((prevState) =>
+            //     prevState.filter(
+            //       (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
+            //     )
+            //   );
+            //   setIsSelectingNode(false);
+            // }}
           >
-            <TouchableWithoutFeedback
-              style={{
-                width: "100%",
-                height: "100%",
-                justifyContent: "center",
-                alignItems: "center",
-              }}
-              // delayLongPress={650}
-              // onPressIn={() => {
-              //   setSelectedNodeIdx(idx);
-              //   setIsSelectingNode(true);
-              //   setIsPanEnabled(true);
-              //   setNodes((prevState) => {
-              //     prevState[idx].borderColor = "red";
-              //     return prevState;
-              //   });
-              // }}
-              // onPress={() => {
-              //   setIsSelectingNode(false);
-              //   setNodes((prevState) => {
-              //     prevState[idx].borderColor = "red";
-              //     return prevState;
-              //   });
-              // }}
-              // onLongPress={() => {
-              //   setNodes((prevState) =>
-              //     prevState.filter(
-              //       (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
-              //     )
-              //   );
-              //   setIsSelectingNode(false);
-              // }}
-            >
-              <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-                {/* {idx + 1} */}1
-              </Text>
-            </TouchableWithoutFeedback>
-          </Animated.View>
+            <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
+              {index}
+            </Text>
+          </TouchableWithoutFeedback>
         </Animated.View>
+      ))}
+    </Animated.View>
+  );
+
+  return (
+    <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
+      <View style={{ flex: 1 }}>
+        <MovementNodeContainer />
         <Animated.View
           onLayout={() => {
             if (ref.current) isViewRendered.value = true;
