@@ -21,6 +21,7 @@ import Animated, {
   measure,
   useDerivedValue,
   runOnJS,
+  runOnUI,
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
 import MovementNode from "./src/components/MovementNode";
@@ -77,9 +78,7 @@ const ImageViewer = () => {
   const adjustedTranslationY = useSharedValue(0);
   const isViewRendered = useSharedValue(false);
   const adjustedScale = useSharedValue(0);
-  const nodePosition = useSharedValue<Coordinates>({ x: 100, y: 100 });
-  const nodePositions = useSharedValue<Coordinates[]>([]);
-  const isNodeVisible = useSharedValue(false);
+  const selectedNodeIndex = useSharedValue<number | null>(null);
 
   const [nodes, setNodes] = useState<any[]>([]);
 
@@ -217,12 +216,17 @@ const ImageViewer = () => {
     });
 
   const longPress = Gesture.LongPress()
-    // .enabled(!isSelectingNode)
     .minDuration(300)
-    // .onStart(applyImage)
+    // .enabled(selectedNodeIndex === null)
     .onStart((event) => {
+      if (selectedNodeIndex.value !== null) {
+        console.log("not null");
+        // selectedNodeIndex.value = null;
+        return;
+      }
+      // if (selectedNodeIndex.value !== null) return;
       const measured = measure(ref);
-      if (!measured) return {};
+      if (!measured) return;
       const nodeSizeOffset = 25;
 
       const getNewNodePosition = (
@@ -248,7 +252,9 @@ const ImageViewer = () => {
           y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
         },
       ]);
+      // selectedNodeIndex = null;
     });
+
   // .onEnd(() => setIsSelectingNode(false));
   const animatedStyle = useAnimatedStyle((): TransformsStyle => {
     // necessary as measuring a view that has not rendered properly will produce a warning
@@ -305,7 +311,7 @@ const ImageViewer = () => {
       ],
     };
   });
-  
+
   const MovementNodeContainer = () => (
     <Animated.View
       style={[
@@ -369,6 +375,8 @@ const ImageViewer = () => {
               return {
                 top: getCurrentNodePosition(nodePosition.y),
                 left: getCurrentNodePosition(nodePosition.x),
+                borderColor:
+                  selectedNodeIndex.value === index ? "red" : "black",
               };
             }),
           ]}
@@ -380,31 +388,52 @@ const ImageViewer = () => {
               justifyContent: "center",
               alignItems: "center",
             }}
-            // delayLongPress={650}
-            // onPressIn={() => {
-            //   setSelectedNodeIdx(idx);
-            //   setIsSelectingNode(true);
-            //   setIsPanEnabled(true);
-            //   setNodes((prevState) => {
-            //     prevState[idx].borderColor = "red";
-            //     return prevState;
-            //   });
-            // }}
+            delayLongPress={700}
+            onPressIn={() => {
+              console.log("in");
+              selectedNodeIndex.value = index;
+              // console.log(selectedNodeIndex.value);
+              // await setSelectedNodeIndex(index);
+              // console.log(selectedNodeIndex);
+              // await setSelectedNodeIndex(index);
+              // console.. log(selectedNodeIndex, "in")
+              // selectedNodeIndex.value = index;
+              // setSelectedNodeIdx(idx);
+              // setIsSelectingNode(true);
+              // setIsPanEnabled(true);
+              // setNodes((prevState) => {
+              //   prevState[idx].borderColor = "red";
+              //   return prevState;
+              // });
+              // setSelectedNodeIndex(index);
+              // console.log("in");
+            }}
             // onPress={() => {
-            //   setIsSelectingNode(false);
-            //   setNodes((prevState) => {
-            //     prevState[idx].borderColor = "red";
-            //     return prevState;
-            //   });
+            //   console.log("press");
+
+            //   selectedNodeIndex.value = null;
+            //   // setIsSelectingNode(false);
+            //   // setNodes((prevState) => {
+            //   //   prevState[idx].borderColor = "red";
+            //   //   return prevState;
+            //   // });
+            //   // isSelectingNode.value = false;
+            //   // setSelectedNodeIndex(null);
+            //   // console.log("press");
             // }}
-            // onLongPress={() => {
-            //   setNodes((prevState) =>
-            //     prevState.filter(
-            //       (a) => !(a.x === nodeAttributes.x && a.y === nodeAttributes.y)
-            //     )
-            //   );
-            //   setIsSelectingNode(false);
-            // }}
+            onLongPress={() => {
+              console.log("long");
+              // selectedNodeIndex.value = null;
+            }}
+            onPressOut={() => {
+              console.log("out");
+              selectedNodeIndex.value = null;
+              // await setSelectedNodeIndex(null);
+              // console.log(selectedNodeIndex);
+              // console.log("out");
+              // selectedNodeIndex.value = null;
+              // await setSelectedNodeIndex(null);
+            }}
           >
             <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
               {index}
@@ -416,9 +445,16 @@ const ImageViewer = () => {
   );
 
   return (
-    <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
-      <View style={{ flex: 1 }}>
-        <MovementNodeContainer />
+    <View style={{ flex: 1 }}>
+      <MovementNodeContainer />
+      <GestureDetector
+        gesture={Gesture.Simultaneous(
+          // movementNodeLongPress,
+          longPress,
+          pinch,
+          pan
+        )}
+      >
         <Animated.View
           onLayout={() => {
             if (ref.current) isViewRendered.value = true;
@@ -434,8 +470,8 @@ const ImageViewer = () => {
             fadeDuration={0}
           />
         </Animated.View>
-      </View>
-    </GestureDetector>
+      </GestureDetector>
+    </View>
   );
 };
 
