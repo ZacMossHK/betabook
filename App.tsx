@@ -217,14 +217,7 @@ const ImageViewer = () => {
 
   const longPress = Gesture.LongPress()
     .minDuration(300)
-    // .enabled(selectedNodeIndex === null)
     .onStart((event) => {
-      if (selectedNodeIndex.value !== null) {
-        console.log("not null");
-        // selectedNodeIndex.value = null;
-        return;
-      }
-      // if (selectedNodeIndex.value !== null) return;
       const measured = measure(ref);
       if (!measured) return;
       const nodeSizeOffset = 25;
@@ -245,6 +238,7 @@ const ImageViewer = () => {
           nodeSizeOffset
         );
       };
+
       runOnJS(setNodes)([
         ...nodes,
         {
@@ -252,10 +246,8 @@ const ImageViewer = () => {
           y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
         },
       ]);
-      // selectedNodeIndex = null;
     });
 
-  // .onEnd(() => setIsSelectingNode(false));
   const animatedStyle = useAnimatedStyle((): TransformsStyle => {
     // necessary as measuring a view that has not rendered properly will produce a warning
     if (!isViewRendered.value) return {};
@@ -323,12 +315,12 @@ const ImageViewer = () => {
           const measured = measure(ref);
           if (!measured) return {};
           /* This View is the container for all the Move Nodes, and its movement should track along with the image.
-      The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
-      Instead, the node coordinates are scaled according to the scale of the image,
-      and the move node container then moves so that the coordinates 'appear' to stay in the same place.
-      
-      The formulae for working out how far the View has to move to match the position of the scale image is:
-      distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
+          The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
+          Instead, the node coordinates are scaled according to the scale of the image,
+          and the move node container then moves so that the coordinates 'appear' to stay in the same place.
+          
+          The formulae for working out how far the View has to move to match the position of the scale image is:
+          distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
           return {
             transform: [
               {
