@@ -353,9 +353,9 @@ const ImageViewer = () => {
         }),
       ]}
     >
-      {nodes.map((nodePosition, index) => (
+      {nodes.map((nodePosition, nodeIndex) => (
         <Animated.View
-          key={index}
+          key={nodeIndex}
           style={[
             {
               width: 50,
@@ -376,7 +376,7 @@ const ImageViewer = () => {
                 top: getCurrentNodePosition(nodePosition.y),
                 left: getCurrentNodePosition(nodePosition.x),
                 borderColor:
-                  selectedNodeIndex.value === index ? "red" : "black",
+                  selectedNodeIndex.value === nodeIndex ? "red" : "black",
               };
             }),
           ]}
@@ -388,55 +388,25 @@ const ImageViewer = () => {
               justifyContent: "center",
               alignItems: "center",
             }}
-            delayLongPress={700}
+            delayLongPress={800}
             onPressIn={() => {
-              console.log("in");
-              selectedNodeIndex.value = index;
-              // console.log(selectedNodeIndex.value);
-              // await setSelectedNodeIndex(index);
-              // console.log(selectedNodeIndex);
-              // await setSelectedNodeIndex(index);
-              // console.. log(selectedNodeIndex, "in")
-              // selectedNodeIndex.value = index;
-              // setSelectedNodeIdx(idx);
-              // setIsSelectingNode(true);
-              // setIsPanEnabled(true);
-              // setNodes((prevState) => {
-              //   prevState[idx].borderColor = "red";
-              //   return prevState;
-              // });
-              // setSelectedNodeIndex(index);
-              // console.log("in");
+              selectedNodeIndex.value = nodeIndex;
             }}
-            // onPress={() => {
-            //   console.log("press");
-
-            //   selectedNodeIndex.value = null;
-            //   // setIsSelectingNode(false);
-            //   // setNodes((prevState) => {
-            //   //   prevState[idx].borderColor = "red";
-            //   //   return prevState;
-            //   // });
-            //   // isSelectingNode.value = false;
-            //   // setSelectedNodeIndex(null);
-            //   // console.log("press");
-            // }}
             onLongPress={() => {
-              console.log("long");
-              // selectedNodeIndex.value = null;
+              selectedNodeIndex.value = null;
+              setNodes(
+                // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
+                nodes.filter(
+                  (node, indexToFilter) => indexToFilter !== nodeIndex
+                )
+              );
             }}
             onPressOut={() => {
-              console.log("out");
               selectedNodeIndex.value = null;
-              // await setSelectedNodeIndex(null);
-              // console.log(selectedNodeIndex);
-              // console.log("out");
-              // selectedNodeIndex.value = null;
-              // await setSelectedNodeIndex(null);
             }}
           >
             <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-              {index}
+              {nodeIndex}
             </Text>
           </TouchableWithoutFeedback>
         </Animated.View>
