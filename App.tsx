@@ -304,107 +304,166 @@ const ImageViewer = () => {
     };
   });
 
-  const MovementNodeContainer = () => (
-    <Animated.View
-      style={[
-        {
-          zIndex: 2,
-        },
-        useAnimatedStyle(() => {
-          if (!isViewRendered.value) return {};
-          const measured = measure(ref);
-          if (!measured) return {};
-          /* This View is the container for all the Move Nodes, and its movement should track along with the image.
+  const MovementNodeContainer = () => {
+    const isSelectingNode = useSharedValue(false);
+    const isTranslatingNode = useSharedValue(false);
+    const selectedNodePosition = useSharedValue<Coordinates | null>(null);
+
+    const translateNodeGesture = Gesture.Pan()
+      .onChange((event) => {
+        if (selectedNodeIndex.value === null || !isSelectingNode.value) return;
+
+        isTranslatingNode.value = true;
+
+        if (selectedNodePosition.value === null)
+          selectedNodePosition.value = nodes[selectedNodeIndex.value];
+
+        if (selectedNodePosition.value !== null)
+          selectedNodePosition.value = {
+            x: event.changeX + selectedNodePosition.value.x,
+            y: event.changeY + selectedNodePosition.value.y,
+          };
+      })
+      .onEnd(() => {
+        isSelectingNode.value = false;
+        isTranslatingNode.value = false;
+        if (
+          selectedNodeIndex.value === null ||
+          selectedNodePosition.value === null
+        )
+          return;
+        const newNodes = [...nodes];
+        newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
+        runOnJS(setNodes)(newNodes);
+      });
+
+    return (
+      <GestureDetector gesture={translateNodeGesture}>
+        <Animated.View
+          style={[
+            {
+              zIndex: 2,
+            },
+            useAnimatedStyle(() => {
+              if (!isViewRendered.value) return {};
+              const measured = measure(ref);
+              if (!measured) return {};
+              /* This View is the container for all the Move Nodes, and its movement should track along with the image.
           The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
           Instead, the node coordinates are scaled according to the scale of the image,
           and the move node container then moves so that the coordinates 'appear' to stay in the same place.
           
           The formulae for working out how far the View has to move to match the position of the scale image is:
           distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
-          return {
-            transform: [
-              {
-                translateX:
-                  Math.max(
-                    -maxDistance.value.x,
-                    Math.min(maxDistance.value.x, imageMatrix.value[2])
-                  ) -
-                  (measured.width * imageMatrix.value[0] - measured.width) / 2,
-              },
-              {
-                translateY:
-                  Math.max(
-                    -maxDistance.value.y,
-                    Math.min(maxDistance.value.y, imageMatrix.value[5])
-                  ) -
-                  (measured.height * imageMatrix.value[0] - measured.height) /
-                    2,
-              },
-            ],
-          };
-        }),
-      ]}
-    >
-      {nodes.map((nodePosition, nodeIndex) => (
-        <Animated.View
-          key={nodeIndex}
-          style={[
-            {
-              width: 50,
-              height: 50,
-              borderRadius: 50,
-              borderColor: "black",
-              borderWidth: 10,
-              position: "absolute",
-              backgroundColor: "white",
-              flex: 1,
-            },
-            useAnimatedStyle(() => {
-              const getCurrentNodePosition = (coordinate: number) =>
-                coordinate * imageMatrix.value[0] +
-                25 * imageMatrix.value[0] -
-                25;
               return {
-                top: getCurrentNodePosition(nodePosition.y),
-                left: getCurrentNodePosition(nodePosition.x),
-                borderColor:
-                  selectedNodeIndex.value === nodeIndex ? "red" : "black",
+                transform: [
+                  {
+                    translateX:
+                      Math.max(
+                        -maxDistance.value.x,
+                        Math.min(maxDistance.value.x, imageMatrix.value[2])
+                      ) -
+                      (measured.width * imageMatrix.value[0] - measured.width) /
+                        2,
+                  },
+                  {
+                    translateY:
+                      Math.max(
+                        -maxDistance.value.y,
+                        Math.min(maxDistance.value.y, imageMatrix.value[5])
+                      ) -
+                      (measured.height * imageMatrix.value[0] -
+                        measured.height) /
+                        2,
+                  },
+                ],
               };
             }),
           ]}
         >
-          <TouchableWithoutFeedback
-            style={{
-              width: "100%",
-              height: "100%",
-              justifyContent: "center",
-              alignItems: "center",
-            }}
-            delayLongPress={800}
-            onPressIn={() => {
-              selectedNodeIndex.value = nodeIndex;
-            }}
-            onLongPress={() => {
-              selectedNodeIndex.value = null;
-              setNodes(
-                // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
-                nodes.filter(
-                  (node, indexToFilter) => indexToFilter !== nodeIndex
-                )
-              );
-            }}
-            onPressOut={() => {
-              selectedNodeIndex.value = null;
-            }}
-          >
-            <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-              {nodeIndex}
-            </Text>
-          </TouchableWithoutFeedback>
+          {nodes.length
+            ? nodes.map((nodePosition, nodeIndex) => (
+                <Animated.View
+                  key={nodeIndex}
+                  style={[
+                    {
+                      width: 50,
+                      height: 50,
+                      borderRadius: 50,
+                      borderColor: "black",
+                      borderWidth: 10,
+                      position: "absolute",
+                      backgroundColor: "white",
+                      flex: 1,
+                    },
+                    useAnimatedStyle(() => {
+                      const getCurrentNodePosition = (coordinate: number) =>
+                        coordinate * imageMatrix.value[0] +
+                        25 * imageMatrix.value[0] -
+                        25;
+                      return {
+                        top:
+                          selectedNodeIndex.value === nodeIndex &&
+                          selectedNodePosition.value !== null
+                            ? selectedNodePosition.value.y
+                            : getCurrentNodePosition(nodePosition.y),
+                        left:
+                          selectedNodeIndex.value === nodeIndex &&
+                          selectedNodePosition.value !== null
+                            ? selectedNodePosition.value.x
+                            : getCurrentNodePosition(nodePosition.x),
+                        zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
+                        borderColor:
+                          selectedNodeIndex.value === nodeIndex &&
+                          isSelectingNode.value
+                            ? "red"
+                            : "black",
+                      };
+                    }),
+                  ]}
+                >
+                  <TouchableWithoutFeedback
+                    style={{
+                      width: "100%",
+                      height: "100%",
+                      justifyContent: "center",
+                      alignItems: "center",
+                    }}
+                    delayLongPress={800}
+                    onPressIn={() => {
+                      isSelectingNode.value = true;
+                      selectedNodeIndex.value = nodeIndex;
+                    }}
+                    onLongPress={() => {
+                      isSelectingNode.value = false;
+                      selectedNodeIndex.value = null;
+                      setNodes(
+                        // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
+                        nodes.filter(
+                          (node, indexToFilter) => indexToFilter !== nodeIndex
+                        )
+                      );
+                    }}
+                    onPressOut={() => {
+                      if (isSelectingNode.value && isTranslatingNode.value)
+                        return;
+
+                      isTranslatingNode.value = false;
+                      isSelectingNode.value = false;
+                      selectedNodeIndex.value = null;
+                    }}
+                  >
+                    <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
+                      {nodeIndex}
+                    </Text>
+                  </TouchableWithoutFeedback>
+                </Animated.View>
+              ))
+            : null}
         </Animated.View>
-      ))}
-    </Animated.View>
-  );
+      </GestureDetector>
+    );
+  };
 
   return (
     <View style={{ flex: 1 }}>
