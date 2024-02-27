@@ -21,10 +21,8 @@ import Animated, {
   measure,
   useDerivedValue,
   runOnJS,
-  runOnUI,
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
-import MovementNode from "./src/components/MovementNode";
 
 const translateMatrix = (matrix: Matrix3, x: number, y: number): Matrix3 => {
   "worklet";
