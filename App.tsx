@@ -483,14 +483,7 @@ const ImageViewer = () => {
   return (
     <View style={{ flex: 1 }}>
       <MovementNodeContainer />
-      <GestureDetector
-        gesture={Gesture.Simultaneous(
-          // movementNodeLongPress,
-          longPress,
-          pinch,
-          pan
-        )}
-      >
+      <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
         <Animated.View
           onLayout={() => {
             if (ref.current) isViewRendered.value = true;
