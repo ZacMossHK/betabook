@@ -415,20 +415,18 @@ const ImageViewer = () => {
                         nodeSizeOffset * imageMatrix.value[0] -
                         nodeSizeOffset;
                       return {
-                        top:
+                        top: getCurrentNodePosition(
                           selectedNodeIndex.value === nodeIndex &&
-                          selectedNodePosition.value !== null
-                            ? getCurrentNodePosition(
-                                selectedNodePosition.value.y
-                              )
-                            : getCurrentNodePosition(nodePosition.y),
-                        left:
+                            selectedNodePosition.value !== null
+                            ? selectedNodePosition.value.y
+                            : nodePosition.y
+                        ),
+                        left: getCurrentNodePosition(
                           selectedNodeIndex.value === nodeIndex &&
-                          selectedNodePosition.value !== null
-                            ? getCurrentNodePosition(
-                                selectedNodePosition.value.x
-                              )
-                            : getCurrentNodePosition(nodePosition.x),
+                            selectedNodePosition.value !== null
+                            ? selectedNodePosition.value.x
+                            : nodePosition.x
+                        ),
                         zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
                         borderColor:
                           selectedNodeIndex.value === nodeIndex &&
