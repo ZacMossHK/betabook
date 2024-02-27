@@ -82,6 +82,9 @@ const ImageViewer = () => {
 
   const [nodes, setNodes] = useState<any[]>([]);
 
+  const nodeSize = 50;
+  const nodeSizeOffset = nodeSize / 2;
+
   const getMatrix = (
     translation: Coordinates,
     origin: Coordinates,
@@ -220,7 +223,6 @@ const ImageViewer = () => {
     .onStart((event) => {
       const measured = measure(ref);
       if (!measured) return;
-      const nodeSizeOffset = 25;
 
       const getNewNodePosition = (
         dimensionMeasurement: number,
@@ -398,9 +400,9 @@ const ImageViewer = () => {
                   key={nodeIndex}
                   style={[
                     {
-                      width: 50,
-                      height: 50,
-                      borderRadius: 50,
+                      width: nodeSize,
+                      height: nodeSize,
+                      borderRadius: nodeSize,
                       borderColor: "black",
                       borderWidth: 10,
                       position: "absolute",
@@ -410,8 +412,8 @@ const ImageViewer = () => {
                     useAnimatedStyle(() => {
                       const getCurrentNodePosition = (coordinate: number) =>
                         coordinate * imageMatrix.value[0] +
-                        25 * imageMatrix.value[0] -
-                        25;
+                        nodeSizeOffset * imageMatrix.value[0] -
+                        nodeSizeOffset;
                       return {
                         top:
                           selectedNodeIndex.value === nodeIndex &&
