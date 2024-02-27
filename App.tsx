@@ -224,26 +224,33 @@ const ImageViewer = () => {
 
       const getNewNodePosition = (
         dimensionMeasurement: number,
+        scale: number,
         imagePositionCoordinate: number,
         eventCoordinate: number
       ) => {
-        /* TODO:  (dimensionMeasurement * imageMatrix.value[0] - dimensionMeasurement) / 2 
+        /* TODO:  (dimensionMeasurement * scale - dimensionMeasurement) / 2 
         This formulae matches the one from maxDistance, can this be refactored? */
         const imageEdgeOffset =
-          (dimensionMeasurement * imageMatrix.value[0] - dimensionMeasurement) /
-            2 -
+          (dimensionMeasurement * scale - dimensionMeasurement) / 2 -
           imagePositionCoordinate;
-        return (
-          (imageEdgeOffset + eventCoordinate) / imageMatrix.value[0] -
-          nodeSizeOffset
-        );
+        return (imageEdgeOffset + eventCoordinate) / scale - nodeSizeOffset;
       };
 
       runOnJS(setNodes)([
         ...nodes,
         {
-          x: getNewNodePosition(measured.width, imageMatrix.value[2], event.x),
-          y: getNewNodePosition(measured.height, imageMatrix.value[5], event.y),
+          x: getNewNodePosition(
+            measured.width,
+            imageMatrix.value[0],
+            imageMatrix.value[2],
+            event.x
+          ),
+          y: getNewNodePosition(
+            measured.height,
+            imageMatrix.value[0],
+            imageMatrix.value[5],
+            event.y
+          ),
         },
       ]);
     });
@@ -320,8 +327,12 @@ const ImageViewer = () => {
 
         if (selectedNodePosition.value !== null)
           selectedNodePosition.value = {
-            x: event.changeX + selectedNodePosition.value.x,
-            y: event.changeY + selectedNodePosition.value.y,
+            x:
+              event.changeX / imageMatrix.value[0] +
+              selectedNodePosition.value.x,
+            y:
+              event.changeY / imageMatrix.value[0] +
+              selectedNodePosition.value.y,
           };
       })
       .onEnd(() => {
@@ -405,12 +416,16 @@ const ImageViewer = () => {
                         top:
                           selectedNodeIndex.value === nodeIndex &&
                           selectedNodePosition.value !== null
-                            ? selectedNodePosition.value.y
+                            ? getCurrentNodePosition(
+                                selectedNodePosition.value.y
+                              )
                             : getCurrentNodePosition(nodePosition.y),
                         left:
                           selectedNodeIndex.value === nodeIndex &&
                           selectedNodePosition.value !== null
-                            ? selectedNodePosition.value.x
+                            ? getCurrentNodePosition(
+                                selectedNodePosition.value.x
+                              )
                             : getCurrentNodePosition(nodePosition.x),
                         zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
                         borderColor:
