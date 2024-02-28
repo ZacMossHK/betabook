@@ -318,6 +318,7 @@ const ImageViewer = () => {
     const selectedNodePosition = useSharedValue<Coordinates | null>(null);
 
     const translateNodeGesture = Gesture.Pan()
+      .maxPointers(1)
       .onChange((event) => {
         if (selectedNodeIndex.value === null || !isSelectingNode.value) return;
 
@@ -347,8 +348,7 @@ const ImageViewer = () => {
         const newNodes = [...nodes];
         newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
         runOnJS(setNodes)(newNodes);
-      })
-      .requireExternalGestureToFail(pinch);
+      });
 
     return (
       <GestureDetector gesture={translateNodeGesture}>
