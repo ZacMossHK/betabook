@@ -346,7 +346,8 @@ const ImageViewer = () => {
         const newNodes = [...nodes];
         newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
         runOnJS(setNodes)(newNodes);
-      });
+      })
+      .requireExternalGestureToFail(pinch);
 
     return (
       <GestureDetector gesture={translateNodeGesture}>
