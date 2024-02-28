@@ -219,6 +219,7 @@ const ImageViewer = () => {
   const longPress = Gesture.LongPress()
     .minDuration(300)
     .onStart((event) => {
+      if (event.numberOfPointers > 1) return;
       const measured = measure(ref);
       if (!measured) return;
 
