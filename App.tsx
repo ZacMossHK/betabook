@@ -21,8 +21,10 @@ import Animated, {
   measure,
   useDerivedValue,
   runOnJS,
+  useAnimatedProps,
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
+import Svg, { Line } from "react-native-svg";
 
 const translateMatrix = (matrix: Matrix3, x: number, y: number): Matrix3 => {
   "worklet";
@@ -45,7 +47,24 @@ const translateAndScaleMatrix = (
   return translateMatrix(matrix, -origin.x, -origin.y);
 };
 
+const getNewNodePosition = (
+  dimensionMeasurement: number,
+  scale: number,
+  imagePositionCoordinate: number,
+  eventCoordinate: number,
+  nodeSizeOffset: number
+) => {
+  "worklet";
+  /* TODO:  (dimensionMeasurement * scale - dimensionMeasurement) / 2 
+  This formulae matches the one from maxDistance, can this be refactored? */
+  const imageEdgeOffset =
+    (dimensionMeasurement * scale - dimensionMeasurement) / 2 -
+    imagePositionCoordinate;
+  return (imageEdgeOffset + eventCoordinate) / scale - nodeSizeOffset;
+};
+
 const image = require("./assets/IMG_20230716_184450.jpg");
+const AnimatedLine = Animated.createAnimatedComponent(Line);
 
 export interface Coordinates {
   x: number;
@@ -223,20 +242,6 @@ const ImageViewer = () => {
       const measured = measure(ref);
       if (!measured) return;
 
-      const getNewNodePosition = (
-        dimensionMeasurement: number,
-        scale: number,
-        imagePositionCoordinate: number,
-        eventCoordinate: number
-      ) => {
-        /* TODO:  (dimensionMeasurement * scale - dimensionMeasurement) / 2 
-        This formulae matches the one from maxDistance, can this be refactored? */
-        const imageEdgeOffset =
-          (dimensionMeasurement * scale - dimensionMeasurement) / 2 -
-          imagePositionCoordinate;
-        return (imageEdgeOffset + eventCoordinate) / scale - nodeSizeOffset;
-      };
-
       runOnJS(setNodes)([
         ...nodes,
         {
@@ -244,13 +249,15 @@ const ImageViewer = () => {
             measured.width,
             imageMatrix.value[0],
             imageMatrix.value[2],
-            event.x
+            event.x,
+            nodeSizeOffset
           ),
           y: getNewNodePosition(
             measured.height,
             imageMatrix.value[0],
             imageMatrix.value[5],
-            event.y
+            event.y,
+            nodeSizeOffset
           ),
         },
       ]);
@@ -317,6 +324,11 @@ const ImageViewer = () => {
     const isTranslatingNode = useSharedValue(false);
     const selectedNodePosition = useSharedValue<Coordinates | null>(null);
 
+    const getCurrentNodePosition = (coordinate: number, scale: number) => {
+      "worklet";
+      return coordinate * scale + nodeSizeOffset * scale - nodeSizeOffset;
+    };
+
     const translateNodeGesture = Gesture.Pan()
       .maxPointers(1)
       .onChange((event) => {
@@ -351,138 +363,208 @@ const ImageViewer = () => {
       });
 
     return (
-      <GestureDetector gesture={translateNodeGesture}>
-        <Animated.View
-          style={[
-            {
-              zIndex: 2,
-            },
-            useAnimatedStyle(() => {
-              if (!isViewRendered.value) return {};
-              const measured = measure(ref);
-              if (!measured) return {};
-              /* This View is the container for all the Move Nodes, and its movement should track along with the image.
+      <View>
+        <GestureDetector gesture={translateNodeGesture}>
+          <Animated.View
+            style={[
+              {
+                zIndex: 2,
+              },
+              useAnimatedStyle(() => {
+                if (!isViewRendered.value) return {};
+                const measured = measure(ref);
+                if (!measured) return {};
+                /* This View is the container for all the Move Nodes, and its movement should track along with the image.
           The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
           Instead, the node coordinates are scaled according to the scale of the image,
           and the move node container then moves so that the coordinates 'appear' to stay in the same place.
           
           The formulae for working out how far the View has to move to match the position of the scale image is:
           distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
-              return {
-                transform: [
-                  {
-                    translateX:
-                      Math.max(
-                        -maxDistance.value.x,
-                        Math.min(maxDistance.value.x, imageMatrix.value[2])
-                      ) -
-                      (measured.width * imageMatrix.value[0] - measured.width) /
-                        2,
-                  },
-                  {
-                    translateY:
-                      Math.max(
-                        -maxDistance.value.y,
-                        Math.min(maxDistance.value.y, imageMatrix.value[5])
-                      ) -
-                      (measured.height * imageMatrix.value[0] -
-                        measured.height) /
-                        2,
-                  },
-                ],
-              };
-            }),
-          ]}
-        >
-          {nodes.length
-            ? nodes.map((nodePosition, nodeIndex) => (
-                <Animated.View
-                  key={nodeIndex}
-                  style={[
+                return {
+                  transform: [
                     {
-                      width: nodeSize,
-                      height: nodeSize,
-                      borderRadius: nodeSize,
-                      borderColor: "black",
-                      borderWidth: 10,
-                      position: "absolute",
-                      backgroundColor: "white",
-                      flex: 1,
+                      translateX:
+                        Math.max(
+                          -maxDistance.value.x,
+                          Math.min(maxDistance.value.x, imageMatrix.value[2])
+                        ) -
+                        (measured.width * imageMatrix.value[0] -
+                          measured.width) /
+                          2,
                     },
-                    useAnimatedStyle(() => {
-                      const getCurrentNodePosition = (coordinate: number) =>
-                        coordinate * imageMatrix.value[0] +
-                        nodeSizeOffset * imageMatrix.value[0] -
-                        nodeSizeOffset;
-                      return {
-                        top: getCurrentNodePosition(
-                          selectedNodeIndex.value === nodeIndex &&
-                            selectedNodePosition.value !== null
-                            ? selectedNodePosition.value.y
-                            : nodePosition.y
-                        ),
-                        left: getCurrentNodePosition(
-                          selectedNodeIndex.value === nodeIndex &&
-                            selectedNodePosition.value !== null
-                            ? selectedNodePosition.value.x
-                            : nodePosition.x
-                        ),
-                        zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
-                        borderColor:
-                          selectedNodeIndex.value === nodeIndex &&
-                          isSelectingNode.value
-                            ? "red"
-                            : "black",
-                      };
-                    }),
-                  ]}
-                >
-                  <TouchableWithoutFeedback
-                    style={{
-                      width: "100%",
-                      height: "100%",
-                      justifyContent: "center",
-                      alignItems: "center",
-                    }}
-                    delayLongPress={800}
-                    onPressIn={() => {
-                      isSelectingNode.value = true;
-                      selectedNodeIndex.value = nodeIndex;
-                    }}
-                    onLongPress={() => {
-                      isSelectingNode.value = false;
-                      selectedNodeIndex.value = null;
-                      setNodes(
-                        // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
-                        nodes.filter(
-                          (node, indexToFilter) => indexToFilter !== nodeIndex
-                        )
-                      );
-                    }}
-                    onPressOut={() => {
-                      if (isSelectingNode.value && isTranslatingNode.value)
-                        return;
-
-                      isTranslatingNode.value = false;
-                      isSelectingNode.value = false;
-                      selectedNodeIndex.value = null;
-                    }}
+                    {
+                      translateY:
+                        Math.max(
+                          -maxDistance.value.y,
+                          Math.min(maxDistance.value.y, imageMatrix.value[5])
+                        ) -
+                        (measured.height * imageMatrix.value[0] -
+                          measured.height) /
+                          2,
+                    },
+                  ],
+                };
+              }),
+            ]}
+          >
+            {nodes.length
+              ? nodes.map((nodePosition, nodeIndex) => (
+                  <Animated.View
+                    key={nodeIndex}
+                    style={[
+                      {
+                        width: nodeSize,
+                        height: nodeSize,
+                        borderRadius: nodeSize,
+                        borderColor: "black",
+                        borderWidth: 10,
+                        position: "absolute",
+                        backgroundColor: "white",
+                        flex: 1,
+                      },
+                      useAnimatedStyle(() => {
+                        return {
+                          top: getCurrentNodePosition(
+                            selectedNodeIndex.value === nodeIndex &&
+                              selectedNodePosition.value !== null
+                              ? selectedNodePosition.value.y
+                              : nodePosition.y,
+                            imageMatrix.value[0]
+                          ),
+                          left: getCurrentNodePosition(
+                            selectedNodeIndex.value === nodeIndex &&
+                              selectedNodePosition.value !== null
+                              ? selectedNodePosition.value.x
+                              : nodePosition.x,
+                            imageMatrix.value[0]
+                          ),
+                          zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
+                          borderColor:
+                            selectedNodeIndex.value === nodeIndex &&
+                            isSelectingNode.value
+                              ? "red"
+                              : "black",
+                        };
+                      }),
+                    ]}
                   >
-                    <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-                      {nodeIndex}
-                    </Text>
-                  </TouchableWithoutFeedback>
-                </Animated.View>
-              ))
-            : null}
-        </Animated.View>
-      </GestureDetector>
+                    <TouchableWithoutFeedback
+                      style={{
+                        width: "100%",
+                        height: "100%",
+                        justifyContent: "center",
+                        alignItems: "center",
+                      }}
+                      delayLongPress={800}
+                      onPressIn={() => {
+                        isSelectingNode.value = true;
+                        selectedNodeIndex.value = nodeIndex;
+                      }}
+                      onLongPress={() => {
+                        isSelectingNode.value = false;
+                        selectedNodeIndex.value = null;
+                        setNodes(
+                          // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
+                          nodes.filter(
+                            (node, indexToFilter) => indexToFilter !== nodeIndex
+                          )
+                        );
+                      }}
+                      onPressOut={() => {
+                        if (isSelectingNode.value && isTranslatingNode.value)
+                          return;
+
+                        isTranslatingNode.value = false;
+                        isSelectingNode.value = false;
+                        selectedNodeIndex.value = null;
+                      }}
+                    >
+                      <Text
+                        style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}
+                      >
+                        {nodeIndex}
+                      </Text>
+                    </TouchableWithoutFeedback>
+                  </Animated.View>
+                ))
+              : null}
+          </Animated.View>
+        </GestureDetector>
+        {/* AnimatedLines CAN NOT be children of Animated Views */}
+        <Svg style={{ zIndex: 1 }}>
+          {nodes.map((nodePosition, index) => {
+            if (index === nodes.length - 1) return;
+            const animatedLineProps = useAnimatedProps(() => {
+              const measured = measure(ref);
+              if (!measured) return {};
+
+              // TODO: these should be refactored
+              const getX = (nodeCoordinate: number) =>
+                (nodeCoordinate + nodeSizeOffset) * imageMatrix.value[0] -
+                // this is the same as imageEdgeOffset in getNewNodePosition, maybe that should be abstracted out?
+                ((measured.width * imageMatrix.value[0] - measured.width) / 2 -
+                  Math.max(
+                    -maxDistance.value.x,
+                    Math.min(maxDistance.value.x, imageMatrix.value[2])
+                  ));
+
+              const getY = (nodeCoordinate: number) =>
+                (nodeCoordinate + nodeSizeOffset) * imageMatrix.value[0] -
+                ((measured.height * imageMatrix.value[0] - measured.height) /
+                  2 -
+                  Math.max(
+                    -maxDistance.value.y,
+                    Math.min(maxDistance.value.y, imageMatrix.value[5])
+                  ));
+
+              return {
+                x1: getX(
+                  selectedNodeIndex.value === index &&
+                    selectedNodePosition.value !== null
+                    ? selectedNodePosition.value.x
+                    : nodePosition.x
+                ),
+
+                y1: getY(
+                  selectedNodeIndex.value === index &&
+                    selectedNodePosition.value !== null
+                    ? selectedNodePosition.value.y
+                    : nodePosition.y
+                ),
+
+                x2: getX(
+                  selectedNodeIndex.value === index + 1 &&
+                    selectedNodePosition.value !== null
+                    ? selectedNodePosition.value.x
+                    : nodes[index + 1].x
+                ),
+                y2: getY(
+                  selectedNodeIndex.value === index + 1 &&
+                    selectedNodePosition.value !== null
+                    ? selectedNodePosition.value.y
+                    : nodes[index + 1].y
+                ),
+              };
+            });
+            return (
+              <AnimatedLine
+                key={index}
+                animatedProps={animatedLineProps}
+                stroke="black"
+                strokeWidth="4"
+              />
+            );
+          })}
+        </Svg>
+      </View>
     );
   };
 
   return (
     <View style={{ flex: 1 }}>
       <MovementNodeContainer />
+
       <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
         <Animated.View
           onLayout={() => {
