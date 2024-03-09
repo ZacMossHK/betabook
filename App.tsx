@@ -241,26 +241,34 @@ const ImageViewer = () => {
       if (event.numberOfPointers > 1) return;
       const measured = measure(ref);
       if (!measured) return;
-
-      runOnJS(setNodes)([
-        ...nodes,
-        {
-          x: getNewNodePosition(
-            measured.width,
-            imageMatrix.value[0],
-            imageMatrix.value[2],
-            event.x,
-            nodeSizeOffset
-          ),
-          y: getNewNodePosition(
-            measured.height,
-            imageMatrix.value[0],
-            imageMatrix.value[5],
-            event.y,
-            nodeSizeOffset
-          ),
-        },
-      ]);
+      const newNodePosition = {
+        x: getNewNodePosition(
+          measured.width,
+          imageMatrix.value[0],
+          imageMatrix.value[2],
+          event.x,
+          nodeSizeOffset
+        ),
+        y: getNewNodePosition(
+          measured.height,
+          imageMatrix.value[0],
+          imageMatrix.value[5],
+          event.y,
+          nodeSizeOffset
+        ),
+      };
+      // this won't work if landscape is bigger than portrait
+      // TODO: set imageHeight based on the actual height of the image!
+      const imageHeight = measured.width * 1.33333333;
+      const borderDistance = (measured.height - imageHeight) / 2;
+      // checks if the node is outside of the borders of the image
+      if (
+        newNodePosition.y + 25 < borderDistance ||
+        newNodePosition.y + 25 > borderDistance + imageHeight
+      ) {
+        return;
+      }
+      runOnJS(setNodes)([...nodes, newNodePosition]);
     });
 
   const animatedStyle = useAnimatedStyle((): TransformsStyle => {
