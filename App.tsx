@@ -1,18 +1,11 @@
 // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
 import React, { useEffect, useState } from "react";
-import {
-  StyleSheet,
-  SafeAreaView,
-  TransformsStyle,
-  Text,
-  View,
-} from "react-native";
+import { StyleSheet, SafeAreaView, TransformsStyle, View } from "react-native";
 import {
   Gesture,
   GestureDetector,
   GestureHandlerRootView,
-  TouchableWithoutFeedback,
 } from "react-native-gesture-handler";
 import Animated, {
   useAnimatedStyle,
@@ -25,63 +18,17 @@ import Animated, {
 } from "react-native-reanimated";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
 import Svg, { Line } from "react-native-svg";
-
-const translateMatrix = (matrix: Matrix3, x: number, y: number): Matrix3 => {
-  "worklet";
-  return multiply3(matrix, [1, 0, x, 0, 1, y, 0, 0, 1]);
-};
-
-const scaleMatrix = (matrix: Matrix3, value: number): Matrix3 => {
-  "worklet";
-  return multiply3(matrix, [value, 0, 0, 0, value, 0, 0, 0, 1]);
-};
-
-const translateAndScaleMatrix = (
-  matrix: Matrix3,
-  origin: Coordinates,
-  pinchScale: number
-): Matrix3 => {
-  "worklet";
-  matrix = translateMatrix(matrix, origin.x, origin.y);
-  matrix = scaleMatrix(matrix, pinchScale);
-  return translateMatrix(matrix, -origin.x, -origin.y);
-};
-
-const getNewNodePosition = (
-  dimensionMeasurement: number,
-  scale: number,
-  imagePositionCoordinate: number,
-  eventCoordinate: number,
-  nodeSizeOffset: number
-) => {
-  "worklet";
-  /* TODO:  (dimensionMeasurement * scale - dimensionMeasurement) / 2 
-  This formulae matches the one from maxDistance, can this be refactored? */
-  const imageEdgeOffset =
-    (dimensionMeasurement * scale - dimensionMeasurement) / 2 -
-    imagePositionCoordinate;
-  return (imageEdgeOffset + eventCoordinate) / scale - nodeSizeOffset;
-};
+import MovementNodeContainer from "./src/components/MovementNodeContainer";
+import { getNewNodePosition } from "./src/helpers/nodes/nodePositions";
+import {
+  Coordinates,
+  TransformableMatrix3,
+} from "./src/components/ImageViewer/index.types";
+import { NODE_SIZE_OFFSET } from "./src/components/ImageViewer/index.constants";
+import { translateAndScaleMatrix, translateMatrix } from "./src/helpers/matrixTransformers/utils";
 
 const image = require("./assets/IMG_20230716_184450.jpg");
 const AnimatedLine = Animated.createAnimatedComponent(Line);
-
-export interface Coordinates {
-  x: number;
-  y: number;
-}
-
-type TransformableMatrix3 = [
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number,
-  number
-];
 
 const ImageViewer = () => {
   const ref = useAnimatedRef();
@@ -98,10 +45,7 @@ const ImageViewer = () => {
   const selectedNodeIndex = useSharedValue<number | null>(null);
   const selectedNodePosition = useSharedValue<Coordinates | null>(null);
 
-  const [nodes, setNodes] = useState<any[]>([]);
-
-  const nodeSize = 50;
-  const nodeSizeOffset = nodeSize / 2;
+  const [nodes, setNodes] = useState<Coordinates[]>([]);
 
   useEffect(() => {
     selectedNodePosition.value = null;
@@ -253,14 +197,14 @@ const ImageViewer = () => {
           imageMatrix.value[0],
           imageMatrix.value[2],
           event.x,
-          nodeSizeOffset
+          NODE_SIZE_OFFSET
         ),
         y: getNewNodePosition(
           measured.height,
           imageMatrix.value[0],
           imageMatrix.value[5],
           event.y,
-          nodeSizeOffset
+          NODE_SIZE_OFFSET
         ),
       };
       // this won't work if landscape is bigger than portrait
@@ -333,182 +277,6 @@ const ImageViewer = () => {
     };
   });
 
-  const MovementNodeContainer = () => {
-    const isSelectingNode = useSharedValue(false);
-    const isTranslatingNode = useSharedValue(false);
-
-    const getCurrentNodePosition = (coordinate: number, scale: number) => {
-      "worklet";
-      return coordinate * scale + nodeSizeOffset * scale - nodeSizeOffset;
-    };
-
-    const translateNodeGesture = Gesture.Pan()
-      .maxPointers(1)
-      .onChange((event) => {
-        if (selectedNodeIndex.value === null || !isSelectingNode.value) return;
-
-        isTranslatingNode.value = true;
-
-        if (selectedNodePosition.value === null)
-          selectedNodePosition.value = nodes[selectedNodeIndex.value];
-
-        if (selectedNodePosition.value !== null)
-          selectedNodePosition.value = {
-            x:
-              event.changeX / imageMatrix.value[0] +
-              selectedNodePosition.value.x,
-            y:
-              event.changeY / imageMatrix.value[0] +
-              selectedNodePosition.value.y,
-          };
-      })
-      .onEnd(() => {
-        isSelectingNode.value = false;
-        isTranslatingNode.value = false;
-        if (
-          selectedNodeIndex.value === null ||
-          selectedNodePosition.value === null
-        )
-          return;
-        const newNodes = [...nodes];
-        newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
-        runOnJS(setNodes)(newNodes);
-      });
-
-    return (
-      <View>
-        <GestureDetector gesture={translateNodeGesture}>
-          <Animated.View
-            style={[
-              {
-                zIndex: 2,
-              },
-              useAnimatedStyle(() => {
-                if (!isViewRendered.value) return {};
-                const measured = measure(ref);
-                if (!measured) return {};
-                /* This View is the container for all the Move Nodes, and its movement should track along with the image.
-          The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
-          Instead, the node coordinates are scaled according to the scale of the image,
-          and the move node container then moves so that the coordinates 'appear' to stay in the same place.
-          
-          The formulae for working out how far the View has to move to match the position of the scale image is:
-          distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
-                return {
-                  transform: [
-                    {
-                      translateX:
-                        Math.max(
-                          -maxDistance.value.x,
-                          Math.min(maxDistance.value.x, imageMatrix.value[2])
-                        ) -
-                        (measured.width * imageMatrix.value[0] -
-                          measured.width) /
-                          2,
-                    },
-                    {
-                      translateY:
-                        Math.max(
-                          -maxDistance.value.y,
-                          Math.min(maxDistance.value.y, imageMatrix.value[5])
-                        ) -
-                        (measured.height * imageMatrix.value[0] -
-                          measured.height) /
-                          2,
-                    },
-                  ],
-                };
-              }),
-            ]}
-          >
-            {nodes.length
-              ? nodes.map((nodePosition, nodeIndex) => (
-                  <Animated.View
-                    key={nodeIndex}
-                    style={[
-                      {
-                        width: nodeSize,
-                        height: nodeSize,
-                        borderRadius: nodeSize,
-                        borderColor: "black",
-                        borderWidth: 10,
-                        position: "absolute",
-                        backgroundColor: "white",
-                        flex: 1,
-                      },
-                      useAnimatedStyle(() => {
-                        return {
-                          top: getCurrentNodePosition(
-                            selectedNodeIndex.value === nodeIndex &&
-                              selectedNodePosition.value !== null
-                              ? selectedNodePosition.value.y
-                              : nodePosition.y,
-                            imageMatrix.value[0]
-                          ),
-                          left: getCurrentNodePosition(
-                            selectedNodeIndex.value === nodeIndex &&
-                              selectedNodePosition.value !== null
-                              ? selectedNodePosition.value.x
-                              : nodePosition.x,
-                            imageMatrix.value[0]
-                          ),
-                          zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
-                          borderColor:
-                            selectedNodeIndex.value === nodeIndex &&
-                            isSelectingNode.value
-                              ? "red"
-                              : "black",
-                        };
-                      }),
-                    ]}
-                  >
-                    <TouchableWithoutFeedback
-                      style={{
-                        width: "100%",
-                        height: "100%",
-                        justifyContent: "center",
-                        alignItems: "center",
-                      }}
-                      delayLongPress={800}
-                      onPressIn={() => {
-                        isSelectingNode.value = true;
-                        selectedNodeIndex.value = nodeIndex;
-                      }}
-                      onLongPress={() => {
-                        isSelectingNode.value = false;
-                        selectedNodeIndex.value = null;
-                        setNodes(
-                          // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
-                          nodes.filter(
-                            (node, indexToFilter) => indexToFilter !== nodeIndex
-                          )
-                        );
-                      }}
-                      onPressOut={() => {
-                        if (isSelectingNode.value && isTranslatingNode.value)
-                          return;
-
-                        isTranslatingNode.value = false;
-                        isSelectingNode.value = false;
-                        selectedNodeIndex.value = null;
-                      }}
-                    >
-                      <Text
-                        style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}
-                      >
-                        {nodeIndex}
-                      </Text>
-                    </TouchableWithoutFeedback>
-                  </Animated.View>
-                ))
-              : null}
-          </Animated.View>
-        </GestureDetector>
-        {/* AnimatedLines CAN NOT be children of Animated Views */}
-      </View>
-    );
-  };
-
   const SvgContainer = () => (
     <Svg style={{ zIndex: 1 }}>
       {nodes.map((nodePosition, index) => {
@@ -519,7 +287,7 @@ const ImageViewer = () => {
 
           // TODO: these should be refactored
           const getX = (nodeCoordinate: number) =>
-            (nodeCoordinate + nodeSizeOffset) * imageMatrix.value[0] -
+            (nodeCoordinate + NODE_SIZE_OFFSET) * imageMatrix.value[0] -
             // this is the same as imageEdgeOffset in getNewNodePosition, maybe that should be abstracted out?
             ((measured.width * imageMatrix.value[0] - measured.width) / 2 -
               Math.max(
@@ -528,7 +296,7 @@ const ImageViewer = () => {
               ));
 
           const getY = (nodeCoordinate: number) =>
-            (nodeCoordinate + nodeSizeOffset) * imageMatrix.value[0] -
+            (nodeCoordinate + NODE_SIZE_OFFSET) * imageMatrix.value[0] -
             ((measured.height * imageMatrix.value[0] - measured.height) / 2 -
               Math.max(
                 -maxDistance.value.y,
@@ -577,8 +345,18 @@ const ImageViewer = () => {
   );
   return (
     <View style={{ flex: 1 }}>
-      <MovementNodeContainer />
-
+      <MovementNodeContainer
+        {...{
+          selectedNodeIndex,
+          selectedNodePosition,
+          nodes,
+          setNodes,
+          imageMatrix,
+          isViewRendered,
+          innerRef: ref,
+          maxDistance,
+        }}
+      />
       <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
         <View>
           <Animated.View
