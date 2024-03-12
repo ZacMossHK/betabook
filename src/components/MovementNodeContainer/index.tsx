@@ -25,6 +25,8 @@ interface MovementNodeContainerProps {
   isViewRendered: SharedValue<boolean>;
   innerRef: AnimatedRef<React.Component<{}, {}, any>>;
   maxDistance: SharedValue<Coordinates>;
+  isSelectingNode: SharedValue<boolean>;
+  isTranslatingNode: SharedValue<boolean>;
 }
 
 const MovementNodeContainer = ({
@@ -36,41 +38,9 @@ const MovementNodeContainer = ({
   isViewRendered,
   innerRef,
   maxDistance,
+  isSelectingNode,
+  isTranslatingNode,
 }: MovementNodeContainerProps) => {
-  const isSelectingNode = useSharedValue(false);
-  const isTranslatingNode = useSharedValue(false);
-
-  const translateNodeGesture = Gesture.Pan()
-    .maxPointers(1)
-    .onChange((event) => {
-      if (selectedNodeIndex.value === null || !isSelectingNode.value) return;
-
-      isTranslatingNode.value = true;
-
-      if (selectedNodePosition.value === null)
-        selectedNodePosition.value = nodes[selectedNodeIndex.value];
-
-      if (selectedNodePosition.value !== null)
-        selectedNodePosition.value = {
-          x:
-            event.changeX / imageMatrix.value[0] + selectedNodePosition.value.x,
-          y:
-            event.changeY / imageMatrix.value[0] + selectedNodePosition.value.y,
-        };
-    })
-    .onEnd(() => {
-      isSelectingNode.value = false;
-      isTranslatingNode.value = false;
-      if (
-        selectedNodeIndex.value === null ||
-        selectedNodePosition.value === null
-      )
-        return;
-      const newNodes = [...nodes];
-      newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
-      runOnJS(setNodes)(newNodes);
-    });
-
   const animatedStyle = useAnimatedStyle(() => {
     // selectedNodePosition has nothing to do with this but if a reference to it isn't included in this animatedStyle it doesn't work and I don't know why.
     if (!isViewRendered.value || !selectedNodePosition) return {};
@@ -107,35 +77,33 @@ const MovementNodeContainer = ({
 
   return (
     <View>
-      <GestureDetector gesture={translateNodeGesture}>
-        <Animated.View
-          style={[
-            {
-              zIndex: 2,
-            },
-            animatedStyle,
-          ]}
-        >
-          {nodes.length
-            ? nodes.map((nodePosition, nodeIndex) => (
-                <MovementNode
-                  key={nodeIndex}
-                  {...{
-                    selectedNodeIndex,
-                    nodeIndex,
-                    selectedNodePosition,
-                    nodePosition,
-                    imageMatrix,
-                    isSelectingNode,
-                    setNodes,
-                    nodes,
-                    isTranslatingNode,
-                  }}
-                />
-              ))
-            : null}
-        </Animated.View>
-      </GestureDetector>
+      <Animated.View
+        style={[
+          {
+            zIndex: 2,
+          },
+          animatedStyle,
+        ]}
+      >
+        {nodes.length
+          ? nodes.map((nodePosition, nodeIndex) => (
+              <MovementNode
+                key={nodeIndex}
+                {...{
+                  selectedNodeIndex,
+                  nodeIndex,
+                  selectedNodePosition,
+                  nodePosition,
+                  imageMatrix,
+                  isSelectingNode,
+                  setNodes,
+                  nodes,
+                  isTranslatingNode,
+                }}
+              />
+            ))
+          : null}
+      </Animated.View>
     </View>
   );
 };

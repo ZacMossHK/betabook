@@ -25,7 +25,10 @@ import {
   TransformableMatrix3,
 } from "./src/components/ImageViewer/index.types";
 import { NODE_SIZE_OFFSET } from "./src/components/ImageViewer/index.constants";
-import { translateAndScaleMatrix, translateMatrix } from "./src/helpers/matrixTransformers/utils";
+import {
+  translateAndScaleMatrix,
+  translateMatrix,
+} from "./src/helpers/matrixTransformers/utils";
 
 const image = require("./assets/IMG_20230716_184450.jpg");
 const AnimatedLine = Animated.createAnimatedComponent(Line);
@@ -44,6 +47,9 @@ const ImageViewer = () => {
   const adjustedScale = useSharedValue(0);
   const selectedNodeIndex = useSharedValue<number | null>(null);
   const selectedNodePosition = useSharedValue<Coordinates | null>(null);
+
+  const isSelectingNode = useSharedValue(false);
+  const isTranslatingNode = useSharedValue(false);
 
   const [nodes, setNodes] = useState<Coordinates[]>([]);
 
@@ -355,6 +361,8 @@ const ImageViewer = () => {
           isViewRendered,
           innerRef: ref,
           maxDistance,
+          isSelectingNode,
+          isTranslatingNode,
         }}
       />
       <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
