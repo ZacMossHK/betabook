@@ -71,6 +71,40 @@ const MovementNodeContainer = ({
       runOnJS(setNodes)(newNodes);
     });
 
+  const animatedStyle = useAnimatedStyle(() => {
+    // selectedNodePosition has nothing to do with this but if a reference to it isn't included in this animatedStyle it doesn't work and I don't know why.
+    if (!isViewRendered.value || !selectedNodePosition) return {};
+    const measured = measure(innerRef);
+    if (!measured) return {};
+    /* This View is the container for all the Move Nodes, and its movement should track along with the image.
+    The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
+    Instead, the node coordinates are scaled according to the scale of the image,
+    and the move node container then moves so that the coordinates 'appear' to stay in the same place.
+
+    The formulae for working out how far the View has to move to match the position of the scale image is:
+    distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
+    return {
+      transform: [
+        {
+          translateX:
+            Math.max(
+              -maxDistance.value.x,
+              Math.min(maxDistance.value.x, imageMatrix.value[2])
+            ) -
+            (measured.width * imageMatrix.value[0] - measured.width) / 2,
+        },
+        {
+          translateY:
+            Math.max(
+              -maxDistance.value.y,
+              Math.min(maxDistance.value.y, imageMatrix.value[5])
+            ) -
+            (measured.height * imageMatrix.value[0] - measured.height) / 2,
+        },
+      ],
+    };
+  });
+
   return (
     <View>
       <GestureDetector gesture={translateNodeGesture}>
@@ -79,41 +113,7 @@ const MovementNodeContainer = ({
             {
               zIndex: 2,
             },
-            useAnimatedStyle(() => {
-              if (!isViewRendered.value) return {};
-              const measured = measure(innerRef);
-              if (!measured) return {};
-              /* This View is the container for all the Move Nodes, and its movement should track along with the image.
-        The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
-        Instead, the node coordinates are scaled according to the scale of the image,
-        and the move node container then moves so that the coordinates 'appear' to stay in the same place.
-        
-        The formulae for working out how far the View has to move to match the position of the scale image is:
-        distance moved by image - (image dimension measurement * scale - image dimension measurement) / 2 */
-              return {
-                transform: [
-                  {
-                    translateX:
-                      Math.max(
-                        -maxDistance.value.x,
-                        Math.min(maxDistance.value.x, imageMatrix.value[2])
-                      ) -
-                      (measured.width * imageMatrix.value[0] - measured.width) /
-                        2,
-                  },
-                  {
-                    translateY:
-                      Math.max(
-                        -maxDistance.value.y,
-                        Math.min(maxDistance.value.y, imageMatrix.value[5])
-                      ) -
-                      (measured.height * imageMatrix.value[0] -
-                        measured.height) /
-                        2,
-                  },
-                ],
-              };
-            }),
+            animatedStyle,
           ]}
         >
           {nodes.length
