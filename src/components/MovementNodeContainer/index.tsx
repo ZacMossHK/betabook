@@ -136,7 +136,6 @@ const MovementNodeContainer = ({
             : null}
         </Animated.View>
       </GestureDetector>
-      {/* AnimatedLines CAN NOT be children of Animated Views */}
     </View>
   );
 };
