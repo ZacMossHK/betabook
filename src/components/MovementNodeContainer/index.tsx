@@ -14,13 +14,14 @@ import Animated, {
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
-import { Coordinates } from "../ImageViewer/index.types";
+import { Coordinates, Nodes } from "../ImageViewer/index.types";
+import { useEffect, useState } from "react";
 
 interface MovementNodeContainerProps {
   selectedNodeIndex: SharedValue<number | null>;
   selectedNodePosition: SharedValue<Coordinates | null>;
-  nodes: Coordinates[];
-  setNodes: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+  nodes: Nodes;
+  setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   imageMatrix: SharedValue<Matrix3>;
   isViewRendered: SharedValue<boolean>;
   innerRef: AnimatedRef<React.Component<{}, {}, any>>;
@@ -42,8 +43,7 @@ const MovementNodeContainer = ({
   isTranslatingNode,
 }: MovementNodeContainerProps) => {
   const animatedStyle = useAnimatedStyle(() => {
-    // selectedNodePosition has nothing to do with this but if a reference to it isn't included in this animatedStyle it doesn't work and I don't know why.
-    if (!isViewRendered.value || !selectedNodePosition) return {};
+    if (!isViewRendered.value) return {};
     const measured = measure(innerRef);
     if (!measured) return {};
     /* This View is the container for all the Move Nodes, and its movement should track along with the image.
@@ -76,35 +76,36 @@ const MovementNodeContainer = ({
   });
 
   return (
-    <View>
-      <Animated.View
-        style={[
-          {
-            zIndex: 2,
-          },
-          animatedStyle,
-        ]}
-      >
-        {nodes.length
-          ? nodes.map((nodePosition, nodeIndex) => (
-              <MovementNode
-                key={nodeIndex}
-                {...{
-                  selectedNodeIndex,
-                  nodeIndex,
-                  selectedNodePosition,
-                  nodePosition,
-                  imageMatrix,
-                  isSelectingNode,
-                  setNodes,
-                  nodes,
-                  isTranslatingNode,
-                }}
-              />
-            ))
-          : null}
-      </Animated.View>
-    </View>
+    <Animated.View
+      style={[
+        {
+          zIndex: 2,
+        },
+        animatedStyle,
+      ]}
+    >
+      {nodes.map((nodePosition, nodeIndex) => {
+        // The first item in the array is there to stop it visually glitching and can be ignored.
+        if (!nodeIndex) return;
+        return (
+          <MovementNode
+            // TODO: replace this key with a unique value
+            key={nodeIndex * nodePosition.x * nodePosition.y}
+            {...{
+              selectedNodeIndex,
+              nodeIndex,
+              selectedNodePosition,
+              nodePosition,
+              imageMatrix,
+              isSelectingNode,
+              setNodes,
+              nodes,
+              isTranslatingNode,
+            }}
+          />
+        );
+      })}
+    </Animated.View>
   );
 };
 

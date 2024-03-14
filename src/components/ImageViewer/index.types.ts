@@ -14,3 +14,5 @@ export type TransformableMatrix3 = [
   number,
   number
 ];
+
+export type Nodes = Coordinates[]

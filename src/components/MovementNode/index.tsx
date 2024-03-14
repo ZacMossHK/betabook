@@ -3,6 +3,8 @@ import Animated, {
   SharedValue,
   runOnJS,
   useAnimatedStyle,
+  useDerivedValue,
+  useSharedValue,
 } from "react-native-reanimated";
 import {
   TouchableWithoutFeedback,
@@ -10,7 +12,7 @@ import {
   Gesture,
 } from "react-native-gesture-handler";
 import { Text } from "react-native";
-import React from "react";
+import React, { useEffect } from "react";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates } from "../ImageViewer/index.types";
@@ -82,10 +84,9 @@ const MovementNode = ({
     });
 
   const deleteNode = Gesture.LongPress()
+    .blocksExternalGesture(tap)
     .minDuration(800)
     .onStart(() => {
-      isSelectingNode.value = false;
-      selectedNodeIndex.value = null;
       runOnJS(setNodes)(
         // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
         nodes.filter((node, indexToFilter) => indexToFilter !== nodeIndex)
@@ -143,29 +144,6 @@ const MovementNode = ({
             justifyContent: "center",
             alignItems: "center",
           }}
-          delayLongPress={800}
-          // onPressIn={() => {
-          //   // console.log("hi");
-          //   isSelectingNode.value = true;
-          //   selectedNodeIndex.value = nodeIndex;
-          // }}
-          // onLongPress={() => {
-          //   // console.log("press");
-          //   isSelectingNode.value = false;
-          //   selectedNodeIndex.value = null;
-          //   setNodes(
-          //     // TODO: is this the most efficient way to do this? Eg. splice instead of filter?
-          //     nodes.filter((node, indexToFilter) => indexToFilter !== nodeIndex)
-          //   );
-          // }}
-          // onPressOut={() => {
-          //   // console.log("out");
-          // if (isSelectingNode.value && isTranslatingNode.value) return;
-
-          //   isTranslatingNode.value = false;
-          //   isSelectingNode.value = false;
-          //   selectedNodeIndex.value = null;
-          // }}
         >
           <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
             {nodeIndex}
