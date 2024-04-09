@@ -3,8 +3,6 @@ import Animated, {
   SharedValue,
   runOnJS,
   useAnimatedStyle,
-  useDerivedValue,
-  useSharedValue,
 } from "react-native-reanimated";
 import {
   TouchableWithoutFeedback,
@@ -12,7 +10,7 @@ import {
   Gesture,
 } from "react-native-gesture-handler";
 import { Text } from "react-native";
-import React, { useEffect } from "react";
+import React from "react";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates } from "../ImageViewer/index.types";

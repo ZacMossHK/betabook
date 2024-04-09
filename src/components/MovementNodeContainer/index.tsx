@@ -1,21 +1,12 @@
-import { Text, View } from "react-native";
-import {
-  Gesture,
-  GestureDetector,
-  TouchableWithoutFeedback,
-} from "react-native-gesture-handler";
 import Animated, {
   AnimatedRef,
   SharedValue,
   measure,
-  runOnJS,
   useAnimatedStyle,
-  useSharedValue,
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
-import { useEffect, useState } from "react";
 
 interface MovementNodeContainerProps {
   selectedNodeIndex: SharedValue<number | null>;
