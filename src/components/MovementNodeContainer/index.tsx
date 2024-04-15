@@ -3,10 +3,13 @@ import Animated, {
   SharedValue,
   measure,
   useAnimatedStyle,
+  useDerivedValue,
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
+import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
+import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 
 interface MovementNodeContainerProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -19,6 +22,8 @@ interface MovementNodeContainerProps {
   maxDistance: SharedValue<Coordinates>;
   isSelectingNode: SharedValue<boolean>;
   isTranslatingNode: SharedValue<boolean>;
+  pinchScale: SharedValue<number>;
+  baseScale: SharedValue<number>;
 }
 
 const MovementNodeContainer = ({
@@ -32,11 +37,14 @@ const MovementNodeContainer = ({
   maxDistance,
   isSelectingNode,
   isTranslatingNode,
+  pinchScale,
+  baseScale,
 }: MovementNodeContainerProps) => {
   const animatedStyle = useAnimatedStyle(() => {
     if (!isViewRendered.value) return {};
     const measured = measure(innerRef);
     if (!measured) return {};
+    const scale = pinchScale.value * baseScale.value;
     /* This View is the container for all the Move Nodes, and its movement should track along with the image.
     The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
     Instead, the node coordinates are scaled according to the scale of the image,
@@ -52,7 +60,7 @@ const MovementNodeContainer = ({
               -maxDistance.value.x,
               Math.min(maxDistance.value.x, imageMatrix.value[2])
             ) -
-            (measured.width * imageMatrix.value[0] - measured.width) / 2,
+            (measured.width * scale - measured.width) / 2,
         },
         {
           translateY:
@@ -60,10 +68,32 @@ const MovementNodeContainer = ({
               -maxDistance.value.y,
               Math.min(maxDistance.value.y, imageMatrix.value[5])
             ) -
-            (measured.height * imageMatrix.value[0] - measured.height) / 2,
+            (measured.height * scale - measured.height) / 2,
         },
       ],
     };
+  });
+
+  const adjustedPositionNodes = useDerivedValue<Nodes>(() => {
+    const scale = pinchScale.value * baseScale.value;
+    return nodes.map((node, nodeIndex) => ({
+      x: getCurrentNodePosition(
+        selectedNodeIndex.value === nodeIndex &&
+          selectedNodePosition.value !== null
+          ? selectedNodePosition.value.x
+          : node.x,
+        scale,
+        NODE_SIZE_OFFSET
+      ),
+      y: getCurrentNodePosition(
+        selectedNodeIndex.value === nodeIndex &&
+          selectedNodePosition.value !== null
+          ? selectedNodePosition.value.y
+          : node.y,
+        scale,
+        NODE_SIZE_OFFSET
+      ),
+    }));
   });
 
   return (
@@ -92,6 +122,9 @@ const MovementNodeContainer = ({
               setNodes,
               nodes,
               isTranslatingNode,
+              adjustedPositionNodes,
+              pinchScale,
+              baseScale,
             }}
           />
         );

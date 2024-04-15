@@ -13,30 +13,33 @@ import { Text } from "react-native";
 import React from "react";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import { Coordinates } from "../ImageViewer/index.types";
+import { Coordinates, Nodes } from "../ImageViewer/index.types";
 
 interface MovementNodeProps {
   selectedNodeIndex: SharedValue<number | null>;
   nodeIndex: number;
   selectedNodePosition: SharedValue<Coordinates | null>;
   nodePosition: Coordinates;
-  imageMatrix: SharedValue<Matrix3>;
   isSelectingNode: SharedValue<boolean>;
-  setNodes: React.Dispatch<React.SetStateAction<Coordinates[]>>;
-  nodes: Coordinates[];
+  setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
+  nodes: Nodes;
   isTranslatingNode: SharedValue<boolean>;
+  adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
+  pinchScale: SharedValue<number>;
+  baseScale: SharedValue<number>;
 }
 
 const MovementNode = ({
   selectedNodeIndex,
   nodeIndex,
   selectedNodePosition,
-  nodePosition,
-  imageMatrix,
   isSelectingNode,
   setNodes,
   nodes,
   isTranslatingNode,
+  adjustedPositionNodes,
+  pinchScale,
+  baseScale,
 }: MovementNodeProps) => {
   const tap = Gesture.Tap()
     .maxDuration(5000)
@@ -59,13 +62,11 @@ const MovementNode = ({
 
       if (selectedNodePosition.value === null)
         selectedNodePosition.value = nodes[selectedNodeIndex.value];
-
+      const scale = pinchScale.value * baseScale.value;
       if (selectedNodePosition.value !== null)
         selectedNodePosition.value = {
-          x:
-            event.changeX / imageMatrix.value[0] + selectedNodePosition.value.x,
-          y:
-            event.changeY / imageMatrix.value[0] + selectedNodePosition.value.y,
+          x: event.changeX / scale + selectedNodePosition.value.x,
+          y: event.changeY / scale + selectedNodePosition.value.y,
         };
     })
     .onEnd(() => {
@@ -92,23 +93,9 @@ const MovementNode = ({
     });
 
   const movementNodeAnimatedStyle = useAnimatedStyle(() => {
+    const node = adjustedPositionNodes.value[nodeIndex];
     return {
-      top: getCurrentNodePosition(
-        selectedNodeIndex.value === nodeIndex &&
-          selectedNodePosition.value !== null
-          ? selectedNodePosition.value.y
-          : nodePosition.y,
-        imageMatrix.value[0],
-        NODE_SIZE_OFFSET
-      ),
-      left: getCurrentNodePosition(
-        selectedNodeIndex.value === nodeIndex &&
-          selectedNodePosition.value !== null
-          ? selectedNodePosition.value.x
-          : nodePosition.x,
-        imageMatrix.value[0],
-        NODE_SIZE_OFFSET
-      ),
+      transform: [{ translateX: node.x }, { translateY: node.y }],
       zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
       borderColor:
         selectedNodeIndex.value === nodeIndex && isSelectingNode.value

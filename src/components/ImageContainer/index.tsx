@@ -30,11 +30,12 @@ interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
   translation: SharedValue<Coordinates>;
   pinchScale: SharedValue<number>;
+  baseScale: SharedValue<number>;
   transform: SharedValue<Matrix3>;
   maxDistance: SharedValue<Coordinates>;
   imageMatrix: SharedValue<Matrix3>;
   origin: SharedValue<Coordinates>;
-  setNodes: React.Dispatch<React.SetStateAction<Coordinates[]>>;
+  setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
 }
 
@@ -43,6 +44,7 @@ const ImageContainer = ({
   isViewRendered,
   translation,
   pinchScale,
+  baseScale,
   transform,
   maxDistance,
   imageMatrix,
@@ -53,7 +55,7 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
-  const baseScale = useSharedValue(1);
+
   const pinch = Gesture.Pinch()
     .onStart((event) => {
       const measured = measure(innerRef);
@@ -203,6 +205,7 @@ const ImageContainer = ({
       }
       runOnJS(setNodes)([...nodes, newNodePosition]);
     });
+
   const animatedStyle = useAnimatedStyle((): TransformsStyle => {
     // necessary as measuring a view that has not rendered properly will produce a warning
     if (!isViewRendered.value) return {};
@@ -237,6 +240,7 @@ const ImageContainer = ({
         Math.min((measured.height - imageHeight * imageMatrix.value[0]) / 2, 0)
       ),
     };
+
     return {
       transform: [
         {

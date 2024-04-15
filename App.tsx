@@ -20,6 +20,7 @@ const ImageViewer = () => {
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
+  const baseScale = useSharedValue(1);
   const translation = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const maxDistance = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const isViewRendered = useSharedValue(false);
@@ -62,6 +63,8 @@ const ImageViewer = () => {
           maxDistance,
           isSelectingNode,
           isTranslatingNode,
+          baseScale,
+          pinchScale,
         }}
       />
       <ImageContainer
@@ -70,6 +73,7 @@ const ImageViewer = () => {
           isViewRendered,
           translation,
           pinchScale,
+          baseScale,
           transform,
           maxDistance,
           imageMatrix,
