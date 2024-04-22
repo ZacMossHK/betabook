@@ -114,7 +114,7 @@ const MovementNode = ({
             height: NODE_SIZE,
             borderRadius: NODE_SIZE,
             borderColor: "black",
-            borderWidth: 10,
+            borderWidth: 4,
             position: "absolute",
             backgroundColor: "white",
             flex: 1,
@@ -122,7 +122,7 @@ const MovementNode = ({
           movementNodeAnimatedStyle,
         ]}
       >
-        <TouchableWithoutFeedback
+        {/* <TouchableWithoutFeedback
           style={{
             width: "100%",
             height: "100%",
@@ -133,7 +133,7 @@ const MovementNode = ({
           <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
             {nodeIndex}
           </Text>
-        </TouchableWithoutFeedback>
+        </TouchableWithoutFeedback> */}
       </Animated.View>
     </GestureDetector>
   );

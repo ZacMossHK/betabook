@@ -10,6 +10,8 @@ import MovementNode from "../MovementNode";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import { Canvas, Line } from "@shopify/react-native-skia";
+import React from "react";
 
 interface MovementNodeContainerProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -95,6 +97,17 @@ const MovementNodeContainer = ({
       ),
     }));
   });
+  const CompLine = () => (
+    <Canvas style={{ flex: 1, zIndex: 5 }}>
+      <Line
+        p1={{ x: 0, y: 100 }}
+        p2={{ x: 100, y: 0 }}
+        color="black"
+        style="stroke"
+        strokeWidth={4}
+      />
+    </Canvas>
+  );
 
   return (
     <Animated.View
@@ -105,6 +118,24 @@ const MovementNodeContainer = ({
         animatedStyle,
       ]}
     >
+      {/* <Canvas style={{ flex: 1, zIndex: 5 }}>
+        <AnimatedLine
+          p1={{ x: 0, y: 100 }}
+          p2={{ x: 100, y: 0 }}
+          color="black"
+          style="stroke"
+          strokeWidth={4}
+        />
+      </Canvas> */}
+      {/* <Canvas style={{ flex: 2, zIndex: 5 }}>
+        <Line
+          p1={{ x: 0, y: 100 }}
+          p2={{ x: 100, y: 0 }}
+          color="black"
+          style="stroke"
+          strokeWidth={4}
+        />
+      </Canvas> */}
       {nodes.map((nodePosition, nodeIndex) => {
         // The first item in the array is there to stop it visually glitching and can be ignored.
         if (!nodeIndex) return;
