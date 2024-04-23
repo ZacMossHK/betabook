@@ -10,8 +10,9 @@ import MovementNode from "../MovementNode";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import { Canvas, Line } from "@shopify/react-native-skia";
 import React from "react";
+import { PixelRatio } from "react-native";
+import MovementNodeLine from "../MovementNodeLine";
 
 interface MovementNodeContainerProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -42,6 +43,11 @@ const MovementNodeContainer = ({
   pinchScale,
   baseScale,
 }: MovementNodeContainerProps) => {
+  // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
+  const pixelRatio = PixelRatio.get();
+  const pixelRatioRounded = Math.round(pixelRatio);
+  const ratioDiff = pixelRatio / pixelRatioRounded;
+
   const animatedStyle = useAnimatedStyle(() => {
     if (!isViewRendered.value) return {};
     const measured = measure(innerRef);
@@ -97,17 +103,6 @@ const MovementNodeContainer = ({
       ),
     }));
   });
-  const CompLine = () => (
-    <Canvas style={{ flex: 1, zIndex: 5 }}>
-      <Line
-        p1={{ x: 0, y: 100 }}
-        p2={{ x: 100, y: 0 }}
-        color="black"
-        style="stroke"
-        strokeWidth={4}
-      />
-    </Canvas>
-  );
 
   return (
     <Animated.View
@@ -118,31 +113,13 @@ const MovementNodeContainer = ({
         animatedStyle,
       ]}
     >
-      {/* <Canvas style={{ flex: 1, zIndex: 5 }}>
-        <AnimatedLine
-          p1={{ x: 0, y: 100 }}
-          p2={{ x: 100, y: 0 }}
-          color="black"
-          style="stroke"
-          strokeWidth={4}
-        />
-      </Canvas> */}
-      {/* <Canvas style={{ flex: 2, zIndex: 5 }}>
-        <Line
-          p1={{ x: 0, y: 100 }}
-          p2={{ x: 100, y: 0 }}
-          color="black"
-          style="stroke"
-          strokeWidth={4}
-        />
-      </Canvas> */}
       {nodes.map((nodePosition, nodeIndex) => {
         // The first item in the array is there to stop it visually glitching and can be ignored.
         if (!nodeIndex) return;
         return (
           <MovementNode
             // TODO: replace this key with a unique value
-            key={nodeIndex * nodePosition.x * nodePosition.y}
+            key={1 * nodeIndex * nodePosition.x * nodePosition.y}
             {...{
               selectedNodeIndex,
               nodeIndex,
@@ -160,6 +137,22 @@ const MovementNodeContainer = ({
           />
         );
       })}
+      {nodes.length > 2
+        ? nodes.map((nodePosition, nodeIndex) => {
+            if (!nodeIndex || nodeIndex === nodes.length - 1) return;
+            return (
+              <MovementNodeLine
+                // TODO: replace this key with a unique value
+                key={2 * nodeIndex * nodePosition.x * nodePosition.y}
+                {...{
+                  nodeIndex,
+                  adjustedPositionNodes,
+                  ratioDiff,
+                }}
+              />
+            );
+          })
+        : null}
     </Animated.View>
   );
 };

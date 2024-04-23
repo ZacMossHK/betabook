@@ -138,7 +138,7 @@ const ImageViewer = () => {
           strokeWidth={4}
         />
       </Canvas> */}
-      <SvgContainer {...{pinchScale, baseScale}}/>
+      {/* <SvgContainer {...{pinchScale, baseScale}}/> */}
     </Animated.View>
   );
 };
