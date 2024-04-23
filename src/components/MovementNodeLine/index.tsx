@@ -1,12 +1,22 @@
-import Animated, { useAnimatedStyle } from "react-native-reanimated";
+import Animated, {
+  SharedValue,
+  useAnimatedStyle,
+} from "react-native-reanimated";
 import React from "react";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import { Nodes } from "../ImageViewer/index.types";
+
+interface MovementNodeLineProps {
+  nodeIndex: number;
+  adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
+  ratioDiff: number;
+}
 
 const MovementNodeLine = ({
   nodeIndex,
   adjustedPositionNodes,
   ratioDiff,
-}: any) => {
+}: MovementNodeLineProps) => {
   return (
     <Animated.View
       style={[
