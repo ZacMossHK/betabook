@@ -12,6 +12,15 @@ interface MovementNodeLineProps {
   ratioDiff: number;
 }
 
+const getNodeXYWithOffset = (
+  adjustedPositionNodes: Readonly<SharedValue<Nodes>>,
+  index: number
+) => {
+  "worklet";
+  const { x, y } = adjustedPositionNodes.value[index];
+  return [x, y].map((n) => n + NODE_SIZE_OFFSET);
+};
+
 const MovementNodeLine = ({
   nodeIndex,
   adjustedPositionNodes,
@@ -29,17 +38,16 @@ const MovementNodeLine = ({
         position: "absolute",
       },
       useAnimatedStyle(() => {
-        const node = adjustedPositionNodes.value[nodeIndex];
-        const x1 = node.x + NODE_SIZE_OFFSET;
-        const y1 = node.y + NODE_SIZE_OFFSET;
-        const x2 =
-          adjustedPositionNodes.value[nodeIndex + 1].x + NODE_SIZE_OFFSET;
-        const y2 =
-          adjustedPositionNodes.value[nodeIndex + 1].y + NODE_SIZE_OFFSET;
+        const [x1, y1] = getNodeXYWithOffset(adjustedPositionNodes, nodeIndex);
+        const [x2, y2] = getNodeXYWithOffset(
+          adjustedPositionNodes,
+          nodeIndex + 1
+        );
         return {
           transform: [
             { translateX: x1 },
             { translateY: y1 },
+            // formulas for width and rotation pilfered from https://jsfiddle.net/tmjLu8sb/4/
             {
               rotate:
                 // needs to add 180 degrees because the maths puts the angle in the exact opposite direction
@@ -50,7 +58,6 @@ const MovementNodeLine = ({
             },
             {
               scaleX:
-                // formulas for width and rotation pilfered from https://jsfiddle.net/tmjLu8sb/4/
                 Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) *
                 // ratioDiff fixes pixel density issue from scaling - https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
                 ratioDiff,
