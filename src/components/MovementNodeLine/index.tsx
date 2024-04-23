@@ -52,6 +52,7 @@ const MovementNodeLine = ({
               scaleX:
                 // formulas for width and rotation pilfered from https://jsfiddle.net/tmjLu8sb/4/
                 Math.sqrt((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)) *
+                // ratioDiff fixes pixel density issue from scaling - https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
                 ratioDiff,
             },
           ],
