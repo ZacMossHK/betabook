@@ -1,6 +1,6 @@
 // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { SafeAreaView } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import Animated, {
@@ -13,8 +13,6 @@ import MovementNodeContainer from "./src/components/MovementNodeContainer";
 import { Coordinates, Nodes } from "./src/components/ImageViewer/index.types";
 import { getMatrix } from "./src/helpers/matrixTransformers/utils";
 import ImageContainer from "./src/components/ImageContainer";
-import SvgContainer from "./src/components/SvgContainer";
-import { Canvas, Line } from "@shopify/react-native-skia";
 import populateNodes from "./devData/populateNodes";
 
 const populatedNodes = populateNodes(
@@ -58,8 +56,6 @@ const ImageViewer = () => {
     )
   );
 
-  // const x = useDerivedValue(() => ({ x: pinchScale.value * 5, y: 100 }));
-
   return (
     <Animated.View collapsable={false} style={{ flex: 1 }}>
       <MovementNodeContainer
@@ -93,16 +89,6 @@ const ImageViewer = () => {
           nodes,
         }}
       />
-      {/* <Canvas style={{ flex: 1, width: 50, height: 50 }}>
-        <Line
-          p1={x}
-          p2={{ x: 100, y: 0 }}
-          color="black"
-          style="stroke"
-          strokeWidth={4}
-        />
-      </Canvas> */}
-      {/* <SvgContainer {...{pinchScale, baseScale}}/> */}
     </Animated.View>
   );
 };
