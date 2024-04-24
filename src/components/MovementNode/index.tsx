@@ -1,18 +1,11 @@
-import { Matrix3 } from "react-native-redash";
 import Animated, {
   SharedValue,
   runOnJS,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import {
-  TouchableWithoutFeedback,
-  GestureDetector,
-  Gesture,
-} from "react-native-gesture-handler";
-import { Text } from "react-native";
+import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import React from "react";
-import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
-import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import { NODE_SIZE } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 
 interface MovementNodeProps {
@@ -121,20 +114,7 @@ const MovementNode = ({
           },
           movementNodeAnimatedStyle,
         ]}
-      >
-        {/* <TouchableWithoutFeedback
-          style={{
-            width: "100%",
-            height: "100%",
-            justifyContent: "center",
-            alignItems: "center",
-          }}
-        >
-          <Text style={{ flex: 1, fontSize: 20, fontWeight: "bold" }}>
-            {nodeIndex}
-          </Text>
-        </TouchableWithoutFeedback> */}
-      </Animated.View>
+      />
     </GestureDetector>
   );
 };
