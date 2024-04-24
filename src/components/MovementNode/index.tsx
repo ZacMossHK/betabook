@@ -87,6 +87,7 @@ const MovementNode = ({
 
   const movementNodeAnimatedStyle = useAnimatedStyle(() => {
     const node = adjustedPositionNodes.value[nodeIndex];
+    if (!node) return {};
     return {
       transform: [{ translateX: node.x }, { translateY: node.y }],
       zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,

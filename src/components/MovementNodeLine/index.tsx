@@ -3,7 +3,7 @@ import Animated, {
   useAnimatedStyle,
 } from "react-native-reanimated";
 import React from "react";
-import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Nodes } from "../ImageViewer/index.types";
 
 interface MovementNodeLineProps {
@@ -38,6 +38,12 @@ const MovementNodeLine = ({
         position: "absolute",
       },
       useAnimatedStyle(() => {
+        if (
+          [nodeIndex, nodeIndex + 1].some(
+            (index) => index === adjustedPositionNodes.value.length
+          )
+        )
+          return {};
         const [x1, y1] = getNodeXYWithOffset(adjustedPositionNodes, nodeIndex);
         const [x2, y2] = getNodeXYWithOffset(
           adjustedPositionNodes,
