@@ -119,7 +119,7 @@ const MovementNodeContainer = ({
         return (
           <MovementNode
             // TODO: replace this key with a unique value
-            key={1 * nodeIndex * nodePosition.x * nodePosition.y}
+            key={`${0}${nodeIndex}${nodePosition.x}${nodePosition.y}`}
             {...{
               selectedNodeIndex,
               nodeIndex,
@@ -143,7 +143,7 @@ const MovementNodeContainer = ({
             return (
               <MovementNodeLine
                 // TODO: replace this key with a unique value
-                key={2 * nodeIndex * nodePosition.x * nodePosition.y}
+                key={`${1}${nodeIndex}${nodePosition.x}${nodePosition.y}`}
                 {...{
                   nodeIndex,
                   adjustedPositionNodes,
