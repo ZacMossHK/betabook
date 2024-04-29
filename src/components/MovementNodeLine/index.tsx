@@ -4,7 +4,6 @@ import Animated, {
 } from "react-native-reanimated";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
-import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 
 interface MovementNodeLineProps {
   currentNode: Coordinates;
