@@ -103,7 +103,6 @@ const MovementNodeContainer = ({
       ),
     }));
   });
-
   return (
     <Animated.View
       style={[
@@ -142,6 +141,12 @@ const MovementNodeContainer = ({
                   nodeIndex,
                   adjustedPositionNodes,
                   ratioDiff,
+                  selectedNodeIndex,
+                  selectedNodePosition,
+                  pinchScale,
+                  baseScale,
+                  nodePosition,
+                  nodes,
                 }}
               />
             );
