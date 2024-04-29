@@ -12,16 +12,8 @@ interface MovementNodeLineProps {
   ratioDiff: number;
 }
 
-const getNodeXYWithOffset = (
-  adjustedPositionNodes: Readonly<SharedValue<Nodes>>,
-  index: number
-) => {
+const getNodeXYWithOffset = (node: Coordinates) => {
   "worklet";
-  const { x, y } = adjustedPositionNodes.value[index];
-  return [x, y].map((n) => n + NODE_SIZE_OFFSET);
-};
-
-const getNodeXYWithOffsetStatic = (node: Coordinates) => {
   const { x, y } = node;
   return [x, y].map((n) => n + NODE_SIZE_OFFSET);
 };
@@ -31,8 +23,8 @@ const generateStaticTransform = (
   nextNode: Coordinates,
   ratioDiff: number
 ) => {
-  const [x1, y1] = getNodeXYWithOffsetStatic(currentNode);
-  const [x2, y2] = getNodeXYWithOffsetStatic(nextNode);
+  const [x1, y1] = getNodeXYWithOffset(currentNode);
+  const [x2, y2] = getNodeXYWithOffset(nextNode);
   return [
     { translateX: x1 },
     { translateY: y1 },
@@ -122,12 +114,10 @@ const MovementNodeLine = ({
             return {};
           }
           const [x1, y1] = getNodeXYWithOffset(
-            adjustedPositionNodes,
-            nodeIndex
+            adjustedPositionNodes.value[nodeIndex]
           );
           const [x2, y2] = getNodeXYWithOffset(
-            adjustedPositionNodes,
-            nodeIndex + 1
+            adjustedPositionNodes.value[nodeIndex + 1]
           );
           return {
             transform: [
