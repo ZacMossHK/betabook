@@ -7,6 +7,8 @@ import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 
 interface MovementNodeLineProps {
+  currentNode: Coordinates;
+  nextNode: Coordinates;
   nodeIndex: number;
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
   ratioDiff: number;
@@ -46,53 +48,12 @@ const generateTransform = (
 };
 
 const MovementNodeLine = ({
+  currentNode,
+  nextNode,
   nodeIndex,
   adjustedPositionNodes,
   ratioDiff,
-  selectedNodeIndex,
-  selectedNodePosition,
-  pinchScale,
-  baseScale,
-  nodePosition,
-  nodes,
 }: MovementNodeLineProps) => {
-  const scale = pinchScale.value * baseScale.value;
-  const currentNode = {
-    x: getCurrentNodePosition(
-      selectedNodeIndex.value === nodeIndex &&
-        selectedNodePosition.value !== null
-        ? selectedNodePosition.value.x
-        : nodePosition.x,
-      scale,
-      NODE_SIZE_OFFSET
-    ),
-    y: getCurrentNodePosition(
-      selectedNodeIndex.value === nodeIndex &&
-        selectedNodePosition.value !== null
-        ? selectedNodePosition.value.y
-        : nodePosition.y,
-      scale,
-      NODE_SIZE_OFFSET
-    ),
-  };
-  const nextNode = {
-    x: getCurrentNodePosition(
-      selectedNodeIndex.value === nodeIndex &&
-        selectedNodePosition.value !== null
-        ? selectedNodePosition.value.x
-        : nodes[nodeIndex + 1].x,
-      scale,
-      NODE_SIZE_OFFSET
-    ),
-    y: getCurrentNodePosition(
-      selectedNodeIndex.value === nodeIndex &&
-        selectedNodePosition.value !== null
-        ? selectedNodePosition.value.y
-        : nodes[nodeIndex + 1].y,
-      scale,
-      NODE_SIZE_OFFSET
-    ),
-  };
   return (
     <Animated.View
       style={[
@@ -104,6 +65,9 @@ const MovementNodeLine = ({
           width: 1,
           flex: 1,
           position: "absolute",
+          /* This is a workaround asuseAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
+          This transform renders the static position upon rerendering after adding a node.
+          The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
           transform: generateTransform(currentNode, nextNode, ratioDiff),
         },
         useAnimatedStyle(() =>

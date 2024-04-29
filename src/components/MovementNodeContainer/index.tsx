@@ -134,6 +134,43 @@ const MovementNodeContainer = ({
       {nodes.length > 1
         ? nodes.map((nodePosition, nodeIndex) => {
             if (nodeIndex === nodes.length - 1) return;
+            const scale = pinchScale.value * baseScale.value;
+            const currentNode = {
+              x: getCurrentNodePosition(
+                selectedNodeIndex.value === nodeIndex &&
+                  selectedNodePosition.value !== null
+                  ? selectedNodePosition.value.x
+                  : nodePosition.x,
+                scale,
+                NODE_SIZE_OFFSET
+              ),
+              y: getCurrentNodePosition(
+                selectedNodeIndex.value === nodeIndex &&
+                  selectedNodePosition.value !== null
+                  ? selectedNodePosition.value.y
+                  : nodePosition.y,
+                scale,
+                NODE_SIZE_OFFSET
+              ),
+            };
+            const nextNode = {
+              x: getCurrentNodePosition(
+                selectedNodeIndex.value === nodeIndex &&
+                  selectedNodePosition.value !== null
+                  ? selectedNodePosition.value.x
+                  : nodes[nodeIndex + 1].x,
+                scale,
+                NODE_SIZE_OFFSET
+              ),
+              y: getCurrentNodePosition(
+                selectedNodeIndex.value === nodeIndex &&
+                  selectedNodePosition.value !== null
+                  ? selectedNodePosition.value.y
+                  : nodes[nodeIndex + 1].y,
+                scale,
+                NODE_SIZE_OFFSET
+              ),
+            };
             return (
               <MovementNodeLine
                 key={`${1}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
@@ -141,12 +178,8 @@ const MovementNodeContainer = ({
                   nodeIndex,
                   adjustedPositionNodes,
                   ratioDiff,
-                  selectedNodeIndex,
-                  selectedNodePosition,
-                  pinchScale,
-                  baseScale,
-                  nodePosition,
-                  nodes,
+                  currentNode,
+                  nextNode,
                 }}
               />
             );
