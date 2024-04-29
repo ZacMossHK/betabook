@@ -20,6 +20,7 @@ interface MovementNodeProps {
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
+  staticNode: Coordinates;
 }
 
 const MovementNode = ({
@@ -33,6 +34,7 @@ const MovementNode = ({
   adjustedPositionNodes,
   pinchScale,
   baseScale,
+  staticNode,
 }: MovementNodeProps) => {
   const tap = Gesture.Tap()
     .maxDuration(5000)
@@ -112,6 +114,14 @@ const MovementNode = ({
             position: "absolute",
             backgroundColor: "white",
             flex: 1,
+            zIndex: 2,
+            /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
+            This transform renders the static position upon rerendering after adding a node.
+            The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
+            transform: [
+              { translateX: staticNode.x },
+              { translateY: staticNode.y },
+            ],
           },
           movementNodeAnimatedStyle,
         ]}

@@ -112,25 +112,47 @@ const MovementNodeContainer = ({
         animatedStyle,
       ]}
     >
-      {nodes.map((nodePosition, nodeIndex) => (
-        <MovementNode
-          key={`${0}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
-          {...{
-            selectedNodeIndex,
-            nodeIndex,
-            selectedNodePosition,
-            nodePosition,
-            imageMatrix,
-            isSelectingNode,
-            setNodes,
-            nodes,
-            isTranslatingNode,
-            adjustedPositionNodes,
-            pinchScale,
-            baseScale,
-          }}
-        />
-      ))}
+      {nodes.map((nodePosition, nodeIndex) => {
+        const scale = pinchScale.value * baseScale.value;
+        const staticNode = {
+          x: getCurrentNodePosition(
+            selectedNodeIndex.value === nodeIndex &&
+              selectedNodePosition.value !== null
+              ? selectedNodePosition.value.x
+              : nodePosition.x,
+            scale,
+            NODE_SIZE_OFFSET
+          ),
+          y: getCurrentNodePosition(
+            selectedNodeIndex.value === nodeIndex &&
+              selectedNodePosition.value !== null
+              ? selectedNodePosition.value.y
+              : nodePosition.y,
+            scale,
+            NODE_SIZE_OFFSET
+          ),
+        };
+        return (
+          <MovementNode
+            key={`${0}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
+            {...{
+              selectedNodeIndex,
+              nodeIndex,
+              selectedNodePosition,
+              nodePosition,
+              imageMatrix,
+              isSelectingNode,
+              setNodes,
+              nodes,
+              isTranslatingNode,
+              adjustedPositionNodes,
+              pinchScale,
+              baseScale,
+              staticNode,
+            }}
+          />
+        );
+      })}
       {nodes.length > 1
         ? nodes.map((nodePosition, nodeIndex) => {
             if (nodeIndex === nodes.length - 1) return;
