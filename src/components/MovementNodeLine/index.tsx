@@ -64,7 +64,7 @@ const MovementNodeLine = ({
           width: 1,
           flex: 1,
           position: "absolute",
-          /* This is a workaround asuseAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
+          /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
           This transform renders the static position upon rerendering after adding a node.
           The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
           transform: generateTransform(currentNode, nextNode, ratioDiff),
