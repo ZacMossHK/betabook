@@ -149,6 +149,7 @@ const MovementNodeContainer = ({
               pinchScale,
               baseScale,
               staticNode,
+              innerRef
             }}
           />
         );

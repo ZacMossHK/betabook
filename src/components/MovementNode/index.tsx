@@ -1,11 +1,14 @@
 import Animated, {
+  AnimatedRef,
   SharedValue,
+  measure,
   runOnJS,
   useAnimatedStyle,
+  useSharedValue,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import React from "react";
-import { NODE_SIZE } from "../ImageViewer/index.constants";
+import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 
 interface MovementNodeProps {
@@ -21,6 +24,7 @@ interface MovementNodeProps {
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
   staticNode: Coordinates;
+  innerRef: AnimatedRef<React.Component<{}, {}, any>>;
 }
 
 const MovementNode = ({
@@ -35,7 +39,9 @@ const MovementNode = ({
   pinchScale,
   baseScale,
   staticNode,
+  innerRef,
 }: MovementNodeProps) => {
+  const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const tap = Gesture.Tap()
     .maxDuration(5000)
     .onBegin(() => {
@@ -51,18 +57,41 @@ const MovementNode = ({
   const translate = Gesture.Pan()
     .maxPointers(1)
     .onChange((event) => {
-      if (selectedNodeIndex.value === null || !isSelectingNode.value) return;
+      const measured = measure(innerRef);
+      if (
+        !measured ||
+        selectedNodeIndex.value === null ||
+        !isSelectingNode.value
+      )
+        return;
 
       isTranslatingNode.value = true;
 
-      if (selectedNodePosition.value === null)
+      if (selectedNodePosition.value === null) {
         selectedNodePosition.value = nodes[selectedNodeIndex.value];
-      const scale = pinchScale.value * baseScale.value;
-      if (selectedNodePosition.value !== null)
+        actualPosition.value = nodes[selectedNodeIndex.value];
+      } else {
+        const scale = pinchScale.value * baseScale.value;
+        // TODO: set imageHeight based on the actual height of the image!
+        const imageHeight = measured.width * 1.33333333;
+        const borderDistance = (measured.height - imageHeight) / 2;
+
+        actualPosition.value = {
+          x: event.changeX / scale + actualPosition.value.x,
+          y: event.changeY / scale + actualPosition.value.y,
+        };
+
         selectedNodePosition.value = {
           x: event.changeX / scale + selectedNodePosition.value.x,
-          y: event.changeY / scale + selectedNodePosition.value.y,
+          y: Math.max(
+            borderDistance - NODE_SIZE_OFFSET,
+            Math.min(
+              actualPosition.value.y,
+              borderDistance + imageHeight - NODE_SIZE_OFFSET
+            )
+          ),
         };
+      }
     })
     .onEnd(() => {
       isSelectingNode.value = false;
