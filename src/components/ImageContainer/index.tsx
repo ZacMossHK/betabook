@@ -198,8 +198,8 @@ const ImageContainer = ({
       const borderDistance = (measured.height - imageHeight) / 2;
       // checks if the node is outside of the borders of the image
       if (
-        newNodePosition.y + 25 < borderDistance ||
-        newNodePosition.y + 25 > borderDistance + imageHeight
+        newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
+        newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
       ) {
         return;
       }
