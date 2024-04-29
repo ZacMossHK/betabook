@@ -113,37 +113,31 @@ const MovementNodeContainer = ({
         animatedStyle,
       ]}
     >
-      {nodes.map((nodePosition, nodeIndex) => {
-        // The first item in the array is there to stop it visually glitching and can be ignored.
-        if (!nodeIndex) return;
-        return (
-          <MovementNode
-            // TODO: replace this key with a unique value
-            key={`${0}${nodeIndex}${nodePosition.x}${nodePosition.y}`}
-            {...{
-              selectedNodeIndex,
-              nodeIndex,
-              selectedNodePosition,
-              nodePosition,
-              imageMatrix,
-              isSelectingNode,
-              setNodes,
-              nodes,
-              isTranslatingNode,
-              adjustedPositionNodes,
-              pinchScale,
-              baseScale,
-            }}
-          />
-        );
-      })}
-      {nodes.length > 2
+      {nodes.map((nodePosition, nodeIndex) => (
+        <MovementNode
+          key={`${0}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
+          {...{
+            selectedNodeIndex,
+            nodeIndex,
+            selectedNodePosition,
+            nodePosition,
+            imageMatrix,
+            isSelectingNode,
+            setNodes,
+            nodes,
+            isTranslatingNode,
+            adjustedPositionNodes,
+            pinchScale,
+            baseScale,
+          }}
+        />
+      ))}
+      {nodes.length > 1
         ? nodes.map((nodePosition, nodeIndex) => {
-            if (!nodeIndex || nodeIndex === nodes.length - 1) return;
+            if (nodeIndex === nodes.length - 1) return;
             return (
               <MovementNodeLine
-                // TODO: replace this key with a unique value
-                key={`${1}${nodeIndex}${nodePosition.x}${nodePosition.y}`}
+                key={`${1}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
                 {...{
                   nodeIndex,
                   adjustedPositionNodes,

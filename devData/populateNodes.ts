@@ -13,7 +13,7 @@ const hasOverlap = (existingPoints: Nodes, newX: number, newY: number) => {
 };
 
 const populateNodes = (nodeQuantity: number): Nodes => {
-  const nodes = [{ x: 0, y: 0 }];
+  const nodes = [];
   for (let i = 0; i < nodeQuantity; i++) {
     let x, y;
     do {

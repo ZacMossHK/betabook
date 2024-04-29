@@ -36,9 +36,6 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
 
-  /* The first element in the nodes array should never be changed or read. 
-  There must be already be a first element in the array as the first node in the array blinks in and out if it's deleted.
-  I don't know why it does this. */
   const [nodes, setNodes] = useState<Nodes>(populatedNodes);
 
   useEffect(() => {
