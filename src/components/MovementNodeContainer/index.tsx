@@ -203,6 +203,7 @@ const MovementNodeContainer = ({
                   ratioDiff,
                   currentNode,
                   nextNode,
+                  nodes
                 }}
               />
             );

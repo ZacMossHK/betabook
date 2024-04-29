@@ -1,9 +1,12 @@
 import Animated, {
   SharedValue,
+  interpolate,
+  interpolateColor,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
+import { LinearGradient } from "expo-linear-gradient";
 
 interface MovementNodeLineProps {
   currentNode: Coordinates;
@@ -11,6 +14,7 @@ interface MovementNodeLineProps {
   nodeIndex: number;
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
   ratioDiff: number;
+  nodes: Nodes;
 }
 
 const getNodeXYWithOffset = (node: Coordinates) => {
@@ -52,12 +56,19 @@ const MovementNodeLine = ({
   nodeIndex,
   adjustedPositionNodes,
   ratioDiff,
+  nodes,
 }: MovementNodeLineProps) => {
+  const colors = ["white", "blue"];
+  const firstColor = interpolateColor(nodeIndex, [0, nodes.length - 1], colors);
+  const secondColor = interpolateColor(
+    nodeIndex + 1,
+    [0, nodes.length - 1],
+    colors
+  );
   return (
     <Animated.View
       style={[
         {
-          backgroundColor: "black",
           height: 3,
           zIndex: 1,
           transformOrigin: "0% 50%",
@@ -83,7 +94,14 @@ const MovementNodeLine = ({
               }
         ),
       ]}
-    />
+    >
+      <LinearGradient
+        colors={[firstColor, secondColor]}
+        style={{ height: "100%", width: "100%" }}
+        start={{ x: 0, y: 0.5 }}
+        end={{ x: 1, y: 0.5 }}
+      />
+    </Animated.View>
   );
 };
 
