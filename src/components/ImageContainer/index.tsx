@@ -52,6 +52,8 @@ const ImageContainer = ({
   setNodes,
   nodes,
 }: ImageContainerProps) => {
+  // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
+
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
