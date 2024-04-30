@@ -64,7 +64,6 @@ const ImageContainer = ({
       if (!measured) return;
       origin.value = {
         x: event.focalX - measured.width / 2,
-        // TODO: this will NOT work if the image is landscape instead of portrait!
         y: maxDistance.value.y ? event.focalY - measured.height / 2 : 0,
       };
     })
@@ -194,7 +193,6 @@ const ImageContainer = ({
           NODE_SIZE_OFFSET
         ),
       };
-      // this won't work if landscape is bigger than portrait
       const imageHeight =
         measured.width * (imageProps.height / imageProps.width);
       const borderDistance = (measured.height - imageHeight) / 2;
@@ -237,7 +235,6 @@ const ImageContainer = ({
     maxDistance.value = {
       x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
       // the max distance for y will be a negative number so needs .abs to turn it into a positive number
-      // TODO: This will NOT work if the image is landscape rather than portrait!
       y: Math.abs(
         Math.min((measured.height - imageHeight * imageMatrix.value[0]) / 2, 0)
       ),
