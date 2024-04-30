@@ -68,6 +68,7 @@ const ImageViewer = () => {
 
     if (!result.canceled) {
       const { uri, height, width } = result.assets[0];
+      console.log({ uri, height, width });
       setImageProps({ uri, height, width });
     }
   };
@@ -95,6 +96,7 @@ const ImageViewer = () => {
           isTranslatingNode,
           baseScale,
           pinchScale,
+          imageProps
         }}
       />
       <ImageContainer

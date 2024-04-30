@@ -9,7 +9,7 @@ import Animated, {
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import React from "react";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import { Coordinates, Nodes } from "../ImageViewer/index.types";
+import { Coordinates, ImageProps, Nodes } from "../ImageViewer/index.types";
 
 interface MovementNodeProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -25,6 +25,7 @@ interface MovementNodeProps {
   baseScale: SharedValue<number>;
   staticNode: Coordinates;
   innerRef: AnimatedRef<React.Component<{}, {}, any>>;
+  imageProps: ImageProps;
 }
 
 const MovementNode = ({
@@ -40,6 +41,7 @@ const MovementNode = ({
   baseScale,
   staticNode,
   innerRef,
+  imageProps,
 }: MovementNodeProps) => {
   const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const tap = Gesture.Tap()
@@ -72,8 +74,8 @@ const MovementNode = ({
         actualPosition.value = nodes[selectedNodeIndex.value];
       } else {
         const scale = pinchScale.value * baseScale.value;
-        // TODO: set imageHeight based on the actual height of the image!
-        const imageHeight = measured.width * 1.33333333;
+        const imageHeight =
+          measured.width * (imageProps.height / imageProps.width);
         const borderDistance = (measured.height - imageHeight) / 2;
 
         actualPosition.value = {

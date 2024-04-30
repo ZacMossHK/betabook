@@ -195,8 +195,8 @@ const ImageContainer = ({
         ),
       };
       // this won't work if landscape is bigger than portrait
-      // TODO: set imageHeight based on the actual height of the image!
-      const imageHeight = measured.width * 1.33333333;
+      const imageHeight =
+        measured.width * (imageProps.height / imageProps.width);
       const borderDistance = (measured.height - imageHeight) / 2;
       // checks if the node is outside of the borders of the image
       if (
@@ -233,8 +233,7 @@ const ImageContainer = ({
       transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
-    const imageHeight = measured.width * 1.33333333;
-    console.log(imageHeight, measured.width);
+    const imageHeight = measured.width * (imageProps.height / imageProps.width);
     maxDistance.value = {
       x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
       // the max distance for y will be a negative number so needs .abs to turn it into a positive number
