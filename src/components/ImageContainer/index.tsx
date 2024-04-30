@@ -208,7 +208,7 @@ const ImageContainer = ({
       runOnJS(setNodes)([...nodes, newNodePosition]);
     });
 
-  const animatedStyle = useAnimatedStyle((): TransformsStyle => {
+  const animatedStyle = useAnimatedStyle(() => {
     // necessary as measuring a view that has not rendered properly will produce a warning
     if (!isViewRendered.value) return {};
 
