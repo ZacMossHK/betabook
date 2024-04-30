@@ -5,7 +5,7 @@ import ImageViewer from "./src/components/ImageViewer";
 const App = () => {
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "red" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
         <ImageViewer />
       </SafeAreaView>
     </GestureHandlerRootView>
