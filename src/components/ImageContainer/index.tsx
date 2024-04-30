@@ -8,9 +8,9 @@ import Animated, {
 } from "react-native-reanimated";
 import imageContainerStyles from "./index.styles";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import { TransformsStyle } from "react-native";
 import {
   Coordinates,
+  ImageProps,
   Nodes,
   TransformableMatrix3,
 } from "../ImageViewer/index.types";
@@ -22,8 +22,6 @@ import {
 } from "../../helpers/matrixTransformers/utils";
 import { getNewNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-
-const image = require("../../../assets/IMG_20230716_184450.jpg");
 
 interface ImageContainerProps {
   innerRef: AnimatedRef<React.Component<{}, {}, any>>;
@@ -37,6 +35,7 @@ interface ImageContainerProps {
   origin: SharedValue<Coordinates>;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
+  imageProps: ImageProps;
 }
 
 const ImageContainer = ({
@@ -51,6 +50,7 @@ const ImageContainer = ({
   origin,
   setNodes,
   nodes,
+  imageProps,
 }: ImageContainerProps) => {
   // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
@@ -234,6 +234,7 @@ const ImageContainer = ({
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
     const imageHeight = measured.width * 1.33333333;
+    console.log(imageHeight, measured.width);
     maxDistance.value = {
       x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
       // the max distance for y will be a negative number so needs .abs to turn it into a positive number
@@ -274,7 +275,7 @@ const ImageContainer = ({
         style={[imageContainerStyles.fullscreen]}
       >
         <Animated.Image
-          source={image}
+          source={{ uri: imageProps.uri }}
           resizeMode={"contain"}
           style={[imageContainerStyles.fullscreen, animatedStyle]}
           fadeDuration={0}

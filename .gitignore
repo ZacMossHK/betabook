@@ -19,3 +19,5 @@ web-build/
 
 #oldCode
 /oldCode
+
+.env

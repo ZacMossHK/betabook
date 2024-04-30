@@ -15,4 +15,10 @@ export type TransformableMatrix3 = [
   number
 ];
 
-export type Nodes = Coordinates[]
+export type Nodes = Coordinates[];
+
+export interface ImageProps {
+  uri: string;
+  height: number;
+  width: number;
+}
