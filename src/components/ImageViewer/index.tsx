@@ -14,12 +14,6 @@ import { Button, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import getDevImageProps from "../../../devData/getDevImageProps";
 
-const populatedNodes = populateNodes(
-  process.env.EXPO_PUBLIC_NODES_NUM
-    ? parseInt(process.env.EXPO_PUBLIC_NODES_NUM)
-    : 0
-);
-
 const ImageViewer = () => {
   const ref = useAnimatedRef();
 
@@ -35,7 +29,7 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
 
-  const [nodes, setNodes] = useState<Nodes>(populatedNodes);
+  const [nodes, setNodes] = useState<Nodes>(populateNodes());
   const [imageProps, setImageProps] = useState<ImageProps | null>(
     process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );

@@ -12,9 +12,13 @@ const hasOverlap = (existingPoints: Nodes, newX: number, newY: number) => {
   return false;
 };
 
-const populateNodes = (nodeQuantity: number): Nodes => {
+const nodesNum = process.env.EXPO_PUBLIC_NODES_NUM
+  ? parseInt(process.env.EXPO_PUBLIC_NODES_NUM)
+  : 0;
+
+const populateNodes = (): Nodes => {
   const nodes = [];
-  for (let i = 0; i < nodeQuantity; i++) {
+  for (let i = 0; i < nodesNum; i++) {
     let x, y;
     do {
       x = Math.random() * (403 - 10) + 10;
