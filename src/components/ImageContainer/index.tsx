@@ -231,14 +231,32 @@ const ImageContainer = ({
       transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
-    const imageHeight = measured.width * (imageProps.height / imageProps.width);
-    maxDistance.value = {
-      x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
-      // the max distance for y will be a negative number so needs .abs to turn it into a positive number
-      y: Math.abs(
-        Math.min((measured.height - imageHeight * imageMatrix.value[0]) / 2, 0)
-      ),
-    };
+    // TODO: refactor this!
+    if (imageProps.width >= measured.width) {
+      const imageHeight =
+        measured.width * (imageProps.height / imageProps.width);
+      maxDistance.value = {
+        x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
+        // the max distance for y will be a negative number so needs .abs to turn it into a positive number
+        y: Math.abs(
+          Math.min(
+            (measured.height - imageHeight * imageMatrix.value[0]) / 2,
+            0
+          )
+        ),
+      };
+    } else {
+      // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
+      const imageWidth =
+        measured.height * (imageProps.width / imageProps.height);
+      maxDistance.value = {
+        // the max distance for x will be a negative number so needs .abs to turn it into a positive number
+        x: Math.abs(
+          Math.min((measured.width - imageWidth * imageMatrix.value[0]) / 2, 0)
+        ),
+        y: (measured.height * imageMatrix.value[0] - measured.height) / 2,
+      };
+    }
 
     return {
       transform: [
