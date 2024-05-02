@@ -74,25 +74,41 @@ const MovementNode = ({
         actualPosition.value = nodes[selectedNodeIndex.value];
       } else {
         const scale = pinchScale.value * baseScale.value;
-        const imageHeight =
-          measured.width * (imageProps.height / imageProps.width);
-        const borderDistance = (measured.height - imageHeight) / 2;
-
         actualPosition.value = {
           x: event.changeX / scale + actualPosition.value.x,
           y: event.changeY / scale + actualPosition.value.y,
         };
-
-        selectedNodePosition.value = {
-          x: event.changeX / scale + selectedNodePosition.value.x,
-          y: Math.max(
-            borderDistance - NODE_SIZE_OFFSET,
-            Math.min(
-              actualPosition.value.y,
-              borderDistance + imageHeight - NODE_SIZE_OFFSET
-            )
-          ),
-        };
+        // This makes sure you can't move nodes off the side of the image with borders
+        // This needs refactoring!
+        if (imageProps.width >= measured.width) {
+          const imageHeight =
+            measured.width * (imageProps.height / imageProps.width);
+          const verticalBorderDistance = (measured.height - imageHeight) / 2;
+          selectedNodePosition.value = {
+            x: actualPosition.value.x,
+            y: Math.max(
+              verticalBorderDistance - NODE_SIZE_OFFSET,
+              Math.min(
+                actualPosition.value.y,
+                verticalBorderDistance + imageHeight - NODE_SIZE_OFFSET
+              )
+            ),
+          };
+        } else {
+          const imageWidth =
+            measured.height * (imageProps.width / imageProps.height);
+          const horizontalBorderDistance = (measured.width - imageWidth) / 2;
+          selectedNodePosition.value = {
+            x: Math.max(
+              horizontalBorderDistance - NODE_SIZE_OFFSET,
+              Math.min(
+                actualPosition.value.x,
+                horizontalBorderDistance + imageWidth - NODE_SIZE_OFFSET
+              )
+            ),
+            y: actualPosition.value.y,
+          };
+        }
       }
     })
     .onEnd(() => {
