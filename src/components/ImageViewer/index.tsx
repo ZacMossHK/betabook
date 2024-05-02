@@ -12,6 +12,7 @@ import MovementNodeContainer from "../MovementNodeContainer";
 import ImageContainer from "../ImageContainer";
 import { Button, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
+import getDevImageProps from "../../../devData/getDevImageProps";
 
 const populatedNodes = populateNodes(
   process.env.EXPO_PUBLIC_NODES_NUM
@@ -36,13 +37,7 @@ const ImageViewer = () => {
 
   const [nodes, setNodes] = useState<Nodes>(populatedNodes);
   const [imageProps, setImageProps] = useState<ImageProps | null>(
-    process.env.EXPO_PUBLIC_DEV_IMG
-      ? {
-          uri: "http://192.168.1.180:8081/assets/?unstable_path=.%2Fassets%2FIMG_20230716_184450.jpg&platform=android&hash=8d7019156a3445ca930a5beca95adb2a",
-          height: 564.7058905153186,
-          width: 423.5294189453125,
-        }
-      : null
+    process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );
 
   useEffect(() => {
