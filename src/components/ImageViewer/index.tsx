@@ -11,11 +11,9 @@ import { getMatrix } from "../../helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../MovementNodeContainer";
 import ImageContainer from "../ImageContainer";
 import { Alert, Button, TextInput, View } from "react-native";
-import * as ImagePicker from "expo-image-picker";
 import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import * as Crypto from "expo-crypto";
 
 const imageDir = FileSystem.documentDirectory + "images/";
 
@@ -26,7 +24,7 @@ interface File {
   nodes: Nodes;
 }
 
-const ImageViewer = () => {
+const ImageViewer = ({ currentFile, setCurrentFile }) => {
   const ref = useAnimatedRef();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
@@ -45,25 +43,16 @@ const ImageViewer = () => {
   const [imageProps, setImageProps] = useState<ImageProps | null>(
     process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );
-  const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [currentFileName, setCurrentFileName] = useState("");
-  const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
-    useState(false);
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
 
-  const loadFiles = async () => {
-    const files = [];
-    for (const fileId of await AsyncStorage.getAllKeys()) {
-      const file = await AsyncStorage.getItem(fileId);
-      if (file) files.push(JSON.parse(file));
-    }
-    await setSavedFiles(files);
+  const initialiseImageViewer = async () => {
+    await setNodes(currentFile.nodes);
+    await setImageProps(currentFile.imageProps);
   };
 
   useEffect(() => {
-    if (imageProps) return;
-    loadFiles();
-  }, [imageProps]);
+    initialiseImageViewer();
+  }, []);
 
   useEffect(() => {
     selectedNodePosition.value = null;
@@ -79,22 +68,6 @@ const ImageViewer = () => {
       transform.value
     )
   );
-
-  const pickImage = async () => {
-    // No permissions request is necessary for launching the image library
-    const result = await ImagePicker.launchImageLibraryAsync({
-      quality: 1,
-    });
-    if (result.canceled) return;
-    const { uri, height, width } = result.assets[0];
-    await setImageProps({ uri, height, width });
-    await setCurrentFile({
-      fileId: Crypto.randomUUID(),
-      fileName: null,
-      imageProps: { uri, height, width },
-      nodes: [],
-    });
-  };
 
   const getImageExtension = (uri: string) => {
     const splitUri = uri.split(".");
@@ -127,61 +100,7 @@ const ImageViewer = () => {
     Alert.alert("File saved!");
   };
 
-  const loadFile = async (file: File) => {
-    await setImageProps(file.imageProps);
-    await setCurrentFile(file);
-    await setNodes(file.nodes);
-  };
-
-  const deleteAllFiles = async () => {
-    await AsyncStorage.multiRemove(await AsyncStorage.getAllKeys());
-    await FileSystem.deleteAsync(imageDir);
-    await setSavedFiles([]);
-    await setIsRequestingDeletingFiles(false);
-  };
-
-  if (!currentFile)
-    return (
-      <View
-        style={{
-          flex: 1,
-          alignItems: "center",
-          justifyContent: "center",
-        }}
-      >
-        <Button onPress={pickImage} title="choose your image" color="green" />
-        {savedFiles.length ? (
-          <>
-            {isRequestingDeletingFiles ? (
-              <>
-                <Button
-                  onPress={deleteAllFiles}
-                  title="Confirm file Deletion - cannot be undone!"
-                  color="red"
-                />
-                <Button
-                  title="Cancel"
-                  onPress={() => setIsRequestingDeletingFiles(false)}
-                />
-              </>
-            ) : (
-              <Button
-                onPress={() => setIsRequestingDeletingFiles(true)}
-                title="Delete all files"
-                color="red"
-              />
-            )}
-            {savedFiles.map((savedFile, index) => (
-              <Button
-                onPress={() => loadFile(savedFile)}
-                key={index}
-                title={savedFile.fileName}
-              />
-            ))}
-          </>
-        ) : null}
-      </View>
-    );
+  if (!imageProps) return;
 
   return (
     <Animated.View collapsable={false} style={{ flex: 1 }}>
