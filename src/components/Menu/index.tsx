@@ -5,17 +5,15 @@ import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Nodes } from "../ImageViewer/index.types";
 import * as FileSystem from "expo-file-system";
+import { File, SetCurrentFileState } from "../../../App";
 
-interface File {
-  fileId: string;
-  fileName: string | null;
-  imageProps: ImageProps;
-  nodes: Nodes;
+interface MenuProps {
+  setCurrentFile: SetCurrentFileState;
 }
 
 const imageDir = FileSystem.documentDirectory + "images/";
 
-const Menu = ({ setCurrentFile }) => {
+const Menu = ({ setCurrentFile }: MenuProps) => {
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
@@ -96,7 +94,7 @@ const Menu = ({ setCurrentFile }) => {
             <Button
               onPress={() => loadFile(savedFile)}
               key={index}
-              title={savedFile.fileName}
+              title={savedFile.fileName || ""}
             />
           ))}
         </>

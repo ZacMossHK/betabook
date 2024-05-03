@@ -14,17 +14,16 @@ import { Alert, Button, TextInput, View } from "react-native";
 import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { File, SetCurrentFileState } from "../../../App";
 
 const imageDir = FileSystem.documentDirectory + "images/";
 
-interface File {
-  fileId: string;
-  fileName: string | null;
-  imageProps: ImageProps;
-  nodes: Nodes;
+interface ImageViewerProps {
+  currentFile: File;
+  setCurrentFile: SetCurrentFileState;
 }
 
-const ImageViewer = ({ currentFile, setCurrentFile }) => {
+const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
   const ref = useAnimatedRef();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
