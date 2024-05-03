@@ -15,8 +15,16 @@ import * as ImagePicker from "expo-image-picker";
 import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import * as Crypto from "expo-crypto";
 
 const imageDir = FileSystem.documentDirectory + "images/";
+
+interface File {
+  fileId: string;
+  fileName: string | null;
+  imageProps: ImageProps;
+  nodes: Nodes;
+}
 
 const ImageViewer = () => {
   const ref = useAnimatedRef();
@@ -37,20 +45,17 @@ const ImageViewer = () => {
   const [imageProps, setImageProps] = useState<ImageProps | null>(
     process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );
-  const [savedFiles, setSavedFiles] = useState([]);
+  const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [currentFileName, setCurrentFileName] = useState("");
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
+  const [currentFile, setCurrentFile] = useState<File | null>(null);
 
   const loadFiles = async () => {
     const files = [];
     for (const fileId of await AsyncStorage.getAllKeys()) {
       const file = await AsyncStorage.getItem(fileId);
-      if (file)
-        files.push({
-          fileId,
-          fileName: JSON.parse(file).fileName,
-        });
+      if (file) files.push(JSON.parse(file));
     }
     await setSavedFiles(files);
   };
@@ -82,39 +87,50 @@ const ImageViewer = () => {
     });
     if (result.canceled) return;
     const { uri, height, width } = result.assets[0];
-    setImageProps({ uri, height, width });
+    await setImageProps({ uri, height, width });
+    await setCurrentFile({
+      fileId: Crypto.randomUUID(),
+      fileName: null,
+      imageProps: { uri, height, width },
+      nodes: [],
+    });
   };
 
-  const getImageId = (uri: string) => {
-    const splitUri = uri.split("/");
+  const getImageExtension = (uri: string) => {
+    const splitUri = uri.split(".");
     return splitUri[splitUri.length - 1];
   };
 
-  const saveImage = async (uri: string) => {
+  const saveImage = async () => {
+    if (!currentFile) return;
     // creates the image directory if it doesn't exist
     if (!(await FileSystem.getInfoAsync(imageDir)).exists)
       await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
-    const imageId = getImageId(uri);
-    const imageFileUri = `${imageDir}${imageId}`;
-    if (!(await FileSystem.getInfoAsync(imageFileUri)).exists)
-      await FileSystem.copyAsync({ from: uri, to: imageFileUri });
-    const fileInfo = {
-      imageProps,
+    // if image doesn't exist on local storage, copy it over
+    const newFile = {
+      fileId: currentFile.fileId,
+      imageProps: currentFile.imageProps,
       nodes,
-      fileName: currentFileName,
+      fileName: currentFileName || currentFile.fileName,
     };
-    await AsyncStorage.setItem(imageId, JSON.stringify(fileInfo));
-    // TODO: add node saving here
+    const imageFileUri = `${imageDir}${currentFile.fileId}${getImageExtension(
+      currentFile.imageProps.uri
+    )}`;
+    if (!(await FileSystem.getInfoAsync(imageFileUri)).exists) {
+      await FileSystem.copyAsync({
+        from: currentFile.imageProps.uri,
+        to: imageFileUri,
+      });
+      newFile.imageProps = { ...newFile.imageProps, uri: imageFileUri };
+    }
+    await AsyncStorage.setItem(currentFile.fileId, JSON.stringify(newFile));
     Alert.alert("File saved!");
   };
 
-  const loadFile = async (fileName: string) => {
-    const item = await AsyncStorage.getItem(fileName);
-    if (!item) return;
-    const file = JSON.parse(item);
-    await setCurrentFileName(file.fileName);
-    await setNodes(file.nodes);
+  const loadFile = async (file: File) => {
     await setImageProps(file.imageProps);
+    await setCurrentFile(file);
+    await setNodes(file.nodes);
   };
 
   const deleteAllFiles = async () => {
@@ -124,7 +140,7 @@ const ImageViewer = () => {
     await setIsRequestingDeletingFiles(false);
   };
 
-  if (!imageProps)
+  if (!currentFile)
     return (
       <View
         style={{
@@ -157,7 +173,7 @@ const ImageViewer = () => {
             )}
             {savedFiles.map((savedFile, index) => (
               <Button
-                onPress={() => loadFile(savedFile.fileId)}
+                onPress={() => loadFile(savedFile)}
                 key={index}
                 title={savedFile.fileName}
               />
@@ -209,20 +225,17 @@ const ImageViewer = () => {
             height: 40,
             textAlign: "center",
           }}
-          placeholder={currentFileName}
+          placeholder={currentFile.fileName || "enter route name here"}
           onChangeText={setCurrentFileName}
         />
-        <Button
-          onPress={() => saveImage(imageProps.uri)}
-          color="red"
-          title="save"
-        />
+        <Button onPress={saveImage} color="red" title="save" />
         <Button
           title="menu"
           onPress={() => {
             setImageProps(null);
             setNodes([]);
             setCurrentFileName("");
+            setCurrentFile(null);
           }}
         />
       </View>

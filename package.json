@@ -26,7 +26,8 @@
     "expo-linear-gradient": "~12.7.2",
     "expo-image-picker": "~14.7.1",
     "expo-file-system": "~16.0.9",
-    "@react-native-async-storage/async-storage": "1.21.0"
+    "@react-native-async-storage/async-storage": "1.21.0",
+    "expo-crypto": "~12.8.1"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"
