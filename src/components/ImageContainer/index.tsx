@@ -293,8 +293,8 @@ const ImageContainer = ({
   return (
     <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
       <Animated.View
-        onLayout={(i) => {
-          const { height, width } = i.nativeEvent.layout;
+        onLayout={({ nativeEvent }) => {
+          const { height, width } = nativeEvent.layout;
           setViewportMeasurements({ height, width });
           isViewRendered.value = true;
         }}
