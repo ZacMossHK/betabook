@@ -109,15 +109,10 @@ const ImageViewer = () => {
   };
 
   const loadFile = async (fileName: string) => {
-    const fileInfo = await FileSystem.getInfoAsync(imageDir + fileName);
-    const file = JSON.parse(await AsyncStorage.getItem(fileName));
-    // TODO: replace this with saved height and width from expo image picker
-    console.log(file);
-    await setImageProps({
-      uri: fileInfo.uri,
-      height: 564.7058905153186,
-      width: 423.5294189453125,
-    });
+    const item = await AsyncStorage.getItem(fileName);
+    if (!item) return;
+    const file = JSON.parse(item);
+    await setImageProps(file.imageProps);
     await setNodes(file.nodes);
   };
 
