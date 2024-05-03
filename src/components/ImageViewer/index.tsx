@@ -222,6 +222,7 @@ const ImageViewer = () => {
           onPress={() => {
             setImageProps(null);
             setNodes([]);
+            setCurrentFileName("");
           }}
         />
       </View>
