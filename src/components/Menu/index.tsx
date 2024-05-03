@@ -1,9 +1,8 @@
-import { Button, ImageProps, View } from "react-native";
+import { Button, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Crypto from "expo-crypto";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Nodes } from "../ImageViewer/index.types";
 import * as FileSystem from "expo-file-system";
 import { File, SetCurrentFileState } from "../../../App";
 import { IMAGE_DIR } from "./index.constants";
