@@ -38,7 +38,7 @@ const ImageViewer = () => {
     process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );
   const [savedFiles, setSavedFiles] = useState([]);
-  const [newFileName, setNewFileName] = useState("");
+  const [currentFileName, setCurrentFileName] = useState("");
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
 
@@ -101,7 +101,7 @@ const ImageViewer = () => {
     const fileInfo = {
       imageProps,
       nodes,
-      fileName: newFileName,
+      fileName: currentFileName,
     };
     await AsyncStorage.setItem(imageId, JSON.stringify(fileInfo));
     // TODO: add node saving here
@@ -112,8 +112,9 @@ const ImageViewer = () => {
     const item = await AsyncStorage.getItem(fileName);
     if (!item) return;
     const file = JSON.parse(item);
-    await setImageProps(file.imageProps);
+    await setCurrentFileName(file.fileName);
     await setNodes(file.nodes);
+    await setImageProps(file.imageProps);
   };
 
   const deleteAllFiles = async () => {
@@ -208,8 +209,8 @@ const ImageViewer = () => {
             height: 40,
             textAlign: "center",
           }}
-          placeholder="Enter file name"
-          onChangeText={setNewFileName}
+          placeholder={currentFileName}
+          onChangeText={setCurrentFileName}
         />
         <Button
           onPress={() => saveImage(imageProps.uri)}
