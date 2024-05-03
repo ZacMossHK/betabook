@@ -15,8 +15,7 @@ import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File, SetCurrentFileState } from "../../../App";
-
-const imageDir = FileSystem.documentDirectory + "images/";
+import { IMAGE_DIR } from "../Menu/index.constants";
 
 interface ImageViewerProps {
   currentFile: File;
@@ -76,8 +75,8 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
   const saveImage = async () => {
     if (!currentFile) return;
     // creates the image directory if it doesn't exist
-    if (!(await FileSystem.getInfoAsync(imageDir)).exists)
-      await FileSystem.makeDirectoryAsync(imageDir, { intermediates: true });
+    if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
+      await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
     // if image doesn't exist on local storage, copy it over
     const newFile = {
       fileId: currentFile.fileId,
@@ -85,7 +84,7 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
       nodes,
       fileName: currentFileName || currentFile.fileName,
     };
-    const imageFileUri = `${imageDir}${currentFile.fileId}${getImageExtension(
+    const imageFileUri = `${IMAGE_DIR}${currentFile.fileId}${getImageExtension(
       currentFile.imageProps.uri
     )}`;
     if (!(await FileSystem.getInfoAsync(imageFileUri)).exists) {

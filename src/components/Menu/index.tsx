@@ -6,12 +6,11 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { Nodes } from "../ImageViewer/index.types";
 import * as FileSystem from "expo-file-system";
 import { File, SetCurrentFileState } from "../../../App";
+import { IMAGE_DIR } from "./index.constants";
 
 interface MenuProps {
   setCurrentFile: SetCurrentFileState;
 }
-
-const imageDir = FileSystem.documentDirectory + "images/";
 
 const Menu = ({ setCurrentFile }: MenuProps) => {
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
@@ -55,7 +54,7 @@ const Menu = ({ setCurrentFile }: MenuProps) => {
 
   const deleteAllFiles = async () => {
     await AsyncStorage.multiRemove(await AsyncStorage.getAllKeys());
-    await FileSystem.deleteAsync(imageDir);
+    await FileSystem.deleteAsync(IMAGE_DIR);
     await setSavedFiles([]);
     await setIsRequestingDeletingFiles(false);
   };
