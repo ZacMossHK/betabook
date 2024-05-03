@@ -29,6 +29,7 @@ const generateTransform = (
   ratioDiff: number
 ) => {
   "worklet";
+  if (!currentNode || !nextNode) return [];
   const [x1, y1] = getNodeXYWithOffset(currentNode);
   const [x2, y2] = getNodeXYWithOffset(nextNode);
   return [
