@@ -1,7 +1,5 @@
 import Animated, {
-  AnimatedRef,
   SharedValue,
-  measure,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -12,6 +10,7 @@ import {
   Coordinates,
   ImageProps,
   Nodes,
+  SizeDimensions,
   TransformableMatrix3,
 } from "../ImageViewer/index.types";
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
@@ -24,7 +23,6 @@ import { getNewNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 
 interface ImageContainerProps {
-  innerRef: AnimatedRef<React.Component<{}, {}, any>>;
   isViewRendered: SharedValue<boolean>;
   translation: SharedValue<Coordinates>;
   pinchScale: SharedValue<number>;
@@ -36,10 +34,13 @@ interface ImageContainerProps {
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
   imageProps: ImageProps;
+  viewportMeasurements: SizeDimensions | null;
+  setViewportMeasurements: React.Dispatch<
+    React.SetStateAction<SizeDimensions | null>
+  >;
 }
 
 const ImageContainer = ({
-  innerRef,
   isViewRendered,
   translation,
   pinchScale,
@@ -51,6 +52,8 @@ const ImageContainer = ({
   setNodes,
   nodes,
   imageProps,
+  viewportMeasurements,
+  setViewportMeasurements,
 }: ImageContainerProps) => {
   // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
 
@@ -60,16 +63,16 @@ const ImageContainer = ({
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
-      const measured = measure(innerRef);
-      if (!measured) return;
+      if (!viewportMeasurements) return;
       origin.value = {
-        x: event.focalX - measured.width / 2,
-        y: maxDistance.value.y ? event.focalY - measured.height / 2 : 0,
+        x: event.focalX - viewportMeasurements.width / 2,
+        y: maxDistance.value.y
+          ? event.focalY - viewportMeasurements.height / 2
+          : 0,
       };
     })
     .onChange((event) => {
-      const measured = measure(innerRef);
-      if (!measured) return;
+      if (!viewportMeasurements) return;
 
       if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
 
@@ -80,7 +83,7 @@ const ImageContainer = ({
         );
         baseScale.value *= pinchScale.value;
         pinchScale.value = 1;
-        origin.value.y = event.focalY - measured.height / 2;
+        origin.value.y = event.focalY - viewportMeasurements.height / 2;
         adjustedScale.value = 1;
       }
 
@@ -175,18 +178,17 @@ const ImageContainer = ({
     .minDuration(300)
     .onStart((event) => {
       if (event.numberOfPointers > 1) return;
-      const measured = measure(innerRef);
-      if (!measured) return;
+      if (!viewportMeasurements) return;
       const newNodePosition = {
         x: getNewNodePosition(
-          measured.width,
+          viewportMeasurements.width,
           imageMatrix.value[0],
           imageMatrix.value[2],
           event.x,
           NODE_SIZE_OFFSET
         ),
         y: getNewNodePosition(
-          measured.height,
+          viewportMeasurements.height,
           imageMatrix.value[0],
           imageMatrix.value[5],
           event.y,
@@ -194,8 +196,8 @@ const ImageContainer = ({
         ),
       };
       const imageHeight =
-        measured.width * (imageProps.height / imageProps.width);
-      const borderDistance = (measured.height - imageHeight) / 2;
+        viewportMeasurements.width * (imageProps.height / imageProps.width);
+      const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
       // checks if the node is outside of the borders of the image
       if (
         newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
@@ -208,10 +210,9 @@ const ImageContainer = ({
 
   const animatedStyle = useAnimatedStyle(() => {
     // necessary as measuring a view that has not rendered properly will produce a warning
-    if (!isViewRendered.value) return {};
+    if (!isViewRendered.value && !_WORKLET) return {};
 
-    const measured = measure(innerRef);
-    if (!measured || !isViewRendered.value) return {};
+    if (!viewportMeasurements || !isViewRendered.value) return {};
 
     if (
       !translation.value.x &&
@@ -232,15 +233,19 @@ const ImageContainer = ({
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
     // TODO: refactor this!
-    if (imageProps.width >= measured.width) {
+    if (imageProps.width >= viewportMeasurements.width) {
       const imageHeight =
-        measured.width * (imageProps.height / imageProps.width);
+        viewportMeasurements.width * (imageProps.height / imageProps.width);
       maxDistance.value = {
-        x: (measured.width * imageMatrix.value[0] - measured.width) / 2,
+        x:
+          (viewportMeasurements.width * imageMatrix.value[0] -
+            viewportMeasurements.width) /
+          2,
         // the max distance for y will be a negative number so needs .abs to turn it into a positive number
         y: Math.abs(
           Math.min(
-            (measured.height - imageHeight * imageMatrix.value[0]) / 2,
+            (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
+              2,
             0
           )
         ),
@@ -248,13 +253,20 @@ const ImageContainer = ({
     } else {
       // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
       const imageWidth =
-        measured.height * (imageProps.width / imageProps.height);
+        viewportMeasurements.height * (imageProps.width / imageProps.height);
       maxDistance.value = {
         // the max distance for x will be a negative number so needs .abs to turn it into a positive number
         x: Math.abs(
-          Math.min((measured.width - imageWidth * imageMatrix.value[0]) / 2, 0)
+          Math.min(
+            (viewportMeasurements.width - imageWidth * imageMatrix.value[0]) /
+              2,
+            0
+          )
         ),
-        y: (measured.height * imageMatrix.value[0] - measured.height) / 2,
+        y:
+          (viewportMeasurements.height * imageMatrix.value[0] -
+            viewportMeasurements.height) /
+          2,
       };
     }
 
@@ -281,10 +293,11 @@ const ImageContainer = ({
   return (
     <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
       <Animated.View
-        onLayout={() => {
-          if (innerRef.current) isViewRendered.value = true;
+        onLayout={(i) => {
+          const { height, width } = i.nativeEvent.layout;
+          setViewportMeasurements({ height, width });
+          isViewRendered.value = true;
         }}
-        ref={innerRef}
         collapsable={false}
         style={[imageContainerStyles.fullscreen]}
       >

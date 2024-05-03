@@ -1,7 +1,5 @@
 import Animated, {
-  AnimatedRef,
   SharedValue,
-  measure,
   runOnJS,
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +7,12 @@ import Animated, {
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import React from "react";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import { Coordinates, ImageProps, Nodes } from "../ImageViewer/index.types";
+import {
+  Coordinates,
+  ImageProps,
+  Nodes,
+  SizeDimensions,
+} from "../ImageViewer/index.types";
 
 interface MovementNodeProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -24,8 +27,8 @@ interface MovementNodeProps {
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
   staticNode: Coordinates;
-  innerRef: AnimatedRef<React.Component<{}, {}, any>>;
   imageProps: ImageProps;
+  viewportMeasurements: SizeDimensions | null;
 }
 
 const MovementNode = ({
@@ -40,8 +43,8 @@ const MovementNode = ({
   pinchScale,
   baseScale,
   staticNode,
-  innerRef,
   imageProps,
+  viewportMeasurements,
 }: MovementNodeProps) => {
   const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const tap = Gesture.Tap()
@@ -59,9 +62,8 @@ const MovementNode = ({
   const translate = Gesture.Pan()
     .maxPointers(1)
     .onChange((event) => {
-      const measured = measure(innerRef);
       if (
-        !measured ||
+        !viewportMeasurements ||
         selectedNodeIndex.value === null ||
         !isSelectingNode.value
       )
@@ -80,10 +82,11 @@ const MovementNode = ({
         };
         // This makes sure you can't move nodes off the side of the image with borders
         // This needs refactoring!
-        if (imageProps.width >= measured.width) {
+        if (imageProps.width >= viewportMeasurements.width) {
           const imageHeight =
-            measured.width * (imageProps.height / imageProps.width);
-          const verticalBorderDistance = (measured.height - imageHeight) / 2;
+            viewportMeasurements.width * (imageProps.height / imageProps.width);
+          const verticalBorderDistance =
+            (viewportMeasurements.height - imageHeight) / 2;
           selectedNodePosition.value = {
             x: actualPosition.value.x,
             y: Math.max(
@@ -96,8 +99,10 @@ const MovementNode = ({
           };
         } else {
           const imageWidth =
-            measured.height * (imageProps.width / imageProps.height);
-          const horizontalBorderDistance = (measured.width - imageWidth) / 2;
+            viewportMeasurements.height *
+            (imageProps.width / imageProps.height);
+          const horizontalBorderDistance =
+            (viewportMeasurements.width - imageWidth) / 2;
           selectedNodePosition.value = {
             x: Math.max(
               horizontalBorderDistance - NODE_SIZE_OFFSET,

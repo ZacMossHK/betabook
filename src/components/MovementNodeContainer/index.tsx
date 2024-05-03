@@ -1,13 +1,16 @@
 import Animated, {
-  AnimatedRef,
   SharedValue,
-  measure,
   useAnimatedStyle,
   useDerivedValue,
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
-import { Coordinates, ImageProps, Nodes } from "../ImageViewer/index.types";
+import {
+  Coordinates,
+  ImageProps,
+  Nodes,
+  SizeDimensions,
+} from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import React from "react";
@@ -21,13 +24,13 @@ interface MovementNodeContainerProps {
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   imageMatrix: SharedValue<Matrix3>;
   isViewRendered: SharedValue<boolean>;
-  innerRef: AnimatedRef<React.Component<{}, {}, any>>;
   maxDistance: SharedValue<Coordinates>;
   isSelectingNode: SharedValue<boolean>;
   isTranslatingNode: SharedValue<boolean>;
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
   imageProps: ImageProps;
+  viewportMeasurements: SizeDimensions | null;
 }
 
 const MovementNodeContainer = ({
@@ -37,13 +40,13 @@ const MovementNodeContainer = ({
   setNodes,
   imageMatrix,
   isViewRendered,
-  innerRef,
   maxDistance,
   isSelectingNode,
   isTranslatingNode,
   pinchScale,
   baseScale,
   imageProps,
+  viewportMeasurements,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
   const pixelRatio = PixelRatio.get();
@@ -52,8 +55,7 @@ const MovementNodeContainer = ({
 
   const animatedStyle = useAnimatedStyle(() => {
     if (!isViewRendered.value) return {};
-    const measured = measure(innerRef);
-    if (!measured) return {};
+    if (!viewportMeasurements) return {};
     const scale = pinchScale.value * baseScale.value;
     /* This View is the container for all the Move Nodes, and its movement should track along with the image.
     The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
@@ -70,7 +72,8 @@ const MovementNodeContainer = ({
               -maxDistance.value.x,
               Math.min(maxDistance.value.x, imageMatrix.value[2])
             ) -
-            (measured.width * scale - measured.width) / 2,
+            (viewportMeasurements.width * scale - viewportMeasurements.width) /
+              2,
         },
         {
           translateY:
@@ -78,7 +81,9 @@ const MovementNodeContainer = ({
               -maxDistance.value.y,
               Math.min(maxDistance.value.y, imageMatrix.value[5])
             ) -
-            (measured.height * scale - measured.height) / 2,
+            (viewportMeasurements.height * scale -
+              viewportMeasurements.height) /
+              2,
         },
       ],
     };
@@ -151,8 +156,8 @@ const MovementNodeContainer = ({
               pinchScale,
               baseScale,
               staticNode,
-              innerRef,
               imageProps,
+              viewportMeasurements,
             }}
           />
         );

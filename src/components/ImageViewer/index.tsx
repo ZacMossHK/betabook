@@ -1,9 +1,8 @@
 import Animated, {
-  useAnimatedRef,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
-import { Coordinates, ImageProps, Nodes } from "./index.types";
+import { Coordinates, ImageProps, Nodes, SizeDimensions } from "./index.types";
 import { identity3 } from "react-native-redash";
 import populateNodes from "../../../devData/populateNodes";
 import { useEffect, useState } from "react";
@@ -23,8 +22,6 @@ interface ImageViewerProps {
 }
 
 const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
-  const ref = useAnimatedRef();
-
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
@@ -42,6 +39,8 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
   );
   const [currentFileName, setCurrentFileName] = useState("");
+  const [viewportMeasurements, setViewportMeasurements] =
+    useState<SizeDimensions | null>(null);
 
   const initialiseImageViewer = async () => {
     await setNodes(currentFile.nodes);
@@ -110,18 +109,17 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
           setNodes,
           imageMatrix,
           isViewRendered,
-          innerRef: ref,
           maxDistance,
           isSelectingNode,
           isTranslatingNode,
           baseScale,
           pinchScale,
           imageProps,
+          viewportMeasurements,
         }}
       />
       <ImageContainer
         {...{
-          innerRef: ref,
           isViewRendered,
           translation,
           pinchScale,
@@ -133,6 +131,8 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
           setNodes,
           nodes,
           imageProps,
+          viewportMeasurements,
+          setViewportMeasurements,
         }}
       />
       <View style={{ flex: 1, top: "83%" }}>
