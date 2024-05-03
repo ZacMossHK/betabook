@@ -146,15 +146,7 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
           onChangeText={setCurrentFileName}
         />
         <Button onPress={saveImage} color="red" title="save" />
-        <Button
-          title="menu"
-          onPress={() => {
-            setImageProps(null);
-            setNodes([]);
-            setCurrentFileName("");
-            setCurrentFile(null);
-          }}
-        />
+        <Button title="menu" onPress={() => setCurrentFile(null)} />
       </View>
     </Animated.View>
   );
