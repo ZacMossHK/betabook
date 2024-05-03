@@ -29,11 +29,7 @@ const Menu = ({ setCurrentFile }: MenuProps) => {
     loadFiles();
   }, []);
 
-  const loadFile = async (file: File) => {
-    // await setImageProps(file.imageProps);
-    await setCurrentFile(file);
-    // await setNodes(file.nodes);
-  };
+  const loadFile = async (file: File) => await setCurrentFile(file);
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -42,7 +38,6 @@ const Menu = ({ setCurrentFile }: MenuProps) => {
     });
     if (result.canceled) return;
     const { uri, height, width } = result.assets[0];
-    // await setImageProps({ uri, height, width });
     await setCurrentFile({
       fileId: Crypto.randomUUID(),
       fileName: null,
