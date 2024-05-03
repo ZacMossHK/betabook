@@ -1,15 +1,21 @@
-import { ImageProps, SafeAreaView } from "react-native";
+import { SafeAreaView } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import ImageViewer from "./src/components/ImageViewer";
 import { useState } from "react";
-import { Nodes } from "./src/components/ImageViewer/index.types";
+import { ImageProps, Nodes } from "./src/components/ImageViewer/index.types";
 import Menu from "./src/components/Menu";
-interface File {
+
+export interface File {
   fileId: string;
   fileName: string | null;
   imageProps: ImageProps;
   nodes: Nodes;
 }
+
+export type SetCurrentFileState = React.Dispatch<
+  React.SetStateAction<File | null>
+>;
+
 const App = () => {
   const [currentFile, setCurrentFile] = useState<File | null>(null);
 
