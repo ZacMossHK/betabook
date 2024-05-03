@@ -76,7 +76,6 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     // creates the image directory if it doesn't exist
     if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
       await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
-    // if image doesn't exist on local storage, copy it over
     const newFile = {
       fileId: currentFile.fileId,
       imageProps: currentFile.imageProps,
@@ -86,6 +85,7 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     const imageFileUri = `${IMAGE_DIR}${currentFile.fileId}${getImageExtension(
       currentFile.imageProps.uri
     )}`;
+    // if image doesn't exist on local storage, copy it over
     if (!(await FileSystem.getInfoAsync(imageFileUri)).exists) {
       await FileSystem.copyAsync({
         from: currentFile.imageProps.uri,
