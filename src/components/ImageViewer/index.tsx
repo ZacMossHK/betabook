@@ -72,7 +72,6 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
   };
 
   const saveImage = async () => {
-    if (!currentFile) return;
     // creates the image directory if it doesn't exist
     if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
       await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
