@@ -69,8 +69,7 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
       await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
     const newFile = {
-      fileId: currentFile.fileId,
-      imageProps: currentFile.imageProps,
+      ...currentFile,
       nodes,
       fileName: currentFileName || currentFile.fileName,
     };
