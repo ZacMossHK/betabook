@@ -6,6 +6,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
 import { File, SetCurrentFileState } from "../../../App";
 import { IMAGE_DIR } from "./index.constants";
+import devCurrentFile from "../../../devData/devCurrentfile";
 
 interface MenuProps {
   setCurrentFile: SetCurrentFileState;
@@ -18,6 +19,9 @@ const Menu = ({ setCurrentFile }: MenuProps) => {
 
   const loadFiles = async () => {
     const files = [];
+    // file for development only
+    if (process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG)
+      files.push(devCurrentFile());
     for (const fileId of await AsyncStorage.getAllKeys()) {
       const file = await AsyncStorage.getItem(fileId);
       if (file) files.push(JSON.parse(file));

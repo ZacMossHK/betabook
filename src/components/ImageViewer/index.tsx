@@ -35,23 +35,14 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
 
-  const [nodes, setNodes] = useState<Nodes>(populateNodes());
-  const [imageProps, setImageProps] = useState<ImageProps | null>(
-    process.env.EXPO_PUBLIC_DEV_IMG ? getDevImageProps() : null
+  const [nodes, setNodes] = useState<Nodes>(currentFile.nodes);
+  const [imageProps, setImageProps] = useState<ImageProps>(
+    currentFile.imageProps
   );
   const [currentFileName, setCurrentFileName] = useState("");
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
   const [isDisplayingNodeNotes, setIsDisplayingNodeNotes] = useState(false);
-
-  const initialiseImageViewer = async () => {
-    await setNodes(currentFile.nodes);
-    await setImageProps(currentFile.imageProps);
-  };
-
-  useEffect(() => {
-    initialiseImageViewer();
-  }, []);
 
   useEffect(() => {
     selectedNodePosition.value = null;

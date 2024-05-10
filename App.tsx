@@ -4,6 +4,7 @@ import ImageViewer from "./src/components/ImageViewer";
 import { useState } from "react";
 import { ImageProps, Nodes } from "./src/components/ImageViewer/index.types";
 import Menu from "./src/components/Menu";
+import devCurrentFile from "./devData/devCurrentfile";
 
 export interface File {
   fileId: string;
@@ -17,7 +18,11 @@ export type SetCurrentFileState = React.Dispatch<
 >;
 
 const App = () => {
-  const [currentFile, setCurrentFile] = useState<File | null>(null);
+  const [currentFile, setCurrentFile] = useState<File | null>(
+    process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG
+      ? devCurrentFile()
+      : null
+  );
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>

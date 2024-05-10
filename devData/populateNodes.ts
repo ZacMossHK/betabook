@@ -24,7 +24,7 @@ const populateNodes = (): Nodes => {
       x = Math.random() * (403 - 10) + 10;
       y = Math.random() * (713 - 188) + 188;
     } while (hasOverlap(nodes, x, y));
-    nodes.push({ x, y });
+    nodes.push({ x, y, note: "" });
   }
   return nodes;
 };
