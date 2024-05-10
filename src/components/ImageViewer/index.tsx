@@ -4,13 +4,11 @@ import Animated, {
 } from "react-native-reanimated";
 import { Coordinates, ImageProps, Nodes, SizeDimensions } from "./index.types";
 import { identity3 } from "react-native-redash";
-import populateNodes from "../../../devData/populateNodes";
 import { useEffect, useState } from "react";
 import { getMatrix } from "../../helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../MovementNodeContainer";
 import ImageContainer from "../ImageContainer";
 import { Alert, Button, TextInput, View } from "react-native";
-import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File, SetCurrentFileState } from "../../../App";
