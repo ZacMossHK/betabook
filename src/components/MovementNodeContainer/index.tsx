@@ -108,6 +108,7 @@ const MovementNodeContainer = ({
         scale,
         NODE_SIZE_OFFSET
       ),
+      note: node.note,
     }));
   });
   return (
@@ -119,14 +120,14 @@ const MovementNodeContainer = ({
         animatedStyle,
       ]}
     >
-      {nodes.map((nodePosition, nodeIndex) => {
+      {nodes.map((node, nodeIndex) => {
         const scale = pinchScale.value * baseScale.value;
         const staticNode = {
           x: getCurrentNodePosition(
             selectedNodeIndex.value === nodeIndex &&
               selectedNodePosition.value !== null
               ? selectedNodePosition.value.x
-              : nodePosition.x,
+              : node.x,
             scale,
             NODE_SIZE_OFFSET
           ),
@@ -134,19 +135,19 @@ const MovementNodeContainer = ({
             selectedNodeIndex.value === nodeIndex &&
               selectedNodePosition.value !== null
               ? selectedNodePosition.value.y
-              : nodePosition.y,
+              : node.y,
             scale,
             NODE_SIZE_OFFSET
           ),
         };
         return (
           <MovementNode
-            key={`${0}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
+            key={`${0}-${nodeIndex}-${node.x}-${node.y}`}
             {...{
               selectedNodeIndex,
               nodeIndex,
               selectedNodePosition,
-              nodePosition,
+              nodePosition: { x: node.x, y: node.y },
               imageMatrix,
               isSelectingNode,
               setNodes,
@@ -163,7 +164,7 @@ const MovementNodeContainer = ({
         );
       })}
       {nodes.length > 1
-        ? nodes.map((nodePosition, nodeIndex) => {
+        ? nodes.map((node, nodeIndex) => {
             if (nodeIndex === nodes.length - 1) return;
             const scale = pinchScale.value * baseScale.value;
             const currentNode = {
@@ -171,7 +172,7 @@ const MovementNodeContainer = ({
                 selectedNodeIndex.value === nodeIndex &&
                   selectedNodePosition.value !== null
                   ? selectedNodePosition.value.x
-                  : nodePosition.x,
+                  : node.x,
                 scale,
                 NODE_SIZE_OFFSET
               ),
@@ -179,7 +180,7 @@ const MovementNodeContainer = ({
                 selectedNodeIndex.value === nodeIndex &&
                   selectedNodePosition.value !== null
                   ? selectedNodePosition.value.y
-                  : nodePosition.y,
+                  : node.y,
                 scale,
                 NODE_SIZE_OFFSET
               ),
@@ -204,7 +205,7 @@ const MovementNodeContainer = ({
             };
             return (
               <MovementNodeLine
-                key={`${1}-${nodeIndex}-${nodePosition.x}-${nodePosition.y}`}
+                key={`${1}-${nodeIndex}-${node.x}-${node.y}`}
                 {...{
                   nodeIndex,
                   adjustedPositionNodes,

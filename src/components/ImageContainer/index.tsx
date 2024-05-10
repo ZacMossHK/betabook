@@ -205,7 +205,7 @@ const ImageContainer = ({
       ) {
         return;
       }
-      runOnJS(setNodes)([...nodes, newNodePosition]);
+      runOnJS(setNodes)([...nodes, { ...newNodePosition, note: "" }]);
     });
 
   const animatedStyle = useAnimatedStyle(() => {

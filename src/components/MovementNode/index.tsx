@@ -125,7 +125,10 @@ const MovementNode = ({
       )
         return;
       const newNodes = [...nodes];
-      newNodes[selectedNodeIndex.value] = selectedNodePosition.value;
+      newNodes[selectedNodeIndex.value] = {
+        ...selectedNodePosition.value,
+        note: "",
+      };
       runOnJS(setNodes)(newNodes);
     });
 
