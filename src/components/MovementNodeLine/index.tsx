@@ -1,6 +1,5 @@
 import Animated, {
   SharedValue,
-  interpolate,
   interpolateColor,
   useAnimatedStyle,
 } from "react-native-reanimated";
