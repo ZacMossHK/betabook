@@ -9,12 +9,13 @@ import { useEffect, useState } from "react";
 import { getMatrix } from "../../helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../MovementNodeContainer";
 import ImageContainer from "../ImageContainer";
-import { Alert, Button, TextInput, View } from "react-native";
+import { Alert, Button, Text, TextInput, View } from "react-native";
 import getDevImageProps from "../../../devData/getDevImageProps";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File, SetCurrentFileState } from "../../../App";
 import { IMAGE_DIR } from "../Menu/index.constants";
+import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
 
 interface ImageViewerProps {
   currentFile: File;
@@ -41,6 +42,7 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
   const [currentFileName, setCurrentFileName] = useState("");
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
+  const [isDisplayingNodeNotes, setIsDisplayingNodeNotes] = useState(false);
 
   const initialiseImageViewer = async () => {
     await setNodes(currentFile.nodes);
@@ -96,10 +98,54 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     Alert.alert("File saved!");
   };
 
+  const NodeData = ({ node }) => {
+    const [isEditingText, setIsEditingText] = useState(false);
+    return isEditingText ? (
+      <TouchableOpacity onPress={() => setIsEditingText(false)}>
+        <TextInput
+          style={{
+            backgroundColor: "white",
+            height: 40,
+            textAlign: "center",
+          }}
+          placeholder={currentFile.fileName || "enter route name here"}
+          onChangeText={setCurrentFileName}
+        />
+      </TouchableOpacity>
+    ) : (
+      <TouchableOpacity onPress={() => setIsEditingText(true)}>
+        <Text style={{ color: "white", padding: 20 }}>
+          x={node.x} y={node.y}
+        </Text>
+      </TouchableOpacity>
+    );
+  };
   if (!imageProps) return;
 
   return (
     <Animated.View collapsable={false} style={{ flex: 1 }}>
+      {isDisplayingNodeNotes && (
+        <View style={{ height: "100%", zIndex: 10, backgroundColor: "black" }}>
+          <FlatList
+            style={
+              {
+                // height: "80%",
+                // width: "100%",
+              }
+            }
+            data={nodes}
+            renderItem={({ item }) => <NodeData node={item} />}
+          />
+          <View style={{ bottom: "10%" }}>
+            <Button
+              title="back"
+              onPress={() => {
+                setIsDisplayingNodeNotes(false);
+              }}
+            />
+          </View>
+        </View>
+      )}
       <MovementNodeContainer
         {...{
           selectedNodeIndex,
@@ -146,6 +192,11 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
         />
         <Button onPress={saveImage} color="red" title="save" />
         <Button title="menu" onPress={() => setCurrentFile(null)} />
+        <Button
+          title="nodes"
+          color="orange"
+          onPress={() => setIsDisplayingNodeNotes(true)}
+        />
       </View>
     </Animated.View>
   );
