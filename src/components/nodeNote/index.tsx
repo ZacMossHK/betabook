@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Node, Nodes } from "../ImageViewer/index.types";
-import { Button, Text, View } from "react-native";
+import { Button, Keyboard, Text, View } from "react-native";
 import { TextInput } from "react-native-gesture-handler";
 
 interface NodeNoteProps {
@@ -12,12 +12,14 @@ interface NodeNoteProps {
 const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(node.note);
-  const saveNodeNote = () =>
+
+  const saveNodeNote = () => {
     setNodes((prevNodes) => {
       const newNodes = [...prevNodes];
-      newNodes[index].note = noteValue;
+      newNodes[index] = { ...newNodes[index], note: noteValue };
       return newNodes;
     });
+  };
 
   return (
     <View>
@@ -30,14 +32,29 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
             textAlign: "center",
           }}
           placeholder={node.note}
+          onChangeText={setNoteValue}
+          defaultValue={node.note}
           onFocus={() => setIsEditingText(true)}
-          onBlur={() => setIsEditingText(false)}
+          onBlur={() => Keyboard.dismiss()}
         />
       </View>
       {isEditingText && (
         <>
-          <Button title="save" onPress={() => saveNodeNote()} />
-          <Button title="cancel" onPress={() => setIsEditingText(false)} />
+          <Button
+            title="save"
+            onPress={() => {
+              saveNodeNote();
+              setIsEditingText(false);
+              Keyboard.dismiss();
+            }}
+          />
+          <Button
+            title="cancel"
+            onPress={() => {
+              setIsEditingText(false);
+              Keyboard.dismiss();
+            }}
+          />
         </>
       )}
     </View>

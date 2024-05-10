@@ -17,6 +17,7 @@ const NodeNoteContainer = ({
   return (
     <View style={{ height: "100%", zIndex: 10, backgroundColor: "black" }}>
       <FlatList
+        keyboardShouldPersistTaps="handled"
         style={{ top: "10%" }}
         data={nodes}
         renderItem={({ item, index }) => (
