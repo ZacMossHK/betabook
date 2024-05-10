@@ -2,7 +2,13 @@ import Animated, {
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
-import { Coordinates, ImageProps, Nodes, SizeDimensions } from "./index.types";
+import {
+  Coordinates,
+  ImageProps,
+  Node,
+  Nodes,
+  SizeDimensions,
+} from "./index.types";
 import { identity3 } from "react-native-redash";
 import populateNodes from "../../../devData/populateNodes";
 import { useEffect, useState } from "react";
@@ -16,6 +22,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { File, SetCurrentFileState } from "../../../App";
 import { IMAGE_DIR } from "../Menu/index.constants";
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
+import NodeNote from "../nodeNote";
+import NodeNoteContainer from "../NodeNoteContainer";
 
 interface ImageViewerProps {
   currentFile: File;
@@ -98,53 +106,12 @@ const ImageViewer = ({ currentFile, setCurrentFile }: ImageViewerProps) => {
     Alert.alert("File saved!");
   };
 
-  const NodeData = ({ node }) => {
-    const [isEditingText, setIsEditingText] = useState(false);
-    return isEditingText ? (
-      <TouchableOpacity onPress={() => setIsEditingText(false)}>
-        <TextInput
-          style={{
-            backgroundColor: "white",
-            height: 40,
-            textAlign: "center",
-          }}
-          placeholder={currentFile.fileName || "enter route name here"}
-          onChangeText={setCurrentFileName}
-        />
-      </TouchableOpacity>
-    ) : (
-      <TouchableOpacity onPress={() => setIsEditingText(true)}>
-        <Text style={{ color: "white", padding: 20 }}>
-          x={node.x} y={node.y}
-        </Text>
-      </TouchableOpacity>
-    );
-  };
   if (!imageProps) return;
 
   return (
     <Animated.View collapsable={false} style={{ flex: 1 }}>
       {isDisplayingNodeNotes && (
-        <View style={{ height: "100%", zIndex: 10, backgroundColor: "black" }}>
-          <FlatList
-            style={
-              {
-                // height: "80%",
-                // width: "100%",
-              }
-            }
-            data={nodes}
-            renderItem={({ item }) => <NodeData node={item} />}
-          />
-          <View style={{ bottom: "10%" }}>
-            <Button
-              title="back"
-              onPress={() => {
-                setIsDisplayingNodeNotes(false);
-              }}
-            />
-          </View>
-        </View>
+        <NodeNoteContainer {...{ nodes, setNodes, setIsDisplayingNodeNotes }} />
       )}
       <MovementNodeContainer
         {...{
