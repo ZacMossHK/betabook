@@ -7,16 +7,15 @@ import * as FileSystem from "expo-file-system";
 import { File, SetCurrentFileState } from "../../../App";
 import { IMAGE_DIR } from "./index.constants";
 import devCurrentFile from "../../../devData/devCurrentfile";
+import { useNavigation, useRouter } from "expo-router";
+import { useClimb } from "../../providers/ClimbProvider";
 
-interface MenuProps {
-  setCurrentFile: SetCurrentFileState;
-}
-
-const Menu = ({ setCurrentFile }: MenuProps) => {
+const Menu = () => {
+  const navigation = useNavigation();
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
-
+  const { setClimb } = useClimb();
   const loadFiles = async () => {
     const files = [];
     // file for development only
@@ -42,12 +41,14 @@ const Menu = ({ setCurrentFile }: MenuProps) => {
     });
     if (result.canceled) return;
     const { uri, height, width } = result.assets[0];
-    await setCurrentFile({
+    await setClimb({
       fileId: Crypto.randomUUID(),
       fileName: null,
       imageProps: { uri, height, width },
       nodes: [],
     });
+
+    navigation.navigate("imageViewer");
   };
 
   const deleteAllFiles = async () => {

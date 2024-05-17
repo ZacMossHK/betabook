@@ -1,11 +1,9 @@
 import { SafeAreaView } from "react-native";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
-import ImageViewer from "./app/imageViewer";
 import { useState } from "react";
-import { ImageProps, Nodes } from "./src/components/ImageViewer/index.types";
-import Menu from "./src/components/Menu";
-import devCurrentFile from "./devData/devCurrentfile";
-
+import devCurrentFile from "../devData/devCurrentfile";
+import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
+import Menu from "../src/components/Menu";
 import { Stack } from "expo-router";
 
 export interface File {
@@ -28,12 +26,13 @@ const App = () => {
 
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
+      <Stack.Screen
+        options={{
+          headerShown: false,
+        }}
+      />
       <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-        {currentFile ? (
-          <ImageViewer {...{ currentFile, setCurrentFile }} />
-        ) : (
-          <Menu {...{ setCurrentFile }} />
-        )}
+        <Menu />
       </SafeAreaView>
     </GestureHandlerRootView>
   );
