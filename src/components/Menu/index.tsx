@@ -7,15 +7,17 @@ import * as FileSystem from "expo-file-system";
 import { File } from "../../../App";
 import { IMAGE_DIR } from "./index.constants";
 import devCurrentFile from "../../../devData/devCurrentfile";
-import { useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 import { useClimb } from "../../providers/ClimbProvider";
 
 const Menu = () => {
-  const navigation = useNavigation();
+  const router = useRouter();
+  const { setClimb } = useClimb();
+
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
-  const { setClimb } = useClimb();
+
   const loadFiles = async () => {
     const files = [];
     // file for development only
@@ -32,7 +34,7 @@ const Menu = () => {
     loadFiles();
   }, []);
 
-  const loadFile = async (file: File) => await setCurrentFile(file);
+  const loadFile = async (file: File) => await setClimb(file);
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
@@ -48,7 +50,7 @@ const Menu = () => {
       nodes: [],
     });
 
-    navigation.navigate("imageViewer");
+    router.navigate("imageViewer");
   };
 
   const deleteAllFiles = async () => {

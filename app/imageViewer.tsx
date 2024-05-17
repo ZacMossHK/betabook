@@ -20,12 +20,11 @@ import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { useNavigation } from "expo-router";
+import { useRouter } from "expo-router";
 
 const ImageViewer = () => {
   const { climb, setClimb } = useClimb();
-
-  const navigation = useNavigation();
+  const router = useRouter();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
@@ -154,7 +153,7 @@ const ImageViewer = () => {
               title="menu"
               onPress={() => {
                 setClimb(null);
-                navigation.goBack();
+                router.back();
               }}
             />
             <Button
