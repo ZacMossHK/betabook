@@ -87,22 +87,22 @@ const ImageViewer = () => {
     if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
       await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
     const newFile = {
-      ...currentFile,
+      ...climb,
       nodes,
-      fileName: currentFileName || currentFile.fileName,
+      fileName: currentFileName || climb.fileName,
     };
-    const imageFileUri = `${IMAGE_DIR}${currentFile.fileId}${getImageExtension(
-      currentFile.imageProps.uri
+    const imageFileUri = `${IMAGE_DIR}${climb.fileId}${getImageExtension(
+      climb.imageProps.uri
     )}`;
     // if image doesn't exist on local storage, copy it over
     if (!(await FileSystem.getInfoAsync(imageFileUri)).exists) {
       await FileSystem.copyAsync({
-        from: currentFile.imageProps.uri,
+        from: climb.imageProps.uri,
         to: imageFileUri,
       });
       newFile.imageProps = { ...newFile.imageProps, uri: imageFileUri };
     }
-    await AsyncStorage.setItem(currentFile.fileId, JSON.stringify(newFile));
+    await AsyncStorage.setItem(climb.fileId, JSON.stringify(newFile));
     Alert.alert("File saved!");
   };
 
@@ -128,7 +128,7 @@ const ImageViewer = () => {
           }}
         />
       )}
-      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+      <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Stack.Screen options={{ title: climb.name }} />
         <Animated.View collapsable={false} style={{ flex: 1 }}>
           {isDisplayingNodeNotes && (
