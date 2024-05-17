@@ -53,6 +53,10 @@ const ImageViewer = () => {
     isSelectingNode.value = false;
   }, [nodes]);
 
+  useEffect(() => {
+    setNodes(climb.nodes);
+  }, []);
+
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
       translation.value,
