@@ -19,8 +19,7 @@ import { Stack, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
-  const { climb, setClimb, nodes, setNodes, saveClimb, clearClimb } =
-    useClimb();
+  const { climb, nodes, setNodes, saveClimb, clearClimb } = useClimb();
   const { isEditingTitle } = useIsEditingTitle();
 
   const router = useRouter();
@@ -37,7 +36,6 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
 
-  // const [nodes, setNodes] = useState<Nodes>(climb.nodes);
   const [imageProps, setImageProps] = useState<ImageProps>({
     height: climb.imageProps.height,
     width: climb.imageProps.width,
