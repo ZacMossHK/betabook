@@ -13,7 +13,7 @@ import { TouchableOpacity } from "react-native-gesture-handler";
 
 const Menu = () => {
   const router = useRouter();
-  const { setClimb } = useClimb();
+  const { climb, setClimb } = useClimb();
 
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
@@ -32,8 +32,9 @@ const Menu = () => {
   };
 
   useEffect(() => {
+    if (climb) return;
     loadFiles();
-  }, []);
+  }, [climb]);
 
   const loadFile = async (file: File) => await setClimb(file);
 
