@@ -42,6 +42,12 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
     await setClimb(newFile);
   };
 
+  const clearClimb = () => {
+    setClimb(null);
+    setNodes([]);
+    setNewClimbName("");
+  };
+
   return (
     <ClimbContext.Provider
       value={{
@@ -52,6 +58,7 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
         newClimbName,
         setNewClimbName,
         saveClimb,
+        clearClimb,
       }}
     >
       {children}

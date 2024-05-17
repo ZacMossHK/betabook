@@ -19,7 +19,8 @@ import { Stack, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
-  const { climb, setClimb, nodes, setNodes, saveClimb } = useClimb();
+  const { climb, setClimb, nodes, setNodes, saveClimb, clearClimb } =
+    useClimb();
   const { isEditingTitle } = useIsEditingTitle();
 
   const router = useRouter();
@@ -130,7 +131,7 @@ const ImageViewer = () => {
             <Button
               title="menu"
               onPress={() => {
-                setClimb(null);
+                clearClimb();
                 router.back();
               }}
             />
