@@ -16,10 +16,8 @@ import ImageContainer from "../src/components/ImageContainer";
 import { Alert, Button, SafeAreaView, TextInput, View } from "react-native";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { File, SetCurrentFileState } from "../App";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
-import { useLocalSearchParams } from "expo-router";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 
@@ -43,7 +41,7 @@ const ImageViewer = () => {
     width: climb.imageProps.width,
     uri: climb.imageProps.uri,
   });
-  
+
   const [currentFileName, setCurrentFileName] = useState("");
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);

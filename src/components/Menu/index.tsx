@@ -4,10 +4,10 @@ import * as Crypto from "expo-crypto";
 import { useEffect, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as FileSystem from "expo-file-system";
-import { File, SetCurrentFileState } from "../../../App";
+import { File } from "../../../App";
 import { IMAGE_DIR } from "./index.constants";
 import devCurrentFile from "../../../devData/devCurrentfile";
-import { useNavigation, useRouter } from "expo-router";
+import { useNavigation } from "expo-router";
 import { useClimb } from "../../providers/ClimbProvider";
 
 const Menu = () => {
