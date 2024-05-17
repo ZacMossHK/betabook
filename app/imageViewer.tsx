@@ -20,9 +20,13 @@ import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
+import { useNavigation } from "expo-router";
 
 const ImageViewer = () => {
-  const { climb } = useClimb();
+  const { climb, setClimb } = useClimb();
+
+  const navigation = useNavigation();
+
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
@@ -41,7 +45,6 @@ const ImageViewer = () => {
     width: climb.imageProps.width,
     uri: climb.imageProps.uri,
   });
-
   const [currentFileName, setCurrentFileName] = useState("");
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
@@ -147,7 +150,13 @@ const ImageViewer = () => {
               onChangeText={setCurrentFileName}
             />
             <Button onPress={saveImage} color="red" title="save" />
-            <Button title="menu" onPress={() => setCurrentFile(null)} />
+            <Button
+              title="menu"
+              onPress={() => {
+                setClimb(null);
+                navigation.goBack();
+              }}
+            />
             <Button
               title="nodes"
               color="orange"
