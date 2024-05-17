@@ -36,7 +36,10 @@ const Menu = () => {
     loadFiles();
   }, [climb]);
 
-  const loadFile = async (file: File) => await setClimb(file);
+  const loadFile = async (file: File) => {
+    await setClimb(file);
+    router.navigate("imageViewer");
+  };
 
   const pickImage = async () => {
     // No permissions request is necessary for launching the image library
