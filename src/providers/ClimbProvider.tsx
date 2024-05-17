@@ -4,7 +4,6 @@ import { IMAGE_DIR } from "../components/Menu/index.constants";
 import { Nodes } from "../components/ImageViewer/index.types";
 import { File } from "../../app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import { Alert } from "react-native";
 
 const ClimbContext = createContext({});
 
@@ -40,7 +39,6 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
       newFile.imageProps = { ...newFile.imageProps, uri: imageFileUri };
     }
     await AsyncStorage.setItem(climb.fileId, JSON.stringify(newFile));
-    Alert.alert("File saved!");
     await setClimb(newFile);
   };
 
