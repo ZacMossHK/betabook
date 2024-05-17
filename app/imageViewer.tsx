@@ -29,7 +29,7 @@ import { Stack, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
-  const { climb, setClimb, nodes, setNodes } = useClimb();
+  const { climb, setClimb, nodes, setNodes, saveClimb } = useClimb();
   const { isEditingTitle } = useIsEditingTitle();
 
   const router = useRouter();
@@ -70,35 +70,6 @@ const ImageViewer = () => {
       transform.value
     )
   );
-
-  const getImageExtension = (uri: string) => {
-    const splitUri = uri.split(".");
-    return splitUri[splitUri.length - 1];
-  };
-
-  const saveImage = async () => {
-    // creates the image directory if it doesn't exist
-    if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
-      await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
-    const newFile = {
-      ...climb,
-      nodes,
-      fileName: currentFileName || climb.fileName,
-    };
-    const imageFileUri = `${IMAGE_DIR}${climb.fileId}${getImageExtension(
-      climb.imageProps.uri
-    )}`;
-    // if image doesn't exist on local storage, copy it over
-    if (!(await FileSystem.getInfoAsync(imageFileUri)).exists) {
-      await FileSystem.copyAsync({
-        from: climb.imageProps.uri,
-        to: imageFileUri,
-      });
-      newFile.imageProps = { ...newFile.imageProps, uri: imageFileUri };
-    }
-    await AsyncStorage.setItem(climb.fileId, JSON.stringify(newFile));
-    Alert.alert("File saved!");
-  };
 
   if (!imageProps) return;
 
@@ -165,7 +136,7 @@ const ImageViewer = () => {
             }}
           />
           <View style={{ flex: 1, top: "83%" }}>
-            <Button onPress={saveImage} color="red" title="save" />
+            <Button onPress={saveClimb} color="red" title="save" />
             <Button
               title="menu"
               onPress={() => {
