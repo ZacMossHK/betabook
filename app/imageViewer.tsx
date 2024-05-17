@@ -171,15 +171,6 @@ const ImageViewer = () => {
             }}
           />
           <View style={{ flex: 1, top: "83%" }}>
-            <TextInput
-              style={{
-                backgroundColor: "white",
-                height: 40,
-                textAlign: "center",
-              }}
-              placeholder={climb.fileName || "enter route name here"}
-              onChangeText={setCurrentFileName}
-            />
             <Button onPress={saveImage} color="red" title="save" />
             <Button
               title="menu"

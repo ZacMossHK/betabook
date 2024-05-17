@@ -72,7 +72,7 @@ const RootLayout = () => (
                         color: "#14281D",
                         fontSize: 22,
                       }}
-                      placeholder={props.children || "enter route name here"}
+                      placeholder={"Enter climb name..."}
                       defaultValue={props.children || ""}
                       onChangeText={setNewRouteName}
                       onLayout={(e) => e.target.focus()}
