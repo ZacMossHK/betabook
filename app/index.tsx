@@ -1,6 +1,4 @@
-import { SafeAreaView, Text, View } from "react-native";
-import { useState } from "react";
-import devCurrentFile from "../devData/devCurrentfile";
+import { SafeAreaView, Text } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import Menu from "../src/components/Menu";
 import { Stack } from "expo-router";
@@ -30,7 +28,7 @@ const App = () => {
     InriaSans_400Regular,
     InriaSans_700Bold,
   });
-  
+
   // TODO: replace with splash screen
   if (!fontsLoaded) return null;
 
