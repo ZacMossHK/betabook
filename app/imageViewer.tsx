@@ -13,17 +13,30 @@ import { useEffect, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
-import { Alert, Button, SafeAreaView, TextInput, View } from "react-native";
+import {
+  Alert,
+  Button,
+  Keyboard,
+  Pressable,
+  SafeAreaView,
+  TextInput,
+  View,
+} from "react-native";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
-import { GestureHandlerRootView } from "react-native-gesture-handler";
+import {
+  GestureHandlerRootView,
+  TouchableWithoutFeedback,
+} from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { useRouter } from "expo-router";
+import { Stack, useRouter } from "expo-router";
+import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
   const { climb, setClimb } = useClimb();
+  const { isEditingTitle } = useIsEditingTitle();
   const router = useRouter();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
@@ -96,73 +109,94 @@ const ImageViewer = () => {
   if (!imageProps) return;
 
   return (
-    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-      <Animated.View collapsable={false} style={{ flex: 1 }}>
-        {isDisplayingNodeNotes && (
-          <NodeNoteContainer
-            {...{ nodes, setNodes, setIsDisplayingNodeNotes }}
-          />
-        )}
-        <MovementNodeContainer
-          {...{
-            selectedNodeIndex,
-            selectedNodePosition,
-            nodes,
-            setNodes,
-            imageMatrix,
-            isViewRendered,
-            maxDistance,
-            isSelectingNode,
-            isTranslatingNode,
-            baseScale,
-            pinchScale,
-            imageProps,
-            viewportMeasurements,
+    <Pressable
+      style={{ flex: 1 }}
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+    >
+      {/* show grey transparent overlay if the title is being edited */}
+      {isEditingTitle && (
+        <View
+          style={{
+            backgroundColor: "grey",
+            opacity: 0.8,
+            width: "100%",
+            height: "100%",
+            position: "absolute",
+            zIndex: 10,
           }}
         />
-        <ImageContainer
-          {...{
-            isViewRendered,
-            translation,
-            pinchScale,
-            baseScale,
-            transform,
-            maxDistance,
-            imageMatrix,
-            origin,
-            setNodes,
-            nodes,
-            imageProps,
-            viewportMeasurements,
-            setViewportMeasurements,
-          }}
-        />
-        <View style={{ flex: 1, top: "83%" }}>
-          <TextInput
-            style={{
-              backgroundColor: "white",
-              height: 40,
-              textAlign: "center",
-            }}
-            placeholder={climb.fileName || "enter route name here"}
-            onChangeText={setCurrentFileName}
-          />
-          <Button onPress={saveImage} color="red" title="save" />
-          <Button
-            title="menu"
-            onPress={() => {
-              setClimb(null);
-              router.back();
+      )}
+      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+        <Stack.Screen options={{ title: climb.name }} />
+        <Animated.View collapsable={false} style={{ flex: 1 }}>
+          {isDisplayingNodeNotes && (
+            <NodeNoteContainer
+              {...{ nodes, setNodes, setIsDisplayingNodeNotes }}
+            />
+          )}
+          <MovementNodeContainer
+            {...{
+              selectedNodeIndex,
+              selectedNodePosition,
+              nodes,
+              setNodes,
+              imageMatrix,
+              isViewRendered,
+              maxDistance,
+              isSelectingNode,
+              isTranslatingNode,
+              baseScale,
+              pinchScale,
+              imageProps,
+              viewportMeasurements,
             }}
           />
-          <Button
-            title="nodes"
-            color="orange"
-            onPress={() => setIsDisplayingNodeNotes(true)}
+          <ImageContainer
+            {...{
+              isViewRendered,
+              translation,
+              pinchScale,
+              baseScale,
+              transform,
+              maxDistance,
+              imageMatrix,
+              origin,
+              setNodes,
+              nodes,
+              imageProps,
+              viewportMeasurements,
+              setViewportMeasurements,
+            }}
           />
-        </View>
-      </Animated.View>
-    </SafeAreaView>
+          <View style={{ flex: 1, top: "83%" }}>
+            <TextInput
+              style={{
+                backgroundColor: "white",
+                height: 40,
+                textAlign: "center",
+              }}
+              placeholder={climb.fileName || "enter route name here"}
+              onChangeText={setCurrentFileName}
+            />
+            <Button onPress={saveImage} color="red" title="save" />
+            <Button
+              title="menu"
+              onPress={() => {
+                setClimb(null);
+                router.back();
+              }}
+            />
+            <Button
+              title="nodes"
+              color="orange"
+              onPress={() => setIsDisplayingNodeNotes(true)}
+            />
+          </View>
+        </Animated.View>
+      </SafeAreaView>
+    </Pressable>
   );
 };
 

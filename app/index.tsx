@@ -8,7 +8,10 @@ import {
   useFonts,
   InriaSerif_400Regular,
 } from "@expo-google-fonts/inria-serif";
-import { InriaSans_700Bold } from "@expo-google-fonts/inria-sans";
+import {
+  InriaSans_400Regular,
+  InriaSans_700Bold,
+} from "@expo-google-fonts/inria-sans";
 
 export interface File {
   fileId: string;
@@ -24,15 +27,12 @@ export type SetCurrentFileState = React.Dispatch<
 const App = () => {
   const [fontsLoaded] = useFonts({
     InriaSerif_400Regular,
+    InriaSans_400Regular,
     InriaSans_700Bold,
   });
-
-  const [currentFile, setCurrentFile] = useState<File | null>(
-    process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG
-      ? devCurrentFile()
-      : null
-  );
-  if (!fontsLoaded) return <View />;
+  
+  // TODO: replace with splash screen
+  if (!fontsLoaded) return null;
 
   return (
     <SafeAreaView
