@@ -96,75 +96,73 @@ const ImageViewer = () => {
   if (!imageProps) return;
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
-        <Animated.View collapsable={false} style={{ flex: 1 }}>
-          {isDisplayingNodeNotes && (
-            <NodeNoteContainer
-              {...{ nodes, setNodes, setIsDisplayingNodeNotes }}
-            />
-          )}
-          <MovementNodeContainer
-            {...{
-              selectedNodeIndex,
-              selectedNodePosition,
-              nodes,
-              setNodes,
-              imageMatrix,
-              isViewRendered,
-              maxDistance,
-              isSelectingNode,
-              isTranslatingNode,
-              baseScale,
-              pinchScale,
-              imageProps,
-              viewportMeasurements,
+    <SafeAreaView style={{ flex: 1, backgroundColor: "black" }}>
+      <Animated.View collapsable={false} style={{ flex: 1 }}>
+        {isDisplayingNodeNotes && (
+          <NodeNoteContainer
+            {...{ nodes, setNodes, setIsDisplayingNodeNotes }}
+          />
+        )}
+        <MovementNodeContainer
+          {...{
+            selectedNodeIndex,
+            selectedNodePosition,
+            nodes,
+            setNodes,
+            imageMatrix,
+            isViewRendered,
+            maxDistance,
+            isSelectingNode,
+            isTranslatingNode,
+            baseScale,
+            pinchScale,
+            imageProps,
+            viewportMeasurements,
+          }}
+        />
+        <ImageContainer
+          {...{
+            isViewRendered,
+            translation,
+            pinchScale,
+            baseScale,
+            transform,
+            maxDistance,
+            imageMatrix,
+            origin,
+            setNodes,
+            nodes,
+            imageProps,
+            viewportMeasurements,
+            setViewportMeasurements,
+          }}
+        />
+        <View style={{ flex: 1, top: "83%" }}>
+          <TextInput
+            style={{
+              backgroundColor: "white",
+              height: 40,
+              textAlign: "center",
+            }}
+            placeholder={climb.fileName || "enter route name here"}
+            onChangeText={setCurrentFileName}
+          />
+          <Button onPress={saveImage} color="red" title="save" />
+          <Button
+            title="menu"
+            onPress={() => {
+              setClimb(null);
+              router.back();
             }}
           />
-          <ImageContainer
-            {...{
-              isViewRendered,
-              translation,
-              pinchScale,
-              baseScale,
-              transform,
-              maxDistance,
-              imageMatrix,
-              origin,
-              setNodes,
-              nodes,
-              imageProps,
-              viewportMeasurements,
-              setViewportMeasurements,
-            }}
+          <Button
+            title="nodes"
+            color="orange"
+            onPress={() => setIsDisplayingNodeNotes(true)}
           />
-          <View style={{ flex: 1, top: "83%" }}>
-            <TextInput
-              style={{
-                backgroundColor: "white",
-                height: 40,
-                textAlign: "center",
-              }}
-              placeholder={climb.fileName || "enter route name here"}
-              onChangeText={setCurrentFileName}
-            />
-            <Button onPress={saveImage} color="red" title="save" />
-            <Button
-              title="menu"
-              onPress={() => {
-                setClimb(null);
-                router.back();
-              }}
-            />
-            <Button
-              title="nodes"
-              color="orange"
-              onPress={() => setIsDisplayingNodeNotes(true)}
-            />
-          </View>
-        </Animated.View>
-      </SafeAreaView>
-    </GestureHandlerRootView>
+        </View>
+      </Animated.View>
+    </SafeAreaView>
   );
 };
 

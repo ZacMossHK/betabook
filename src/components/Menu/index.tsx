@@ -1,4 +1,4 @@
-import { Button, View } from "react-native";
+import { Button, Pressable, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Crypto from "expo-crypto";
 import { useEffect, useState } from "react";
@@ -9,6 +9,7 @@ import { IMAGE_DIR } from "./index.constants";
 import devCurrentFile from "../../../devData/devCurrentfile";
 import { useRouter } from "expo-router";
 import { useClimb } from "../../providers/ClimbProvider";
+import { TouchableOpacity } from "react-native-gesture-handler";
 
 const Menu = () => {
   const router = useRouter();
@@ -61,14 +62,21 @@ const Menu = () => {
   };
 
   return (
-    <View
-      style={{
-        flex: 1,
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <Button onPress={pickImage} title="choose your image" color="green" />
+    <View>
+      <TouchableOpacity
+        style={{ backgroundColor: "#D6EFFF", borderRadius: 15, padding: 9 }}
+        onPress={pickImage}
+      >
+        <Text
+          style={{
+            fontSize: 19,
+            fontFamily: "InriaSans_700Bold",
+            color: "#14281D",
+          }}
+        >
+          Create new
+        </Text>
+      </TouchableOpacity>
       {savedFiles.length ? (
         <>
           {isRequestingDeletingFiles ? (
