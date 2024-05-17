@@ -57,7 +57,6 @@ const ImageViewer = () => {
     width: climb.imageProps.width,
     uri: climb.imageProps.uri,
   });
-  const [currentFileName, setCurrentFileName] = useState("");
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
   const [isDisplayingNodeNotes, setIsDisplayingNodeNotes] = useState(false);

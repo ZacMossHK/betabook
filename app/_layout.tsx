@@ -1,5 +1,5 @@
 import { Stack } from "expo-router";
-import ClimbProvider from "../src/providers/ClimbProvider";
+import ClimbProvider, { useClimb } from "../src/providers/ClimbProvider";
 import {
   GestureHandlerRootView,
   TextInput,
@@ -23,9 +23,10 @@ const RootLayout = () => (
         <Stack
           screenOptions={{
             headerStyle: { backgroundColor: "#F55536" },
+
             headerRight: (props) => {
               const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
-
+              const { saveClimb } = useClimb();
               if (!isEditingTitle) return;
               return (
                 <TouchableOpacity
@@ -34,7 +35,10 @@ const RootLayout = () => (
                     backgroundColor: "#D6EFFF",
                     borderRadius: 15,
                   }}
-                  onPress={() => setIsEditingTitle(false)}
+                  onPress={() => {
+                    saveClimb();
+                    setIsEditingTitle(false);
+                  }}
                 >
                   <Text
                     style={{
@@ -50,8 +54,8 @@ const RootLayout = () => (
             },
             headerTitle: (props) => {
               const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
-
-              const [newRouteName, setNewRouteName] = useState(props.children);
+              const { climb, newClimbName, setNewClimbName, saveClimb } =
+                useClimb();
 
               if (isEditingTitle) {
                 return (
@@ -73,10 +77,11 @@ const RootLayout = () => (
                         fontSize: 22,
                       }}
                       placeholder={"Enter climb name..."}
-                      defaultValue={props.children || ""}
-                      onChangeText={setNewRouteName}
+                      defaultValue={climb?.fileName || ""}
+                      onChangeText={setNewClimbName}
                       onLayout={(e) => e.target.focus()}
                       onBlur={() => {
+                        saveClimb();
                         setIsEditingTitle(false);
                       }}
                     />
@@ -98,7 +103,7 @@ const RootLayout = () => (
                       fontSize: 22,
                     }}
                   >
-                    {props.children}
+                    {climb?.fileName || ""}
                   </Text>
                 </Pressable>
               );
