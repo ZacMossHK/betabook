@@ -5,7 +5,6 @@ import Animated, {
 import {
   Coordinates,
   ImageProps,
-  Nodes,
   SizeDimensions,
 } from "../src/components/ImageViewer/index.types";
 import { identity3 } from "react-native-redash";
@@ -19,24 +18,20 @@ import {
   Keyboard,
   Pressable,
   SafeAreaView,
-  TextInput,
   View,
 } from "react-native";
 import * as FileSystem from "expo-file-system";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
-import {
-  GestureHandlerRootView,
-  TouchableWithoutFeedback,
-} from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { Stack, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
-  const { climb, setClimb } = useClimb();
+  const { climb, setClimb, nodes, setNodes } = useClimb();
   const { isEditingTitle } = useIsEditingTitle();
+
   const router = useRouter();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
@@ -51,7 +46,7 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
 
-  const [nodes, setNodes] = useState<Nodes>(climb.nodes);
+  // const [nodes, setNodes] = useState<Nodes>(climb.nodes);
   const [imageProps, setImageProps] = useState<ImageProps>({
     height: climb.imageProps.height,
     width: climb.imageProps.width,
