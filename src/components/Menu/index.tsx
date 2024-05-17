@@ -1,4 +1,4 @@
-import { Button, Pressable, Text, View } from "react-native";
+import { Button, Text, View } from "react-native";
 import * as ImagePicker from "expo-image-picker";
 import * as Crypto from "expo-crypto";
 import { useEffect, useState } from "react";
