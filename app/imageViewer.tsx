@@ -12,17 +12,7 @@ import { useEffect, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
-import {
-  Alert,
-  Button,
-  Keyboard,
-  Pressable,
-  SafeAreaView,
-  View,
-} from "react-native";
-import * as FileSystem from "expo-file-system";
-import AsyncStorage from "@react-native-async-storage/async-storage";
-import { IMAGE_DIR } from "../src/components/Menu/index.constants";
+import { Button, Keyboard, Pressable, SafeAreaView, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { Stack, useRouter } from "expo-router";
