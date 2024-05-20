@@ -4,14 +4,8 @@ import {
   GestureHandlerRootView,
   TextInput,
 } from "react-native-gesture-handler";
-import {
-  Keyboard,
-  Pressable,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
-import { useEffect, useRef, useState } from "react";
+import { Alert, Pressable, Text, TouchableOpacity, View } from "react-native";
+
 import IsEditingTitleProvider, {
   useIsEditingTitle,
 } from "../src/providers/EditingTitleProvider";
@@ -31,7 +25,7 @@ const RootLayout = () => {
 
   // TODO: replace with splash screen
   if (!fontsLoaded) return null;
-  
+
   return (
     <GestureHandlerRootView style={{ flex: 1 }}>
       <IsEditingTitleProvider>
@@ -40,18 +34,22 @@ const RootLayout = () => {
             screenOptions={{
               headerStyle: { backgroundColor: "#F55536" },
 
-              headerRight: (props) => {
+              headerRight: () => {
                 const { isEditingTitle, setIsEditingTitle } =
                   useIsEditingTitle();
-                const { saveClimb } = useClimb();
+                const { saveClimb, newClimbName } = useClimb();
+
                 if (!isEditingTitle) return;
+
                 return (
                   <TouchableOpacity
                     style={{
                       padding: 9,
                       backgroundColor: "#D6EFFF",
                       borderRadius: 15,
+                      opacity: !newClimbName.length ? 0.3 : 1,
                     }}
+                    disabled={!newClimbName.length}
                     onPress={() => {
                       saveClimb();
                       setIsEditingTitle(false);
@@ -69,7 +67,7 @@ const RootLayout = () => {
                   </TouchableOpacity>
                 );
               },
-              headerTitle: (props) => {
+              headerTitle: () => {
                 const { isEditingTitle, setIsEditingTitle } =
                   useIsEditingTitle();
                 const { climb, newClimbName, setNewClimbName, saveClimb } =
@@ -98,7 +96,12 @@ const RootLayout = () => {
                         defaultValue={climb?.fileName || ""}
                         onChangeText={setNewClimbName}
                         onLayout={(e) => e.target.focus()}
-                        onBlur={() => {
+                        onBlur={(e) => {
+                          if (!newClimbName.length) {
+                            Alert.alert("Climb name cannot be blank");
+                            e.target.focus();
+                            return;
+                          }
                           saveClimb();
                           setIsEditingTitle(false);
                         }}
@@ -110,9 +113,7 @@ const RootLayout = () => {
                 return (
                   <Pressable
                     style={{ flex: 1 }}
-                    onPress={() => {
-                      setIsEditingTitle(true);
-                    }}
+                    onPress={() => setIsEditingTitle(true)}
                   >
                     <Text
                       style={{

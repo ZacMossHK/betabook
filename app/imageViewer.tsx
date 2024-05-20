@@ -20,7 +20,7 @@ import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, saveClimb, clearClimb } = useClimb();
-  const { isEditingTitle } = useIsEditingTitle();
+  const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
 
   const navigation = useNavigation();
 
@@ -55,6 +55,9 @@ const ImageViewer = () => {
     navigation.addListener("beforeRemove", () => {
       clearClimb();
     });
+    if (!climb.fileName) {
+      setIsEditingTitle(true)
+    }
     setNodes(climb.nodes);
   }, []);
 
