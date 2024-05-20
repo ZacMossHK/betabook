@@ -15,14 +15,14 @@ import ImageContainer from "../src/components/ImageContainer";
 import { Button, Keyboard, Pressable, SafeAreaView, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { Stack, useRouter } from "expo-router";
+import { useNavigation, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, saveClimb, clearClimb } = useClimb();
   const { isEditingTitle } = useIsEditingTitle();
 
-  const router = useRouter();
+  const navigation = useNavigation();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
@@ -52,6 +52,9 @@ const ImageViewer = () => {
   }, [nodes]);
 
   useEffect(() => {
+    navigation.addListener("beforeRemove", () => {
+      clearClimb();
+    });
     setNodes(climb.nodes);
   }, []);
 
@@ -129,13 +132,6 @@ const ImageViewer = () => {
           />
           <View style={{ flex: 1, top: "83%" }}>
             <Button onPress={saveClimb} color="red" title="save" />
-            <Button
-              title="menu"
-              onPress={() => {
-                clearClimb();
-                router.back();
-              }}
-            />
             <Button
               title="nodes"
               color="orange"
