@@ -1,6 +1,14 @@
 import { PropsWithChildren, createContext, useContext, useState } from "react";
 
-const IsEditingTitleContext = createContext({});
+interface isEditingTitleDataType {
+  isEditingTitle: boolean;
+  setIsEditingTitle: React.Dispatch<React.SetStateAction<boolean>>;
+}
+
+const IsEditingTitleContext = createContext<isEditingTitleDataType>({
+  isEditingTitle: false,
+  setIsEditingTitle: () => {},
+});
 
 const IsEditingTitleProvider = ({ children }: PropsWithChildren) => {
   const [isEditingTitle, setIsEditingTitle] = useState(false);
