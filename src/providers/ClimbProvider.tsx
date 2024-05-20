@@ -1,4 +1,10 @@
-import { PropsWithChildren, createContext, useContext, useState } from "react";
+import {
+  PropsWithChildren,
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import * as FileSystem from "expo-file-system";
 import { IMAGE_DIR } from "../components/Menu/index.constants";
 import { Nodes } from "../components/ImageViewer/index.types";
@@ -36,6 +42,11 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
     const splitUri = uri.split(".");
     return splitUri[splitUri.length - 1];
   };
+
+  useEffect(() => {
+    if (!climb) return;
+    setNewClimbName(climb.fileName);
+  });
 
   const saveClimb = async () => {
     if (!climb) return;
