@@ -73,12 +73,7 @@ const ImageViewer = () => {
   if (!imageProps) return;
 
   return (
-    <Pressable
-      style={{ flex: 1 }}
-      onPress={() => {
-        Keyboard.dismiss();
-      }}
-    >
+    <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
       {/* show grey transparent overlay if the title is being edited */}
       {isEditingTitle && (
         <View
