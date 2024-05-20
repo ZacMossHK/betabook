@@ -49,6 +49,7 @@ const ImageViewer = () => {
     selectedNodePosition.value = null;
     selectedNodeIndex.value = null;
     isSelectingNode.value = false;
+    saveClimb();
   }, [nodes]);
 
   useEffect(() => {
@@ -56,7 +57,7 @@ const ImageViewer = () => {
       clearClimb();
     });
     if (!climb.fileName) {
-      setIsEditingTitle(true)
+      setIsEditingTitle(true);
     }
     setNodes(climb.nodes);
   }, []);
@@ -134,7 +135,6 @@ const ImageViewer = () => {
             }}
           />
           <View style={{ flex: 1, top: "83%" }}>
-            <Button onPress={saveClimb} color="red" title="save" />
             <Button
               title="nodes"
               color="orange"
