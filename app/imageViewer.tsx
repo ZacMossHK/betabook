@@ -34,9 +34,6 @@ const ImageViewer = () => {
   const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
   const bottomSheetRef = useRef<BottomSheet>(null);
 
-  const navigation = useNavigation();
-  const headerHeight = useHeaderHeight();
-
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
   const pinchScale = useSharedValue(1);
@@ -54,6 +51,7 @@ const ImageViewer = () => {
     width: climb.imageProps.width,
     uri: climb.imageProps.uri,
   });
+
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
   const [isDisplayingNodeNotes, setIsDisplayingNodeNotes] = useState(false);
@@ -66,9 +64,6 @@ const ImageViewer = () => {
   }, [nodes]);
 
   useEffect(() => {
-    navigation.addListener("beforeRemove", () => {
-      clearClimb();
-    });
     if (!climb.fileName) {
       setIsEditingTitle(true);
     }

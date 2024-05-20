@@ -1,9 +1,9 @@
 import { Button, SafeAreaView, Text, View } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import devCurrentFile from "../devData/devCurrentfile";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
@@ -24,7 +24,7 @@ export type SetCurrentFileState = React.Dispatch<
 
 const Menu = () => {
   const router = useRouter();
-  const { climb, setClimb } = useClimb();
+  const { climb, setClimb, clearClimb } = useClimb();
 
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
@@ -46,6 +46,13 @@ const Menu = () => {
     if (climb) return;
     loadFiles();
   }, [climb]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (!climb) return;
+      clearClimb();
+    }, [])
+  );
 
   const loadFile = async (file: File) => {
     await setClimb(file);
