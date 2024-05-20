@@ -5,7 +5,27 @@ import { Nodes } from "../components/ImageViewer/index.types";
 import { File } from "../../app";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-const ClimbContext = createContext({});
+interface ClimbDataType {
+  climb: File | null;
+  setClimb: React.Dispatch<React.SetStateAction<File | null>>;
+  nodes: Nodes;
+  setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
+  newClimbName: string;
+  setNewClimbName: React.Dispatch<React.SetStateAction<string>>;
+  saveClimb: () => Promise<void>;
+  clearClimb: () => void;
+}
+
+const ClimbContext = createContext<ClimbDataType>({
+  climb: null,
+  setClimb: () => {},
+  nodes: [],
+  setNodes: () => {},
+  newClimbName: "",
+  setNewClimbName: () => {},
+  saveClimb: async () => {},
+  clearClimb: () => {},
+});
 
 const ClimbProvider = ({ children }: PropsWithChildren) => {
   const [climb, setClimb] = useState<File | null>(null);
