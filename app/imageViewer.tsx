@@ -87,7 +87,6 @@ const ImageViewer = () => {
         />
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
-        <Stack.Screen options={{ title: climb.name }} />
         <Animated.View collapsable={false} style={{ flex: 1 }}>
           {isDisplayingNodeNotes && (
             <NodeNoteContainer
