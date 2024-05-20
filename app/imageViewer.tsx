@@ -12,26 +12,17 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
-import {
-  Button,
-  Keyboard,
-  Pressable,
-  SafeAreaView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { useNavigation, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
-import { useHeaderHeight } from "@react-navigation/elements";
 import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
 
 const ImageViewer = () => {
-  const { climb, nodes, setNodes, saveClimb, clearClimb } = useClimb();
+  const { climb, nodes, setNodes, saveClimb } = useClimb();
   const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
+
   const bottomSheetRef = useRef<BottomSheet>(null);
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
