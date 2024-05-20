@@ -8,21 +8,34 @@ import {
   SizeDimensions,
 } from "../src/components/ImageViewer/index.types";
 import { identity3 } from "react-native-redash";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
-import { Button, Keyboard, Pressable, SafeAreaView, View } from "react-native";
+import {
+  Button,
+  Keyboard,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Text,
+  View,
+} from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useNavigation, useRouter } from "expo-router";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
+import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import { useHeaderHeight } from "@react-navigation/elements";
+import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, saveClimb, clearClimb } = useClimb();
   const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
+  const bottomSheetRef = useRef<BottomSheet>(null);
 
   const navigation = useNavigation();
+  const headerHeight = useHeaderHeight();
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
@@ -95,11 +108,6 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          {isDisplayingNodeNotes && (
-            <NodeNoteContainer
-              {...{ nodes, setNodes, setIsDisplayingNodeNotes }}
-            />
-          )}
           <MovementNodeContainer
             {...{
               selectedNodeIndex,
@@ -134,12 +142,44 @@ const ImageViewer = () => {
               setViewportMeasurements,
             }}
           />
-          <View style={{ flex: 1, top: "83%" }}>
-            <Button
-              title="nodes"
-              color="orange"
-              onPress={() => setIsDisplayingNodeNotes(true)}
-            />
+          <View style={{ flex: 1, zIndex: 10 }}>
+            <BottomSheet
+              keyboardBlurBehavior="restore"
+              enableOverDrag={false}
+              backgroundStyle={{ backgroundColor: "#F55536", borderRadius: 0 }}
+              ref={bottomSheetRef}
+              snapPoints={useMemo(() => [60, 369, "100%"], [])}
+            >
+              <BottomSheetView style={{ alignItems: "center" }}>
+                <View
+                  style={{
+                    flexDirection: "row",
+                  }}
+                >
+                  <View
+                    style={{
+                      width: NODE_SIZE,
+                      height: NODE_SIZE,
+                      borderRadius: NODE_SIZE,
+                      borderColor: "black",
+                      borderWidth: 4,
+                      backgroundColor: "white",
+                    }}
+                  />
+                  <Text
+                    style={{
+                      marginLeft: 7,
+                      fontFamily: "InriaSans_400Regular",
+                      fontSize: 16,
+                      color: "white",
+                    }}
+                  >
+                    Edit nodes
+                  </Text>
+                </View>
+                <NodeNoteContainer {...{ nodes, setNodes }} />
+              </BottomSheetView>
+            </BottomSheet>
           </View>
         </Animated.View>
       </SafeAreaView>
