@@ -46,7 +46,11 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
   useEffect(() => {
     if (!climb?.fileName) return;
     setNewClimbName(climb.fileName);
-  });
+  }, []);
+
+  useEffect(() => {
+    saveClimb();
+  }, [nodes]);
 
   const saveClimb = async () => {
     if (!climb) return;

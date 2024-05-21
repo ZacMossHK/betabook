@@ -54,7 +54,6 @@ const ImageViewer = () => {
     selectedNodePosition.value = null;
     selectedNodeIndex.value = null;
     isSelectingNode.value = false;
-    saveClimb();
   }, [nodes]);
 
   useEffect(() => {
