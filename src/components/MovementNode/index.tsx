@@ -7,12 +7,8 @@ import Animated, {
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import React from "react";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import {
-  Coordinates,
-  ImageProps,
-  Nodes,
-  SizeDimensions,
-} from "../ImageViewer/index.types";
+import { Coordinates, Nodes, SizeDimensions } from "../ImageViewer/index.types";
+import { useClimb } from "../../providers/ClimbProvider";
 
 interface MovementNodeProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -27,7 +23,6 @@ interface MovementNodeProps {
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
   staticNode: Coordinates;
-  imageProps: ImageProps;
   viewportMeasurements: SizeDimensions | null;
 }
 
@@ -43,9 +38,12 @@ const MovementNode = ({
   pinchScale,
   baseScale,
   staticNode,
-  imageProps,
   viewportMeasurements,
 }: MovementNodeProps) => {
+  const { climb } = useClimb();
+
+  if (!climb) return null;
+
   const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const tap = Gesture.Tap()
     .maxDuration(5000)
@@ -82,9 +80,10 @@ const MovementNode = ({
         };
         // This makes sure you can't move nodes off the side of the image with borders
         // This needs refactoring!
-        if (imageProps.width >= viewportMeasurements.width) {
+        if (climb.imageProps.width >= viewportMeasurements.width) {
           const imageHeight =
-            viewportMeasurements.width * (imageProps.height / imageProps.width);
+            viewportMeasurements.width *
+            (climb.imageProps.height / climb.imageProps.width);
           const verticalBorderDistance =
             (viewportMeasurements.height - imageHeight) / 2;
           selectedNodePosition.value = {
@@ -100,7 +99,7 @@ const MovementNode = ({
         } else {
           const imageWidth =
             viewportMeasurements.height *
-            (imageProps.width / imageProps.height);
+            (climb.imageProps.width / climb.imageProps.height);
           const horizontalBorderDistance =
             (viewportMeasurements.width - imageWidth) / 2;
           selectedNodePosition.value = {

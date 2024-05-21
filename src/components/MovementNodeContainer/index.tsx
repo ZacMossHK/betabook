@@ -5,12 +5,7 @@ import Animated, {
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
-import {
-  Coordinates,
-  ImageProps,
-  Nodes,
-  SizeDimensions,
-} from "../ImageViewer/index.types";
+import { Coordinates, Nodes, SizeDimensions } from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import React from "react";
@@ -29,7 +24,6 @@ interface MovementNodeContainerProps {
   isTranslatingNode: SharedValue<boolean>;
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
-  imageProps: ImageProps;
   viewportMeasurements: SizeDimensions | null;
 }
 
@@ -45,7 +39,6 @@ const MovementNodeContainer = ({
   isTranslatingNode,
   pinchScale,
   baseScale,
-  imageProps,
   viewportMeasurements,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
@@ -157,7 +150,6 @@ const MovementNodeContainer = ({
               pinchScale,
               baseScale,
               staticNode,
-              imageProps,
               viewportMeasurements,
             }}
           />

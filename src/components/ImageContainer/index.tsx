@@ -21,6 +21,7 @@ import {
 } from "../../helpers/matrixTransformers/utils";
 import { getNewNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import { useClimb } from "../../providers/ClimbProvider";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -33,7 +34,6 @@ interface ImageContainerProps {
   origin: SharedValue<Coordinates>;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
-  imageProps: ImageProps;
   viewportMeasurements: SizeDimensions | null;
   setViewportMeasurements: React.Dispatch<
     React.SetStateAction<SizeDimensions | null>
@@ -51,12 +51,15 @@ const ImageContainer = ({
   origin,
   setNodes,
   nodes,
-  imageProps,
   viewportMeasurements,
   setViewportMeasurements,
 }: ImageContainerProps) => {
+  const { climb } = useClimb();
+
+  if (!climb) return null;
+
   // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
-  
+
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
@@ -196,7 +199,8 @@ const ImageContainer = ({
         ),
       };
       const imageHeight =
-        viewportMeasurements.width * (imageProps.height / imageProps.width);
+        viewportMeasurements.width *
+        (climb.imageProps.height / climb.imageProps.width);
       const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
       // checks if the node is outside of the borders of the image
       if (
@@ -233,9 +237,10 @@ const ImageContainer = ({
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
     // TODO: refactor this!
-    if (imageProps.width >= viewportMeasurements.width) {
+    if (climb.imageProps.width >= viewportMeasurements.width) {
       const imageHeight =
-        viewportMeasurements.width * (imageProps.height / imageProps.width);
+        viewportMeasurements.width *
+        (climb.imageProps.height / climb.imageProps.width);
       maxDistance.value = {
         x:
           (viewportMeasurements.width * imageMatrix.value[0] -
@@ -253,7 +258,8 @@ const ImageContainer = ({
     } else {
       // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
       const imageWidth =
-        viewportMeasurements.height * (imageProps.width / imageProps.height);
+        viewportMeasurements.height *
+        (climb.imageProps.width / climb.imageProps.height);
       maxDistance.value = {
         // the max distance for x will be a negative number so needs .abs to turn it into a positive number
         x: Math.abs(
@@ -302,7 +308,7 @@ const ImageContainer = ({
         style={[imageContainerStyles.fullscreen]}
       >
         <Animated.Image
-          source={{ uri: imageProps.uri }}
+          source={{ uri: climb.imageProps.uri }}
           resizeMode={"contain"}
           style={[imageContainerStyles.fullscreen, animatedStyle]}
           fadeDuration={0}

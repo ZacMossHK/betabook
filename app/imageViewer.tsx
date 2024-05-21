@@ -5,7 +5,6 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   Coordinates,
-  ImageProps,
   SizeDimensions,
 } from "../src/components/ImageViewer/index.types";
 import { identity3 } from "react-native-redash";
@@ -26,6 +25,9 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, saveClimb } = useClimb();
+
+  if (!climb) return null;
+
   const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
@@ -43,11 +45,6 @@ const ImageViewer = () => {
   const isTranslatingNode = useSharedValue(false);
   const bottomSheetIndex = useSharedValue(0);
 
-  const [imageProps, setImageProps] = useState<ImageProps>({
-    height: climb.imageProps.height,
-    width: climb.imageProps.width,
-    uri: climb.imageProps.uri,
-  });
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
 
@@ -86,8 +83,6 @@ const ImageViewer = () => {
     }
   });
 
-  if (!imageProps) return;
-
   return (
     <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
       {/* show grey transparent overlay if the title is being edited */}
@@ -118,7 +113,6 @@ const ImageViewer = () => {
               isTranslatingNode,
               baseScale,
               pinchScale,
-              imageProps,
               viewportMeasurements,
             }}
           />
@@ -134,7 +128,6 @@ const ImageViewer = () => {
               origin,
               setNodes,
               nodes,
-              imageProps,
               viewportMeasurements,
               setViewportMeasurements,
             }}
