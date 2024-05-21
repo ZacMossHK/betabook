@@ -141,7 +141,37 @@ const ImageViewer = () => {
             <BottomSheet
               handleComponent={(props) => (
                 <GestureDetector gesture={tapBottomSheetHandle}>
-                  <BottomSheetHandle {...props} />
+                  <View>
+                    <BottomSheetHandle {...props} />
+                    <View
+                      style={{
+                        flexDirection: "row",
+                        width: "100%",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <View
+                        style={{
+                          width: NODE_SIZE,
+                          height: NODE_SIZE,
+                          borderRadius: NODE_SIZE,
+                          borderColor: "black",
+                          borderWidth: 4,
+                          backgroundColor: "white",
+                        }}
+                      />
+                      <Text
+                        style={{
+                          marginLeft: 7,
+                          fontFamily: "InriaSans_400Regular",
+                          fontSize: 16,
+                          color: "white",
+                        }}
+                      >
+                        Edit nodes
+                      </Text>
+                    </View>
+                  </View>
                 </GestureDetector>
               )}
               keyboardBlurBehavior="restore"
@@ -152,36 +182,6 @@ const ImageViewer = () => {
               animatedIndex={bottomSheetIndex}
             >
               <BottomSheetView style={{ alignItems: "center" }}>
-                <GestureDetector gesture={tapBottomSheetHandle}>
-                  <View
-                    style={{
-                      flexDirection: "row",
-                      width: "100%",
-                      justifyContent: "center",
-                    }}
-                  >
-                    <View
-                      style={{
-                        width: NODE_SIZE,
-                        height: NODE_SIZE,
-                        borderRadius: NODE_SIZE,
-                        borderColor: "black",
-                        borderWidth: 4,
-                        backgroundColor: "white",
-                      }}
-                    />
-                    <Text
-                      style={{
-                        marginLeft: 7,
-                        fontFamily: "InriaSans_400Regular",
-                        fontSize: 16,
-                        color: "white",
-                      }}
-                    >
-                      Edit nodes
-                    </Text>
-                  </View>
-                </GestureDetector>
                 <NodeNoteContainer {...{ nodes, setNodes }} />
               </BottomSheetView>
             </BottomSheet>
