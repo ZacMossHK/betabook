@@ -11,15 +11,16 @@ interface NodeNoteContainerProps {
 const NodeNoteContainer = ({ nodes, setNodes }: NodeNoteContainerProps) => (
   <View
     style={{
-      top:20,
+      top: 20,
       width: "100%",
       height: "100%",
       backgroundColor: "white",
-      borderTopLeftRadius: 15,
-      borderTopRightRadius: 15,
+      borderTopLeftRadius: 20,
+      borderTopRightRadius: 20,
     }}
   >
     <FlatList
+      style={{ top: 30, marginHorizontal: 10 }}
       keyboardShouldPersistTaps="handled"
       data={nodes}
       renderItem={({ item, index }) => (
