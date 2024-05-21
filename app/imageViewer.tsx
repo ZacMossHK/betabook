@@ -51,6 +51,8 @@ const ImageViewer = () => {
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
 
+  const snapPoints = useMemo(() => [60, 369, "100%"], []);
+
   useEffect(() => {
     selectedNodePosition.value = null;
     selectedNodeIndex.value = null;
@@ -178,7 +180,7 @@ const ImageViewer = () => {
               enableOverDrag={false}
               backgroundStyle={{ backgroundColor: "#F55536", borderRadius: 0 }}
               ref={bottomSheetRef}
-              snapPoints={useMemo(() => [60, 369, "100%"], [])}
+              snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
             >
               <BottomSheetView style={{ alignItems: "center" }}>
