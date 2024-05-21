@@ -3,7 +3,7 @@ import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { TouchableOpacity } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import devCurrentFile from "../devData/devCurrentfile";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
@@ -42,15 +42,10 @@ const Menu = () => {
     await setSavedFiles(files);
   };
 
-  useEffect(() => {
-    if (climb) return;
-    loadFiles();
-  }, [climb]);
-
   useFocusEffect(
     useCallback(() => {
-      if (!climb) return;
-      clearClimb();
+      if (climb) clearClimb();
+      loadFiles();
     }, [])
   );
 
