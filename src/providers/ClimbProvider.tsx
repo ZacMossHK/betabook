@@ -58,7 +58,7 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
       nodes,
       fileName: newClimbName || climb.fileName,
     };
-    const imageFileUri = `${IMAGE_DIR}${climb.fileId}${getImageExtension(
+    const imageFileUri = `${IMAGE_DIR}${climb.fileId}.${getImageExtension(
       climb.imageProps.uri
     )}`;
     // if image doesn't exist on local storage, copy it over
