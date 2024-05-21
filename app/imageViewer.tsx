@@ -1,4 +1,5 @@
 import Animated, {
+  runOnJS,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
@@ -16,8 +17,12 @@ import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
-import BottomSheet, { BottomSheetView } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetHandle,
+  BottomSheetView,
+} from "@gorhom/bottom-sheet";
 import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, saveClimb } = useClimb();
@@ -36,16 +41,15 @@ const ImageViewer = () => {
   const selectedNodePosition = useSharedValue<Coordinates | null>(null);
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
+  const bottomSheetIndex = useSharedValue(0);
 
   const [imageProps, setImageProps] = useState<ImageProps>({
     height: climb.imageProps.height,
     width: climb.imageProps.width,
     uri: climb.imageProps.uri,
   });
-
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
-  const [isDisplayingNodeNotes, setIsDisplayingNodeNotes] = useState(false);
 
   useEffect(() => {
     selectedNodePosition.value = null;
@@ -69,6 +73,16 @@ const ImageViewer = () => {
       transform.value
     )
   );
+  const handleOpenBottomSheet = () => bottomSheetRef.current?.snapToIndex(1);
+  const handleCloseBottomSheet = () => bottomSheetRef.current?.snapToIndex(0);
+
+  const tapBottomSheetHandle = Gesture.Tap().onStart(() => {
+    if (!bottomSheetIndex.value) {
+      runOnJS(handleOpenBottomSheet)();
+    } else {
+      runOnJS(handleCloseBottomSheet)();
+    }
+  });
 
   if (!imageProps) return;
 
@@ -125,39 +139,49 @@ const ImageViewer = () => {
           />
           <View style={{ flex: 1, zIndex: 10 }}>
             <BottomSheet
+              handleComponent={(props) => (
+                <GestureDetector gesture={tapBottomSheetHandle}>
+                  <BottomSheetHandle {...props} />
+                </GestureDetector>
+              )}
               keyboardBlurBehavior="restore"
               enableOverDrag={false}
               backgroundStyle={{ backgroundColor: "#F55536", borderRadius: 0 }}
               ref={bottomSheetRef}
               snapPoints={useMemo(() => [60, 369, "100%"], [])}
+              animatedIndex={bottomSheetIndex}
             >
               <BottomSheetView style={{ alignItems: "center" }}>
-                <View
-                  style={{
-                    flexDirection: "row",
-                  }}
-                >
+                <GestureDetector gesture={tapBottomSheetHandle}>
                   <View
                     style={{
-                      width: NODE_SIZE,
-                      height: NODE_SIZE,
-                      borderRadius: NODE_SIZE,
-                      borderColor: "black",
-                      borderWidth: 4,
-                      backgroundColor: "white",
-                    }}
-                  />
-                  <Text
-                    style={{
-                      marginLeft: 7,
-                      fontFamily: "InriaSans_400Regular",
-                      fontSize: 16,
-                      color: "white",
+                      flexDirection: "row",
+                      width: "100%",
+                      justifyContent: "center",
                     }}
                   >
-                    Edit nodes
-                  </Text>
-                </View>
+                    <View
+                      style={{
+                        width: NODE_SIZE,
+                        height: NODE_SIZE,
+                        borderRadius: NODE_SIZE,
+                        borderColor: "black",
+                        borderWidth: 4,
+                        backgroundColor: "white",
+                      }}
+                    />
+                    <Text
+                      style={{
+                        marginLeft: 7,
+                        fontFamily: "InriaSans_400Regular",
+                        fontSize: 16,
+                        color: "white",
+                      }}
+                    >
+                      Edit nodes
+                    </Text>
+                  </View>
+                </GestureDetector>
                 <NodeNoteContainer {...{ nodes, setNodes }} />
               </BottomSheetView>
             </BottomSheet>
