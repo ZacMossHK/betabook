@@ -44,7 +44,7 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    if (!climb) return;
+    if (!climb?.fileName) return;
     setNewClimbName(climb.fileName);
   });
 
