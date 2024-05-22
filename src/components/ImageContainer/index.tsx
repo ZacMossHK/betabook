@@ -8,7 +8,6 @@ import imageContainerStyles from "./index.styles";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   Coordinates,
-  ImageProps,
   Nodes,
   SizeDimensions,
   TransformableMatrix3,
@@ -22,6 +21,8 @@ import {
 import { getNewNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { useClimb } from "../../providers/ClimbProvider";
+import { Dimensions } from "react-native";
+import { useHeaderHeight } from "@react-navigation/elements";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -63,6 +64,11 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
+
+  const isImageThinnerThanView =
+    viewportMeasurements &&
+    climb.imageProps.width / climb.imageProps.height >=
+      viewportMeasurements.width / viewportMeasurements.height;
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -237,7 +243,8 @@ const ImageContainer = ({
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
     // TODO: refactor this!
-    if (climb.imageProps.width >= viewportMeasurements.width) {
+
+    if (isImageThinnerThanView) {
       const imageHeight =
         viewportMeasurements.width *
         (climb.imageProps.height / climb.imageProps.width);
@@ -296,21 +303,28 @@ const ImageContainer = ({
     };
   });
 
+  const fullscreenStyle = {
+    ...imageContainerStyles.fullscreen,
+    height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
+  };
+
   return (
     <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
       <Animated.View
         onLayout={({ nativeEvent }) => {
-          const { height, width } = nativeEvent.layout;
-          setViewportMeasurements({ height, width });
+          if (!viewportMeasurements) {
+            const { height, width } = nativeEvent.layout;
+            setViewportMeasurements({ height, width });
+          }
           isViewRendered.value = true;
         }}
         collapsable={false}
-        style={[imageContainerStyles.fullscreen]}
+        style={fullscreenStyle}
       >
         <Animated.Image
           source={{ uri: climb.imageProps.uri }}
           resizeMode={"contain"}
-          style={[imageContainerStyles.fullscreen, animatedStyle]}
+          style={[fullscreenStyle, animatedStyle]}
           fadeDuration={0}
         />
       </Animated.View>
