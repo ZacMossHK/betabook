@@ -22,6 +22,12 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
     });
   };
 
+  const handleFinishingEditingText = async () => {
+    if (noteValue.length) await saveNodeNote();
+    Keyboard.dismiss();
+    await setIsEditingText(false);
+  };
+
   return (
     <View
       style={{
@@ -69,13 +75,7 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
             onChangeText={setNoteValue}
             defaultValue={node.note}
             onFocus={() => setIsEditingText(true)}
-            onBlur={async () => {
-              // TODO: refactor this!!!!
-              Keyboard.dismiss();
-              if (!noteValue.length) return;
-              await saveNodeNote();
-              await setIsEditingText(false);
-            }}
+            onBlur={handleFinishingEditingText}
           />
         </View>
         {isEditingText && (
@@ -86,13 +86,7 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
               borderRadius: 15,
               alignSelf: "flex-end",
             }}
-            onPress={async () => {
-              // TODO: refactor this!!!!
-              Keyboard.dismiss();
-              if (!noteValue.length) return;
-              await saveNodeNote();
-              await setIsEditingText(false);
-            }}
+            onPress={handleFinishingEditingText}
           >
             <Text
               style={{
