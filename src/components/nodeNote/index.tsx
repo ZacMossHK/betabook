@@ -1,9 +1,8 @@
 import { useState } from "react";
 import { Node, Nodes } from "../ImageViewer/index.types";
-import { Button, Keyboard, Text, View } from "react-native";
+import { Keyboard, Text, View } from "react-native";
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
-import { useClimb } from "../../providers/ClimbProvider";
 
 interface NodeNoteProps {
   node: Node;
@@ -14,7 +13,6 @@ interface NodeNoteProps {
 const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(node.note);
-  const { saveClimb } = useClimb();
 
   const saveNodeNote = async () => {
     await setNodes((prevNodes) => {
@@ -22,12 +20,6 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
       newNodes[index] = { ...newNodes[index], note: noteValue };
       return newNodes;
     });
-  };
-
-  const fontStyle = {
-    fontFamily: "InriaSans_400Regular",
-    size: 14,
-    color: "#14281D",
   };
 
   return (
@@ -114,25 +106,6 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
           </TouchableOpacity>
         )}
       </View>
-      {/* {isEditingText && (
-        <>
-          <Button
-            title="save"
-            onPress={() => {
-              saveNodeNote();
-              setIsEditingText(false);
-              Keyboard.dismiss();
-            }}
-          />
-          <Button
-            title="cancel"
-            onPress={() => {
-              setIsEditingText(false);
-              Keyboard.dismiss();
-            }}
-          />
-        </>
-      )} */}
     </View>
   );
 };
