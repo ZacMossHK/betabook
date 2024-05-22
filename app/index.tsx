@@ -63,7 +63,10 @@ const Menu = () => {
     const result = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
     });
-    if (result.canceled) return;
+    if (result.canceled) {
+      await setIsLoading(false);
+      return;
+    }
     const { uri, height, width } = result.assets[0];
     await setClimb({
       fileId: randomUUID(),
