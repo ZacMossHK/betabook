@@ -24,11 +24,12 @@ export type SetCurrentFileState = React.Dispatch<
 
 const Menu = () => {
   const router = useRouter();
-  const { climb, setClimb, clearClimb } = useClimb();
+  const { setClimb, clearClimb } = useClimb();
 
   const [savedFiles, setSavedFiles] = useState<File[]>([]);
   const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
     useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   const loadFiles = async () => {
     const files = [];
@@ -44,17 +45,20 @@ const Menu = () => {
 
   useFocusEffect(
     useCallback(() => {
+      setIsLoading(false);
       clearClimb();
       loadFiles();
     }, [])
   );
 
   const loadFile = async (file: File) => {
+    await setIsLoading(true);
     await setClimb(file);
     router.navigate("imageViewer");
   };
 
   const pickImage = async () => {
+    await setIsLoading(true);
     // No permissions request is necessary for launching the image library
     const result = await ImagePicker.launchImageLibraryAsync({
       quality: 1,
@@ -77,6 +81,7 @@ const Menu = () => {
     await setSavedFiles([]);
     await setIsRequestingDeletingFiles(false);
   };
+
   return (
     <SafeAreaView
       style={{
@@ -102,6 +107,7 @@ const Menu = () => {
         <TouchableOpacity
           style={{ backgroundColor: "#D6EFFF", borderRadius: 15, padding: 9 }}
           onPress={pickImage}
+          disabled={isLoading}
         >
           <Text
             style={{
@@ -121,10 +127,12 @@ const Menu = () => {
                   onPress={deleteAllFiles}
                   title="Confirm file Deletion - cannot be undone!"
                   color="red"
+                  disabled={isLoading}
                 />
                 <Button
                   title="Cancel"
                   onPress={() => setIsRequestingDeletingFiles(false)}
+                  disabled={isLoading}
                 />
               </>
             ) : (
@@ -132,6 +140,7 @@ const Menu = () => {
                 onPress={() => setIsRequestingDeletingFiles(true)}
                 title="Delete all files"
                 color="red"
+                disabled={isLoading}
               />
             )}
             {savedFiles.map((savedFile, index) => (
@@ -139,6 +148,7 @@ const Menu = () => {
                 onPress={() => loadFile(savedFile)}
                 key={index}
                 title={savedFile.fileName || ""}
+                disabled={isLoading}
               />
             ))}
           </>
