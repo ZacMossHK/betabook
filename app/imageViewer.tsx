@@ -24,7 +24,7 @@ import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 
 const ImageViewer = () => {
-  const { climb, nodes, setNodes, saveClimb } = useClimb();
+  const { climb, nodes, setNodes, setNewClimbName } = useClimb();
 
   if (!climb) return null;
 
@@ -59,6 +59,8 @@ const ImageViewer = () => {
   useEffect(() => {
     if (!climb.fileName) {
       setIsEditingTitle(true);
+    } else {
+      setNewClimbName(climb.fileName);
     }
     setNodes(climb.nodes);
   }, []);

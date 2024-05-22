@@ -78,6 +78,7 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
   };
 
   const clearClimb = () => {
+    console.log("clearing")
     setClimb(null);
     setNodes([]);
     setNewClimbName("");

@@ -44,7 +44,7 @@ const Menu = () => {
 
   useFocusEffect(
     useCallback(() => {
-      if (climb) clearClimb();
+      clearClimb();
       loadFiles();
     }, [])
   );
