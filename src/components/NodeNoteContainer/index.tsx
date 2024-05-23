@@ -1,6 +1,5 @@
 import { FlatList } from "react-native-gesture-handler";
 import NodeNote from "../nodeNote";
-import { View } from "react-native";
 import { Nodes } from "../ImageViewer/index.types";
 
 interface NodeNoteContainerProps {
@@ -9,26 +8,16 @@ interface NodeNoteContainerProps {
 }
 
 const NodeNoteContainer = ({ nodes, setNodes }: NodeNoteContainerProps) => (
-  <View
-    style={{
-      top: 20,
-      width: "100%",
-      height: "100%",
-      backgroundColor: "white",
-      borderTopLeftRadius: 20,
-      borderTopRightRadius: 20,
-    }}
-  >
-    <FlatList
-      style={{ top: 30, marginHorizontal: 10 }}
-      keyboardShouldPersistTaps="handled"
-      data={nodes}
-      renderItem={({ item, index }) => (
-        <NodeNote {...{ node: item, index, setNodes }} />
-      )}
-      keyExtractor={(node, index) => index.toString()}
-    />
-  </View>
+  <FlatList
+    nestedScrollEnabled={true}
+    style={{ width: "100%", paddingHorizontal: 10 }}
+    keyboardShouldPersistTaps="handled"
+    data={nodes}
+    renderItem={({ item, index }) => (
+      <NodeNote {...{ node: item, index, setNodes }} />
+    )}
+    keyExtractor={(_, index) => index.toString()}
+  />
 );
 
 export default NodeNoteContainer;

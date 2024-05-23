@@ -1,5 +1,6 @@
 import Animated, {
   runOnJS,
+  useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
 } from "react-native-reanimated";
@@ -16,12 +17,12 @@ import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
-import BottomSheet, {
-  BottomSheetHandle,
-  BottomSheetView,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetHandle } from "@gorhom/bottom-sheet";
 import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+
+const BOTTOMSHEET_LOW_HEIGHT = 60;
+const BOTTOMSHEET_MID_HEIGHT = 369;
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, setNewClimbName } = useClimb();
@@ -47,8 +48,12 @@ const ImageViewer = () => {
 
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
+  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
 
-  const snapPoints = useMemo(() => [60, 369, "100%"], []);
+  const snapPoints = useMemo(
+    () => [BOTTOMSHEET_LOW_HEIGHT, BOTTOMSHEET_MID_HEIGHT, "100%"],
+    []
+  );
 
   useEffect(() => {
     selectedNodePosition.value = null;
@@ -137,7 +142,11 @@ const ImageViewer = () => {
             <BottomSheet
               handleComponent={(props) => (
                 <GestureDetector gesture={tapBottomSheetHandle}>
-                  <View>
+                  <View
+                    onLayout={({ nativeEvent }) => {
+                      setBottomSheetHandleHeight(nativeEvent.layout.height);
+                    }}
+                  >
                     <BottomSheetHandle {...props} />
                     <View
                       style={{
@@ -162,6 +171,7 @@ const ImageViewer = () => {
                           fontFamily: "InriaSans_400Regular",
                           fontSize: 16,
                           color: "white",
+                          marginBottom: 20,
                         }}
                       >
                         Edit nodes
@@ -177,9 +187,29 @@ const ImageViewer = () => {
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
             >
-              <BottomSheetView style={{ alignItems: "center" }}>
+              <Animated.View
+                style={[
+                  {
+                    alignItems: "center",
+                    width: "100%",
+                    backgroundColor: "white",
+                    borderTopLeftRadius: 20,
+                    borderTopRightRadius: 20,
+                    paddingTop: 30,
+                  },
+                  useAnimatedStyle(() => {
+                    if (!viewportMeasurements) return {};
+                    return {
+                      height:
+                        bottomSheetIndex.value <= 1
+                          ? BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight
+                          : "100%",
+                    };
+                  }),
+                ]}
+              >
                 <NodeNoteContainer {...{ nodes, setNodes }} />
-              </BottomSheetView>
+              </Animated.View>
             </BottomSheet>
           </View>
         </Animated.View>
