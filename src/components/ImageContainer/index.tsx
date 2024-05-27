@@ -5,7 +5,12 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import imageContainerStyles from "./index.styles";
-import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import {
+  Gesture,
+  GestureDetector,
+  GestureStateChangeEvent,
+  TapGestureHandlerEventPayload,
+} from "react-native-gesture-handler";
 import {
   Coordinates,
   Nodes,
@@ -23,6 +28,7 @@ import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { useClimb } from "../../providers/ClimbProvider";
 import { Dimensions } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
+import { useAnimation } from "../../providers/AnimationProvider";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -56,6 +62,7 @@ const ImageContainer = ({
   setViewportMeasurements,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
+  const { selectedLineIndex } = useAnimation();
 
   if (!climb) return null;
 
@@ -69,6 +76,105 @@ const ImageContainer = ({
     viewportMeasurements &&
     climb.imageProps.width / climb.imageProps.height >=
       viewportMeasurements.width / viewportMeasurements.height;
+
+  const isPointNearLineSegment = (
+    currentNodeX: number,
+    currentNodeY: number,
+    nextNodeX: number,
+    nextNodeY: number,
+    x: number,
+    y: number
+  ) => {
+    "worklet";
+    if (!viewportMeasurements) return null;
+
+    // all values must be multiplied by 10 ** 14 to convert any float values to integers
+    let hitSlop = 12 * 10 ** 14;
+
+    [currentNodeX, currentNodeY, nextNodeX, nextNodeY, x, y] = [
+      currentNodeX,
+      currentNodeY,
+      nextNodeX,
+      nextNodeY,
+      x,
+      y,
+    ].map(
+      (value, index) =>
+        (index < 4
+          ? value
+          : getNewNodePosition(
+              viewportMeasurements[index % 2 ? "height" : "width"],
+              imageMatrix.value[0],
+              imageMatrix.value[index % 2 ? 5 : 2],
+              value,
+              NODE_SIZE_OFFSET
+            )) *
+        10 ** 14
+    );
+
+    // Calculate the area to check collinearity
+    const area = Math.abs(
+      currentNodeX * (nextNodeY - y) +
+        nextNodeX * (y - currentNodeY) +
+        x * (currentNodeY - nextNodeY)
+    );
+
+    // Length of the line segment
+    const lineSegmentLength = Math.sqrt(
+      Math.pow(nextNodeX - currentNodeX, 2) +
+        Math.pow(nextNodeY - currentNodeY, 2)
+    );
+
+    // Distance from point to the line
+    const distance = area / lineSegmentLength;
+
+    // Check if the point is within the tolerance distance hitSlop
+    if (distance > hitSlop) {
+      return false;
+    }
+
+    // Check if the point is within the bounding box with some leniency
+    const withinXBounds =
+      Math.min(currentNodeX, nextNodeX) - hitSlop <= x &&
+      x <= Math.max(currentNodeX, nextNodeX) + hitSlop;
+    const withinYBounds =
+      Math.min(currentNodeY, nextNodeY) - hitSlop <= y &&
+      y <= Math.max(currentNodeY, nextNodeY) + hitSlop;
+
+    return withinXBounds && withinYBounds;
+  };
+
+  const getPressedLineIndex = (
+    event: GestureStateChangeEvent<TapGestureHandlerEventPayload>
+  ) => {
+    "worklet";
+    for (const [index, node] of nodes.entries()) {
+      if (
+        index + 1 === nodes.length ||
+        !isPointNearLineSegment(
+          node.x,
+          node.y,
+          nodes[index + 1].x,
+          nodes[index + 1].y,
+          event.x,
+          event.y
+        )
+      ) {
+        continue;
+      }
+      return index;
+    }
+    return null;
+  };
+  const tap = Gesture.Tap()
+    // .maxDuration(699)
+    .onBegin((event) => {
+      if (nodes.length <= 1 || event.numberOfPointers !== 1) return;
+      selectedLineIndex.value = getPressedLineIndex(event);
+    })
+    .onFinalize(() => {
+      selectedLineIndex.value = null;
+    });
 
   const pinch = Gesture.Pinch()
     .onStart((event) => {
@@ -186,8 +292,13 @@ const ImageContainer = ({
   const longPress = Gesture.LongPress()
     .minDuration(300)
     .onStart((event) => {
-      if (event.numberOfPointers > 1) return;
-      if (!viewportMeasurements) return;
+      if (
+        event.numberOfPointers > 1 ||
+        !viewportMeasurements ||
+        getPressedLineIndex(event) !== null
+      )
+        return;
+
       const newNodePosition = {
         x: getNewNodePosition(
           viewportMeasurements.width,
@@ -215,7 +326,50 @@ const ImageContainer = ({
       ) {
         return;
       }
+
       runOnJS(setNodes)([...nodes, { ...newNodePosition, note: "" }]);
+    });
+
+  const lineLongPress = Gesture.LongPress()
+    .minDuration(400)
+    .onStart((event) => {
+      if (event.numberOfPointers > 1) return;
+      if (!viewportMeasurements) return;
+      const lineIndex = getPressedLineIndex(event);
+      if (lineIndex === null) return;
+
+      const newNodePosition = {
+        x: getNewNodePosition(
+          viewportMeasurements.width,
+          imageMatrix.value[0],
+          imageMatrix.value[2],
+          event.x,
+          NODE_SIZE_OFFSET
+        ),
+        y: getNewNodePosition(
+          viewportMeasurements.height,
+          imageMatrix.value[0],
+          imageMatrix.value[5],
+          event.y,
+          NODE_SIZE_OFFSET
+        ),
+      };
+      const imageHeight =
+        viewportMeasurements.width *
+        (climb.imageProps.height / climb.imageProps.width);
+      const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
+      // checks if the node is outside of the borders of the image
+      if (
+        newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
+        newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
+      ) {
+        return;
+      }
+      const newNode = { ...newNodePosition, note: "" };
+      const nodesCopy = [...nodes];
+      nodesCopy.splice(lineIndex + 1, 0, newNode);
+      selectedLineIndex.value = null;
+      runOnJS(setNodes)(nodesCopy);
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -309,7 +463,9 @@ const ImageContainer = ({
   };
 
   return (
-    <GestureDetector gesture={Gesture.Simultaneous(longPress, pinch, pan)}>
+    <GestureDetector
+      gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan, tap)}
+    >
       <Animated.View
         onLayout={({ nativeEvent }) => {
           if (!viewportMeasurements) {
