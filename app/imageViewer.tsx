@@ -45,6 +45,7 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
   const bottomSheetIndex = useSharedValue(0);
+  const isHandlePressOpening = useSharedValue(false);
 
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
@@ -83,7 +84,9 @@ const ImageViewer = () => {
 
   const tapBottomSheetHandle = Gesture.Tap().onStart(() => {
     if (!bottomSheetIndex.value) {
-      runOnJS(handleOpenBottomSheet)();
+      // this is to kick off the animation reaction in NodeNoteContainer
+      // TODO: can this just be a state change instead of an animation?
+      isHandlePressOpening.value = true;
     } else {
       runOnJS(handleCloseBottomSheet)();
     }
@@ -208,7 +211,15 @@ const ImageViewer = () => {
                   }),
                 ]}
               >
-                <NodeNoteContainer {...{ nodes, setNodes }} />
+                <NodeNoteContainer
+                  {...{
+                    nodes,
+                    setNodes,
+                    bottomSheetIndex,
+                    isHandlePressOpening,
+                    handleOpenBottomSheet,
+                  }}
+                />
               </Animated.View>
             </BottomSheet>
           </View>
