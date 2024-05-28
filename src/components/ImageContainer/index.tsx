@@ -5,12 +5,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import imageContainerStyles from "./index.styles";
-import {
-  Gesture,
-  GestureDetector,
-  GestureStateChangeEvent,
-  TapGestureHandlerEventPayload,
-} from "react-native-gesture-handler";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import {
   Coordinates,
   Nodes,
