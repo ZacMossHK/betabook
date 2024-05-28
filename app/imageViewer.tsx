@@ -25,7 +25,7 @@ const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
 
 const ImageViewer = () => {
-  const { climb, nodes, setNodes, setNewClimbName } = useClimb();
+  const { climb, nodes, setNodes, setNewClimbName, saveClimb } = useClimb();
 
   if (!climb) return null;
 
@@ -57,6 +57,7 @@ const ImageViewer = () => {
   );
 
   useEffect(() => {
+    saveClimb();
     selectedNodePosition.value = null;
     selectedNodeIndex.value = null;
     isSelectingNode.value = false;
@@ -79,6 +80,7 @@ const ImageViewer = () => {
       transform.value
     )
   );
+  
   const handleOpenBottomSheet = () => bottomSheetRef.current?.snapToIndex(1);
   const handleCloseBottomSheet = () => bottomSheetRef.current?.snapToIndex(0);
 

@@ -48,10 +48,6 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
     setNewClimbName(climb.fileName);
   }, []);
 
-  useEffect(() => {
-    saveClimb();
-  }, [nodes]);
-
   const saveClimb = async () => {
     if (!climb) return;
     // creates the image directory if it doesn't exist
