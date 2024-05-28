@@ -1,7 +1,13 @@
 import { PropsWithChildren, createContext, useContext, useState } from "react";
-import { useSharedValue } from "react-native-reanimated";
+import { SharedValue, useSharedValue } from "react-native-reanimated";
 
-const AnimationContext = createContext({});
+interface AnimationContextType {
+  selectedLineIndex: SharedValue<number | null>;
+}
+
+const AnimationContext = createContext<AnimationContextType>({
+  selectedLineIndex: useSharedValue<number | null>(null),
+});
 
 const AnimationProvider = ({ children }: PropsWithChildren) => {
   const selectedLineIndex = useSharedValue<number | null>(null);
