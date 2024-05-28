@@ -6,7 +6,7 @@ interface AnimationContextType {
 }
 
 const AnimationContext = createContext<AnimationContextType>({
-  selectedLineIndex: useSharedValue<number | null>(null),
+  selectedLineIndex: { value: null } as SharedValue<number | null>,
 });
 
 const AnimationProvider = ({ children }: PropsWithChildren) => {
