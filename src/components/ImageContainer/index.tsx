@@ -77,7 +77,7 @@ const ImageContainer = ({
     climb.imageProps.width / climb.imageProps.height >=
       viewportMeasurements.width / viewportMeasurements.height;
 
-  const isPointNearLineSegment = (
+  const getDistanceToLineSegment = (
     currentNodeX: number,
     currentNodeY: number,
     nextNodeX: number,
@@ -130,10 +130,10 @@ const ImageContainer = ({
 
     // Check if the point is within the tolerance distance hitSlop
     if (distance > hitSlop) {
-      return false;
+      return null;
     }
 
-    // Check if the point is within the bounding box with some leniency
+    // Check if the point is within the bounding box with some tolerance
     const withinXBounds =
       Math.min(currentNodeX, nextNodeX) - hitSlop <= x &&
       x <= Math.max(currentNodeX, nextNodeX) + hitSlop;
@@ -141,36 +141,29 @@ const ImageContainer = ({
       Math.min(currentNodeY, nextNodeY) - hitSlop <= y &&
       y <= Math.max(currentNodeY, nextNodeY) + hitSlop;
 
-    return withinXBounds && withinYBounds;
+    return withinXBounds && withinYBounds ? distance : null;
   };
 
-  const getPressedLineIndex = (
-    event: GestureStateChangeEvent<TapGestureHandlerEventPayload>
-  ) => {
-    "worklet";
-    for (const [index, node] of nodes.entries()) {
-      if (
-        index + 1 === nodes.length ||
-        !isPointNearLineSegment(
+  const tap = Gesture.Tap()
+    .onBegin((event) => {
+      if (nodes.length <= 1 || event.numberOfPointers !== 1) return;
+      const validLines = [];
+      for (const [index, node] of nodes.entries()) {
+        if (index + 1 === nodes.length) continue;
+        const tapDistance = getDistanceToLineSegment(
           node.x,
           node.y,
           nodes[index + 1].x,
           nodes[index + 1].y,
           event.x,
           event.y
-        )
-      ) {
-        continue;
+        );
+        if (tapDistance) validLines.push({ index, tapDistance });
       }
-      return index;
-    }
-    return null;
-  };
-  const tap = Gesture.Tap()
-    // .maxDuration(699)
-    .onBegin((event) => {
-      if (nodes.length <= 1 || event.numberOfPointers !== 1) return;
-      selectedLineIndex.value = getPressedLineIndex(event);
+      if (!validLines.length) return;
+      selectedLineIndex.value = validLines.sort(
+        (a, b) => a.tapDistance - b.tapDistance
+      )[0].index;
     })
     .onFinalize(() => {
       selectedLineIndex.value = null;
