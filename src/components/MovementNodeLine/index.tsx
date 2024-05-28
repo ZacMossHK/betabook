@@ -106,7 +106,9 @@ const MovementNodeLine = ({
         style={[
           { height: "100%", width: "100%" },
           useAnimatedStyle(() => ({
-            opacity: selectedLineIndex.value === nodeIndex ? 0 : 1,
+            transform: [
+              { scale: selectedLineIndex.value === nodeIndex ? 0 : 1 },
+            ],
           })),
         ]}
         start={{ x: 0, y: 0.5 }}
