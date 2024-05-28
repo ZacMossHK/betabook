@@ -295,7 +295,7 @@ const ImageContainer = ({
       if (
         event.numberOfPointers > 1 ||
         !viewportMeasurements ||
-        getPressedLineIndex(event) !== null
+        selectedLineIndex.value !== null
       )
         return;
 
@@ -326,17 +326,18 @@ const ImageContainer = ({
       ) {
         return;
       }
-
       runOnJS(setNodes)([...nodes, { ...newNodePosition, note: "" }]);
     });
 
   const lineLongPress = Gesture.LongPress()
     .minDuration(400)
     .onStart((event) => {
-      if (event.numberOfPointers > 1) return;
-      if (!viewportMeasurements) return;
-      const lineIndex = getPressedLineIndex(event);
-      if (lineIndex === null) return;
+      if (
+        event.numberOfPointers > 1 ||
+        !viewportMeasurements ||
+        selectedLineIndex.value === null
+      )
+        return;
 
       const newNodePosition = {
         x: getNewNodePosition(
@@ -365,9 +366,11 @@ const ImageContainer = ({
       ) {
         return;
       }
-      const newNode = { ...newNodePosition, note: "" };
       const nodesCopy = [...nodes];
-      nodesCopy.splice(lineIndex + 1, 0, newNode);
+      nodesCopy.splice(selectedLineIndex.value + 1, 0, {
+        ...newNodePosition,
+        note: "",
+      });
       selectedLineIndex.value = null;
       runOnJS(setNodes)(nodesCopy);
     });
