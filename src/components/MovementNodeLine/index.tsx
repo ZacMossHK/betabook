@@ -17,8 +17,6 @@ interface MovementNodeLineProps {
   nodes: Nodes;
 }
 
-const AnimatedLinearGradient = Animated.createAnimatedComponent(LinearGradient);
-
 const getNodeXYWithOffset = (node: Coordinates) => {
   "worklet";
   const { x, y } = node;
@@ -101,19 +99,18 @@ const MovementNodeLine = ({
         ),
       ]}
     >
-      <AnimatedLinearGradient
-        colors={[firstColor, secondColor]}
-        style={[
-          { height: "100%", width: "100%" },
-          useAnimatedStyle(() => ({
-            transform: [
-              { scale: selectedLineIndex.value === nodeIndex ? 0 : 1 },
-            ],
-          })),
-        ]}
-        start={{ x: 0, y: 0.5 }}
-        end={{ x: 1, y: 0.5 }}
-      />
+      <Animated.View
+        style={useAnimatedStyle(() => ({
+          transform: [{ scale: selectedLineIndex.value === nodeIndex ? 0 : 1 }],
+        }))}
+      >
+        <LinearGradient
+          colors={[firstColor, secondColor]}
+          style={{ height: "100%", width: "100%" }}
+          start={{ x: 0, y: 0.5 }}
+          end={{ x: 1, y: 0.5 }}
+        />
+      </Animated.View>
     </Animated.View>
   );
 };
