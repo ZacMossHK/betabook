@@ -282,6 +282,42 @@ const ImageContainer = ({
       adjustedTranslationY.value = 0;
     });
 
+  const getNewNodePositions = (x: number, y: number) => {
+    "worklet";
+    if (!viewportMeasurements) return { x: 0, y: 0 };
+    return {
+      x: getNewNodePosition(
+        viewportMeasurements.width,
+        imageMatrix.value[0],
+        imageMatrix.value[2],
+        x,
+        NODE_SIZE_OFFSET
+      ),
+      y: getNewNodePosition(
+        viewportMeasurements.height,
+        imageMatrix.value[0],
+        imageMatrix.value[5],
+        y,
+        NODE_SIZE_OFFSET
+      ),
+    };
+  };
+  const isNewNodePositionOutsideImageBorder = (
+    newNodePosition: Coordinates
+  ) => {
+    "worklet";
+    if (!viewportMeasurements) return true;
+    const imageHeight =
+      viewportMeasurements.width *
+      (climb.imageProps.height / climb.imageProps.width);
+    const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
+    // checks if the node is outside of the borders of the image
+    return (
+      newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
+      newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
+    );
+  };
+
   const longPress = Gesture.LongPress()
     .minDuration(300)
     .onStart((event) => {
@@ -292,31 +328,8 @@ const ImageContainer = ({
       )
         return;
 
-      const newNodePosition = {
-        x: getNewNodePosition(
-          viewportMeasurements.width,
-          imageMatrix.value[0],
-          imageMatrix.value[2],
-          event.x,
-          NODE_SIZE_OFFSET
-        ),
-        y: getNewNodePosition(
-          viewportMeasurements.height,
-          imageMatrix.value[0],
-          imageMatrix.value[5],
-          event.y,
-          NODE_SIZE_OFFSET
-        ),
-      };
-      const imageHeight =
-        viewportMeasurements.width *
-        (climb.imageProps.height / climb.imageProps.width);
-      const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
-      // checks if the node is outside of the borders of the image
-      if (
-        newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
-        newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
-      ) {
+      const newNodePosition = getNewNodePositions(event.x, event.y);
+      if (isNewNodePositionOutsideImageBorder(newNodePosition)) {
         return;
       }
       runOnJS(setNodes)([...nodes, { ...newNodePosition, note: "" }]);
@@ -332,31 +345,8 @@ const ImageContainer = ({
       )
         return;
 
-      const newNodePosition = {
-        x: getNewNodePosition(
-          viewportMeasurements.width,
-          imageMatrix.value[0],
-          imageMatrix.value[2],
-          event.x,
-          NODE_SIZE_OFFSET
-        ),
-        y: getNewNodePosition(
-          viewportMeasurements.height,
-          imageMatrix.value[0],
-          imageMatrix.value[5],
-          event.y,
-          NODE_SIZE_OFFSET
-        ),
-      };
-      const imageHeight =
-        viewportMeasurements.width *
-        (climb.imageProps.height / climb.imageProps.width);
-      const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
-      // checks if the node is outside of the borders of the image
-      if (
-        newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
-        newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
-      ) {
+      const newNodePosition = getNewNodePositions(event.x, event.y);
+      if (isNewNodePositionOutsideImageBorder(newNodePosition)) {
         return;
       }
       const nodesCopy = [...nodes];
