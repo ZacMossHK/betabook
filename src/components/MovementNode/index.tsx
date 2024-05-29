@@ -44,9 +44,12 @@ const MovementNode = ({
 
   if (!climb) return null;
 
+  const nodeHitSlop = 10;
+
   const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const tap = Gesture.Tap()
     .maxDuration(5000)
+    .hitSlop(nodeHitSlop)
     .onBegin(() => {
       isSelectingNode.value = true;
       selectedNodeIndex.value = nodeIndex;
@@ -59,6 +62,7 @@ const MovementNode = ({
 
   const translate = Gesture.Pan()
     .maxPointers(1)
+    .hitSlop(nodeHitSlop)
     .onChange((event) => {
       if (
         !viewportMeasurements ||
@@ -133,6 +137,7 @@ const MovementNode = ({
 
   const deleteNode = Gesture.LongPress()
     .blocksExternalGesture(tap)
+    .hitSlop(nodeHitSlop)
     .minDuration(800)
     .onStart(() => {
       runOnJS(setNodes)(
