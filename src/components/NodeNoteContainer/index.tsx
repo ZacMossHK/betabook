@@ -64,7 +64,14 @@ const NodeNoteContainer = ({
       keyboardShouldPersistTaps="handled"
       data={nodes}
       renderItem={({ item, index }) => (
-        <NodeNote {...{ node: item, index, setNodes, nodes }} />
+        <NodeNote
+          {...{
+            note: item.note,
+            index,
+            setNodes,
+            nodes,
+          }}
+        />
       )}
       keyExtractor={(node, index) => `2-${index}-${node.x}-${node.y}`}
     />

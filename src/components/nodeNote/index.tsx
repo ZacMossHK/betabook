@@ -5,15 +5,15 @@ import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
 
 interface NodeNoteProps {
-  node: Node;
+  note: string;
   index: number;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
 }
 
-const NodeNote = ({ node, index, setNodes, nodes }: NodeNoteProps) => {
+const NodeNote = ({ note, index, setNodes, nodes }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
-  const [noteValue, setNoteValue] = useState(node.note);
+  const [noteValue, setNoteValue] = useState(note);
 
   const saveNodeNote = async () => {
     await setNodes((prevNodes) => {
@@ -32,16 +32,18 @@ const NodeNote = ({ node, index, setNodes, nodes }: NodeNoteProps) => {
   const handleUpArrowPress = () =>
     setNodes((prevNodes) => {
       const newNodes = [...prevNodes];
+      const nodeToMove = newNodes[index];
       newNodes[index] = newNodes[index - 1];
-      newNodes[index - 1] = node;
+      newNodes[index - 1] = nodeToMove;
       return newNodes;
     });
 
   const handleDownArrowPress = () =>
     setNodes((prevNodes) => {
       const newNodes = [...prevNodes];
+      const nodeToMove = newNodes[index];
       newNodes[index] = newNodes[index + 1];
-      newNodes[index + 1] = node;
+      newNodes[index + 1] = nodeToMove;
       return newNodes;
     });
 
@@ -124,7 +126,7 @@ const NodeNote = ({ node, index, setNodes, nodes }: NodeNoteProps) => {
             }}
             placeholder="Write your note..."
             onChangeText={setNoteValue}
-            defaultValue={node.note}
+            defaultValue={note}
             onFocus={() => setIsEditingText(true)}
             onBlur={handleFinishingEditingText}
           />
