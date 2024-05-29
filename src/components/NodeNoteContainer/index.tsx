@@ -1,5 +1,5 @@
 import { FlatList } from "react-native-gesture-handler";
-import NodeNote from "../nodeNote";
+import NodeNote from "../NodeNote";
 import { Nodes } from "../ImageViewer/index.types";
 import { useState } from "react";
 import {
@@ -64,7 +64,7 @@ const NodeNoteContainer = ({
       keyboardShouldPersistTaps="handled"
       data={nodes}
       renderItem={({ item, index }) => (
-        <NodeNote {...{ node: item, index, setNodes }} />
+        <NodeNote {...{ node: item, index, setNodes, nodes }} />
       )}
       keyExtractor={(node, index) => `2-${index}-${node.x}-${node.y}`}
     />

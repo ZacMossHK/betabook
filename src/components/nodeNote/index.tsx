@@ -8,9 +8,10 @@ interface NodeNoteProps {
   node: Node;
   index: number;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
+  nodes: Nodes;
 }
 
-const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
+const NodeNote = ({ node, index, setNodes, nodes }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(node.note);
 
@@ -28,6 +29,22 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
     await setIsEditingText(false);
   };
 
+  const handleUpArrowPress = () =>
+    setNodes((prevNodes) => {
+      const newNodes = [...prevNodes];
+      newNodes[index] = newNodes[index - 1];
+      newNodes[index - 1] = node;
+      return newNodes;
+    });
+
+  const handleDownArrowPress = () =>
+    setNodes((prevNodes) => {
+      const newNodes = [...prevNodes];
+      newNodes[index] = newNodes[index + 1];
+      newNodes[index + 1] = node;
+      return newNodes;
+    });
+
   return (
     <View
       style={{
@@ -40,6 +57,40 @@ const NodeNote = ({ node, index, setNodes }: NodeNoteProps) => {
     >
       <View style={{ flexDirection: "column" }}>
         <View style={{ flexDirection: "row" }}>
+          <View style={{ flexDirection: "column", marginRight: 5 }}>
+            <TouchableOpacity
+              style={{
+                height: NODE_SIZE,
+                width: NODE_SIZE,
+                backgroundColor: "#D6EFFF",
+                borderRadius: 15,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: index ? 1 : 0,
+              }}
+              disabled={!index}
+              onPress={handleUpArrowPress}
+            >
+              <Text>^</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={{
+                height: NODE_SIZE,
+                width: NODE_SIZE,
+                backgroundColor: "#D6EFFF",
+                borderRadius: 15,
+                alignContent: "center",
+                justifyContent: "center",
+                alignItems: "center",
+                opacity: index + 1 !== nodes.length ? 1 : 0,
+              }}
+              disabled={index + 1 === nodes.length}
+              onPress={handleDownArrowPress}
+            >
+              <Text>⌄</Text>
+            </TouchableOpacity>
+          </View>
           <View
             style={{
               top: -0.5,
