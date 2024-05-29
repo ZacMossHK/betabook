@@ -139,31 +139,6 @@ const ImageContainer = ({
     return withinXBounds && withinYBounds ? distance : null;
   };
 
-  const tap = Gesture.Tap()
-    .onBegin((event) => {
-      if (nodes.length <= 1 || event.numberOfPointers !== 1) return;
-      const validLines = [];
-      for (const [index, node] of nodes.entries()) {
-        if (index + 1 === nodes.length) continue;
-        const tapDistance = getDistanceToLineSegment(
-          node.x,
-          node.y,
-          nodes[index + 1].x,
-          nodes[index + 1].y,
-          event.x,
-          event.y
-        );
-        if (tapDistance) validLines.push({ index, tapDistance });
-      }
-      if (!validLines.length) return;
-      selectedLineIndex.value = validLines.sort(
-        (a, b) => a.tapDistance - b.tapDistance
-      )[0].index;
-    })
-    .onFinalize(() => {
-      selectedLineIndex.value = null;
-    });
-
   const pinch = Gesture.Pinch()
     .onStart((event) => {
       if (!viewportMeasurements) return;
@@ -332,6 +307,26 @@ const ImageContainer = ({
 
   const lineLongPress = Gesture.LongPress()
     .minDuration(400)
+    .onBegin((event) => {
+      if (nodes.length <= 1 || event.numberOfPointers !== 1) return;
+      const validLines = [];
+      for (const [index, node] of nodes.entries()) {
+        if (index + 1 === nodes.length) continue;
+        const tapDistance = getDistanceToLineSegment(
+          node.x,
+          node.y,
+          nodes[index + 1].x,
+          nodes[index + 1].y,
+          event.x,
+          event.y
+        );
+        if (tapDistance) validLines.push({ index, tapDistance });
+      }
+      if (!validLines.length) return;
+      selectedLineIndex.value = validLines.sort(
+        (a, b) => a.tapDistance - b.tapDistance
+      )[0].index;
+    })
     .onStart((event) => {
       if (
         event.numberOfPointers > 1 ||
@@ -351,6 +346,9 @@ const ImageContainer = ({
       });
       selectedLineIndex.value = null;
       runOnJS(setNodes)(nodesCopy);
+    })
+    .onFinalize(() => {
+      selectedLineIndex.value = null;
     });
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -445,7 +443,7 @@ const ImageContainer = ({
 
   return (
     <GestureDetector
-      gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan, tap)}
+      gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan)}
     >
       <Animated.View
         onLayout={({ nativeEvent }) => {
