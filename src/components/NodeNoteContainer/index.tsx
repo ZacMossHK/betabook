@@ -60,7 +60,7 @@ const NodeNoteContainer = ({
   return (
     <FlatList
       nestedScrollEnabled={true}
-      style={{ width: "100%", paddingHorizontal: 10 }}
+      style={{ paddingHorizontal: 10 }}
       keyboardShouldPersistTaps="handled"
       data={nodes}
       renderItem={({ item, index }) => (

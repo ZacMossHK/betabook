@@ -80,7 +80,7 @@ const ImageViewer = () => {
       transform.value
     )
   );
-  
+
   const handleOpenBottomSheet = () => bottomSheetRef.current?.snapToIndex(1);
   const handleCloseBottomSheet = () => bottomSheetRef.current?.snapToIndex(0);
 
@@ -192,37 +192,43 @@ const ImageViewer = () => {
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
             >
-              <Animated.View
-                style={[
-                  {
-                    alignItems: "center",
-                    width: "100%",
-                    backgroundColor: "white",
-                    borderTopLeftRadius: 20,
-                    borderTopRightRadius: 20,
-                    paddingTop: 30,
-                  },
-                  useAnimatedStyle(() => {
-                    if (!viewportMeasurements) return {};
-                    return {
-                      height:
-                        bottomSheetIndex.value <= 1
-                          ? BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight
-                          : "100%",
-                    };
-                  }),
-                ]}
+              <View
+                style={{
+                  alignItems: "center",
+                  width: "100%",
+                  height: 1000,
+                  backgroundColor: "white",
+                  borderTopLeftRadius: 20,
+                  borderTopRightRadius: 20,
+                  paddingTop: 30,
+                }}
               >
-                <NodeNoteContainer
-                  {...{
-                    nodes,
-                    setNodes,
-                    bottomSheetIndex,
-                    isHandlePressOpening,
-                    handleOpenBottomSheet,
-                  }}
-                />
-              </Animated.View>
+                <Animated.View
+                  style={[
+                    { width: "100%" },
+                    useAnimatedStyle(() => {
+                      if (!viewportMeasurements) return {};
+                      return {
+                        // this ensures the bottom of the FlatList in the NodeContainer will always have its height set to the bottom of the drawer
+                        height:
+                          bottomSheetIndex.value <= 1
+                            ? BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight-30
+                            : "100%",
+                      };
+                    }),
+                  ]}
+                >
+                  <NodeNoteContainer
+                    {...{
+                      nodes,
+                      setNodes,
+                      bottomSheetIndex,
+                      isHandlePressOpening,
+                      handleOpenBottomSheet,
+                    }}
+                  />
+                </Animated.View>
+              </View>
             </BottomSheet>
           </View>
         </Animated.View>
