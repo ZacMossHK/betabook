@@ -1,11 +1,12 @@
 import Animated, {
   SharedValue,
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import React from "react";
+import React, { useState } from "react";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes, SizeDimensions } from "../ImageViewer/index.types";
 import { useClimb } from "../../providers/ClimbProvider";
@@ -44,9 +45,28 @@ const MovementNode = ({
 
   if (!climb) return null;
 
+  // zIndex must be set through state instead of animatedStyle style as animating layout style props (eg. zIndex) causes slowdown when animating 
+  const [zIndex, setZIndex] = useState(
+    selectedNodeIndex.value === nodeIndex ? 3 : 2
+  );
+
+  useAnimatedReaction(
+    () => selectedNodeIndex.value,
+    (currentValue) => {
+      if (currentValue === null) return;
+      if (currentValue === nodeIndex && zIndex === 2) {
+        runOnJS(setZIndex)(3);
+      }
+      if (currentValue !== nodeIndex && zIndex !== 2) {
+        runOnJS(setZIndex)(2);
+      }
+    }
+  );
+
   const nodeHitSlop = 10;
 
   const actualPosition = useSharedValue<Coordinates>({ x: 0, y: 0 });
+  
   const tap = Gesture.Tap()
     .maxDuration(5000)
     .hitSlop(nodeHitSlop)
@@ -151,7 +171,6 @@ const MovementNode = ({
     if (!node) return {};
     return {
       transform: [{ translateX: node.x }, { translateY: node.y }],
-      zIndex: selectedNodeIndex.value === nodeIndex ? 3 : 2,
       borderColor:
         selectedNodeIndex.value === nodeIndex && isSelectingNode.value
           ? "red"
@@ -173,7 +192,7 @@ const MovementNode = ({
             position: "absolute",
             backgroundColor: "white",
             flex: 1,
-            zIndex: 2,
+            zIndex,
             /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
             This transform renders the static position upon rerendering after adding a node.
             The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
