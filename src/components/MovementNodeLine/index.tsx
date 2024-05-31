@@ -6,6 +6,7 @@ import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { useAnimation } from "../../providers/AnimationProvider";
 import { memo } from "react";
+import { PixelRatio } from "react-native";
 
 interface MovementNodeLineProps {
   currentNodeX: number;
@@ -14,7 +15,6 @@ interface MovementNodeLineProps {
   nextNodeY: number;
   nodeIndex: number;
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
-  ratioDiff: number;
 }
 
 const getNodeXYWithOffset = (node: Coordinates) => {
@@ -50,6 +50,9 @@ const generateTransform = (
     },
   ];
 };
+const pixelRatio = PixelRatio.get();
+const pixelRatioRounded = Math.round(pixelRatio);
+const ratioDiff = pixelRatio / pixelRatioRounded;
 
 const MovementNodeLine = memo(
   ({
@@ -59,7 +62,6 @@ const MovementNodeLine = memo(
     nextNodeY,
     nodeIndex,
     adjustedPositionNodes,
-    ratioDiff,
   }: MovementNodeLineProps) => {
     const { selectedLineIndex } = useAnimation();
 

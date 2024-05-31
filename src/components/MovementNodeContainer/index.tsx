@@ -14,7 +14,6 @@ import {
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import React, { useCallback } from "react";
-import { PixelRatio } from "react-native";
 import MovementNodeLine from "../MovementNodeLine";
 
 interface MovementNodeContainerProps {
@@ -49,9 +48,6 @@ const MovementNodeContainer = ({
   imageProps,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
-  const pixelRatio = PixelRatio.get();
-  const pixelRatioRounded = Math.round(pixelRatio);
-  const ratioDiff = pixelRatio / pixelRatioRounded;
 
   const animatedStyle = useAnimatedStyle(() => {
     if (!isViewRendered.value) return {};
@@ -238,7 +234,6 @@ const MovementNodeContainer = ({
                 {...{
                   nodeIndex,
                   adjustedPositionNodes,
-                  ratioDiff,
                   currentNodeX: currentNode.x,
                   currentNodeY: currentNode.y,
                   nextNodeX: nextNode.x,
