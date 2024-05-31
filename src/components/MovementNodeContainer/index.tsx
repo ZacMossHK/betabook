@@ -5,10 +5,15 @@ import Animated, {
 } from "react-native-reanimated";
 import { Matrix3 } from "react-native-redash";
 import MovementNode from "../MovementNode";
-import { Coordinates, Nodes, SizeDimensions } from "../ImageViewer/index.types";
+import {
+  Coordinates,
+  ImageProps,
+  Nodes,
+  SizeDimensions,
+} from "../ImageViewer/index.types";
 import { getCurrentNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
-import React from "react";
+import React, { useCallback } from "react";
 import { PixelRatio } from "react-native";
 import MovementNodeLine from "../MovementNodeLine";
 
@@ -25,6 +30,7 @@ interface MovementNodeContainerProps {
   pinchScale: SharedValue<number>;
   baseScale: SharedValue<number>;
   viewportMeasurements: SizeDimensions | null;
+  imageProps: ImageProps;
 }
 
 const MovementNodeContainer = ({
@@ -40,6 +46,7 @@ const MovementNodeContainer = ({
   pinchScale,
   baseScale,
   viewportMeasurements,
+  imageProps,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
   const pixelRatio = PixelRatio.get();
@@ -104,6 +111,28 @@ const MovementNodeContainer = ({
       note: node.note,
     }));
   });
+
+  const translateNode = useCallback(
+    (selectedNodeIndex: number, selectedNodePosition: Coordinates) =>
+      setNodes((prevNodes) => {
+        const newNodes = [...prevNodes];
+        newNodes[selectedNodeIndex] = {
+          ...selectedNodePosition,
+          note: newNodes[selectedNodeIndex].note,
+        };
+        return newNodes;
+      }),
+    []
+  );
+
+  const deleteNode = useCallback(
+    (indexToDelete: number) =>
+      setNodes((prevNodes) =>
+        prevNodes.filter((_, index) => index !== indexToDelete)
+      ),
+    []
+  );
+
   return (
     <Animated.View
       style={[
@@ -115,24 +144,23 @@ const MovementNodeContainer = ({
     >
       {nodes.map((node, nodeIndex) => {
         const scale = pinchScale.value * baseScale.value;
-        const staticNode = {
-          x: getCurrentNodePosition(
-            selectedNodeIndex.value === nodeIndex &&
-              selectedNodePosition.value !== null
-              ? selectedNodePosition.value.x
-              : node.x,
-            scale,
-            NODE_SIZE_OFFSET
-          ),
-          y: getCurrentNodePosition(
-            selectedNodeIndex.value === nodeIndex &&
-              selectedNodePosition.value !== null
-              ? selectedNodePosition.value.y
-              : node.y,
-            scale,
-            NODE_SIZE_OFFSET
-          ),
-        };
+
+        const staticNodeX = getCurrentNodePosition(
+          selectedNodeIndex.value === nodeIndex &&
+            selectedNodePosition.value !== null
+            ? selectedNodePosition.value.x
+            : node.x,
+          scale,
+          NODE_SIZE_OFFSET
+        );
+        const staticNodeY = getCurrentNodePosition(
+          selectedNodeIndex.value === nodeIndex &&
+            selectedNodePosition.value !== null
+            ? selectedNodePosition.value.y
+            : node.y,
+          scale,
+          NODE_SIZE_OFFSET
+        );
         return (
           <MovementNode
             key={`${0}-${nodeIndex}-${node.x}-${node.y}`}
@@ -140,17 +168,25 @@ const MovementNodeContainer = ({
               selectedNodeIndex,
               nodeIndex,
               selectedNodePosition,
-              nodePosition: { x: node.x, y: node.y },
-              imageMatrix,
               isSelectingNode,
-              setNodes,
-              nodes,
+              deleteNode,
               isTranslatingNode,
               adjustedPositionNodes,
+              translateNode,
+              imagePropsWidth: imageProps.width,
+              imagePropsHeight: imageProps.height,
               pinchScale,
               baseScale,
-              staticNode,
-              viewportMeasurements,
+              staticNodeX,
+              staticNodeY,
+              originalNodeX: node.x,
+              originalNodeY: node.y,
+              viewportMeasurementsWidth: viewportMeasurements
+                ? viewportMeasurements.width
+                : null,
+              viewportMeasurementsHeight: viewportMeasurements
+                ? viewportMeasurements?.height
+                : null,
             }}
           />
         );
@@ -195,6 +231,7 @@ const MovementNodeContainer = ({
                 NODE_SIZE_OFFSET
               ),
             };
+
             return (
               <MovementNodeLine
                 key={`${1}-${nodeIndex}-${node.x}-${node.y}`}
@@ -202,9 +239,10 @@ const MovementNodeContainer = ({
                   nodeIndex,
                   adjustedPositionNodes,
                   ratioDiff,
-                  currentNode,
-                  nextNode,
-                  nodes,
+                  currentNodeX: currentNode.x,
+                  currentNodeY: currentNode.y,
+                  nextNodeX: nextNode.x,
+                  nextNodeY: nextNode.y,
                 }}
               />
             );

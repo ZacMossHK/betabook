@@ -1,20 +1,20 @@
 import Animated, {
   SharedValue,
-  interpolateColor,
   useAnimatedStyle,
 } from "react-native-reanimated";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
-import { LinearGradient } from "expo-linear-gradient";
 import { useAnimation } from "../../providers/AnimationProvider";
+import { memo } from "react";
 
 interface MovementNodeLineProps {
-  currentNode: Coordinates;
-  nextNode: Coordinates;
+  currentNodeX: number;
+  currentNodeY: number;
+  nextNodeX: number;
+  nextNodeY: number;
   nodeIndex: number;
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
   ratioDiff: number;
-  nodes: Nodes;
 }
 
 const getNodeXYWithOffset = (node: Coordinates) => {
@@ -51,68 +51,56 @@ const generateTransform = (
   ];
 };
 
-const MovementNodeLine = ({
-  currentNode,
-  nextNode,
-  nodeIndex,
-  adjustedPositionNodes,
-  ratioDiff,
-  nodes,
-}: MovementNodeLineProps) => {
-  const { selectedLineIndex } = useAnimation();
-  const colors = ["white", "blue"];
-  const firstColor = interpolateColor(nodeIndex, [0, nodes.length - 1], colors);
-  const secondColor = interpolateColor(
-    nodeIndex + 1,
-    [0, nodes.length - 1],
-    colors
-  );
+const MovementNodeLine = memo(
+  ({
+    currentNodeX,
+    currentNodeY,
+    nextNodeX,
+    nextNodeY,
+    nodeIndex,
+    adjustedPositionNodes,
+    ratioDiff,
+  }: MovementNodeLineProps) => {
+    const { selectedLineIndex } = useAnimation();
 
-  return (
-    <Animated.View
-      style={[
-        {
-          backgroundColor: "red",
-          height: 3,
-          zIndex: 1,
-          transformOrigin: "0% 50%",
-          width: 1,
-          flex: 1,
-          position: "absolute",
-          /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
+    const currentNode = { x: currentNodeX, y: currentNodeY };
+    const nextNode = { x: nextNodeX, y: nextNodeY };
+
+    return (
+      <Animated.View
+        style={[
+          {
+            backgroundColor: "black",
+            height: 3,
+            zIndex: 1,
+            transformOrigin: "0% 50%",
+            width: 1,
+            flex: 1,
+            position: "absolute",
+            /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
             This transform renders the static position upon rerendering after adding a node.
             The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
-          transform: generateTransform(currentNode, nextNode, ratioDiff),
-        },
-        useAnimatedStyle(() =>
-          [nodeIndex, nodeIndex + 1].some(
-            (index) => index === adjustedPositionNodes.value.length
-          )
-            ? {}
-            : {
-                transform: generateTransform(
-                  adjustedPositionNodes.value[nodeIndex],
-                  adjustedPositionNodes.value[nodeIndex + 1],
-                  ratioDiff
-                ),
-              }
-        ),
-      ]}
-    >
-      <Animated.View
-        style={useAnimatedStyle(() => ({
-          transform: [{ scale: selectedLineIndex.value === nodeIndex ? 0 : 1 }],
-        }))}
-      >
-        <LinearGradient
-          colors={[firstColor, secondColor]}
-          style={{ height: "100%", width: "100%" }}
-          start={{ x: 0, y: 0.5 }}
-          end={{ x: 1, y: 0.5 }}
-        />
-      </Animated.View>
-    </Animated.View>
-  );
-};
+            transform: generateTransform(currentNode, nextNode, ratioDiff),
+          },
+          useAnimatedStyle(() =>
+            [nodeIndex, nodeIndex + 1].some(
+              (index) => index === adjustedPositionNodes.value.length
+            )
+              ? {}
+              : {
+                  backgroundColor:
+                    selectedLineIndex.value === nodeIndex ? "red" : "black",
+                  transform: generateTransform(
+                    adjustedPositionNodes.value[nodeIndex],
+                    adjustedPositionNodes.value[nodeIndex + 1],
+                    ratioDiff
+                  ),
+                }
+          ),
+        ]}
+      />
+    );
+  }
+);
 
 export default MovementNodeLine;

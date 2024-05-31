@@ -125,6 +125,7 @@ const ImageViewer = () => {
               baseScale,
               pinchScale,
               viewportMeasurements,
+              imageProps: climb.imageProps,
             }}
           />
           <ImageContainer
@@ -212,7 +213,9 @@ const ImageViewer = () => {
                         // this ensures the bottom of the FlatList in the NodeContainer will always have its height set to the bottom of the drawer
                         height:
                           bottomSheetIndex.value <= 1
-                            ? BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight-30
+                            ? BOTTOMSHEET_MID_HEIGHT -
+                              bottomSheetHandleHeight -
+                              30
                             : "100%",
                       };
                     }),
