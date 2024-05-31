@@ -50,8 +50,8 @@ const MovementNodeContainer = ({
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
 
   const animatedStyle = useAnimatedStyle(() => {
-    if (!isViewRendered.value) return {};
-    if (!viewportMeasurements) return {};
+    if (!isViewRendered.value || !viewportMeasurements) return {};
+
     const scale = pinchScale.value * baseScale.value;
     /* This View is the container for all the Move Nodes, and its movement should track along with the image.
     The container view doesn't scale because scaling changes the size of the Nodes, which we don't want!
