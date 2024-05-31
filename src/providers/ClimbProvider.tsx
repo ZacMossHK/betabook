@@ -8,7 +8,7 @@ import {
 import * as FileSystem from "expo-file-system";
 import { IMAGE_DIR } from "../components/Menu/index.constants";
 import { Nodes } from "../components/ImageViewer/index.types";
-import { File } from "../../app";
+import { File } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 interface ClimbDataType {
