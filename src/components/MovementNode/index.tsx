@@ -9,6 +9,7 @@ import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { memo, useMemo, useState } from "react";
 import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
+import { Text } from "react-native";
 
 interface MovementNodeProps {
   selectedNodeIndex: SharedValue<number | null>;
@@ -203,11 +204,12 @@ const MovementNode = memo(
               height: NODE_SIZE,
               borderRadius: NODE_SIZE,
               borderColor: "black",
-              borderWidth: 4,
+              borderWidth: 3,
               position: "absolute",
               backgroundColor: "white",
-              flex: 1,
               zIndex,
+              alignItems: "center",
+              justifyContent: "center",
               /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
             This transform renders the static position upon rerendering after adding a node.
             The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
@@ -228,7 +230,17 @@ const MovementNode = memo(
               };
             }),
           ]}
-        />
+        >
+          <Text
+            style={{
+              color: "black",
+              fontSize: 10,
+              fontFamily: "InriaSans_700Bold",
+            }}
+          >
+            {nodeIndex + 1}
+          </Text>
+        </Animated.View>
       </GestureDetector>
     );
   }
