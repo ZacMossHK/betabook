@@ -77,7 +77,6 @@ const MovementNodeLine = memo(
             zIndex: 1,
             transformOrigin: "0% 50%",
             width: 1,
-            flex: 1,
             position: "absolute",
             /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
             This transform renders the static position upon rerendering after adding a node.
@@ -92,6 +91,7 @@ const MovementNodeLine = memo(
               : {
                   backgroundColor:
                     selectedLineIndex.value === nodeIndex ? "red" : "black",
+                  // TODO: a lot of lines with transform props cause a huge performance drop, there should be logic here to work out if a line is on screen and if it isn't, give it opacity 0 and no transform props
                   transform: generateTransform(
                     adjustedPositionNodes.value[nodeIndex],
                     adjustedPositionNodes.value[nodeIndex + 1],
