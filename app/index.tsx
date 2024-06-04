@@ -1,7 +1,11 @@
-import { Button, SafeAreaView, Text, View } from "react-native";
+import { Button, Image, SafeAreaView, Text, View } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import {
+  FlatList,
+  TouchableHighlight,
+  TouchableOpacity,
+} from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useCallback, useState } from "react";
 import devCurrentFile from "../devData/devCurrentfile";
@@ -10,6 +14,7 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { randomUUID } from "expo-crypto";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
+import { LinearGradient } from "expo-linear-gradient";
 
 export interface File {
   fileId: string;
@@ -85,77 +90,192 @@ const Menu = () => {
     await setIsRequestingDeletingFiles(false);
   };
 
+  const deleteFile = async (fileId: string, imagePath: string) => {
+    await AsyncStorage.removeItem(fileId);
+    await FileSystem.deleteAsync(imagePath);
+    await setSavedFiles((prevFiles) => {
+      const newFiles = [...prevFiles];
+      return newFiles.filter((file) => file.fileId !== fileId);
+    });
+  };
+
   return (
     <SafeAreaView
       style={{
         flex: 1,
         backgroundColor: "#F55536",
-        alignItems: "center",
-        justifyContent: "center",
-        padding: 0,
       }}
     >
       <Stack.Screen options={{ headerShown: false }} />
-      <Text
+      <View
         style={{
-          color: "white",
-          fontSize: 69,
-          marginBottom: 29,
-          fontFamily: "InriaSerif_400Regular",
+          alignContent: "center",
+          justifyContent: "center",
+          alignItems: "center",
+          bottom: 0,
+          position: "absolute",
+          width: "100%",
         }}
       >
-        Betabook
-      </Text>
-      <View>
-        <TouchableOpacity
-          style={{ backgroundColor: "#D6EFFF", borderRadius: 15, padding: 9 }}
-          onPress={pickImage}
-          disabled={isLoading}
-        >
-          <Text
-            style={{
-              fontSize: 19,
-              fontFamily: "InriaSans_700Bold",
-              color: "#14281D",
-            }}
-          >
-            Create new
-          </Text>
-        </TouchableOpacity>
+        {/* delete all files button for development only */}
         {savedFiles.length ? (
-          <>
-            {isRequestingDeletingFiles ? (
-              <>
-                <Button
-                  onPress={deleteAllFiles}
-                  title="Confirm file Deletion - cannot be undone!"
-                  color="red"
-                  disabled={isLoading}
-                />
-                <Button
-                  title="Cancel"
-                  onPress={() => setIsRequestingDeletingFiles(false)}
-                  disabled={isLoading}
-                />
-              </>
-            ) : (
+          isRequestingDeletingFiles ? (
+            <>
               <Button
-                onPress={() => setIsRequestingDeletingFiles(true)}
-                title="Delete all files"
+                onPress={deleteAllFiles}
+                title="Confirm file Deletion - cannot be undone!"
                 color="red"
                 disabled={isLoading}
               />
-            )}
-            {savedFiles.map((savedFile, index) => (
               <Button
-                onPress={() => loadFile(savedFile)}
-                key={index}
-                title={savedFile.fileName || ""}
+                title="Cancel"
+                onPress={() => setIsRequestingDeletingFiles(false)}
                 disabled={isLoading}
               />
-            ))}
-          </>
+            </>
+          ) : (
+            <Button
+              onPress={() => setIsRequestingDeletingFiles(true)}
+              title="Delete all files"
+              color="red"
+              disabled={isLoading}
+            />
+          )
         ) : null}
+        <Text
+          style={{
+            color: "white",
+            fontSize: 69,
+            marginBottom: 29,
+            fontFamily: "InriaSerif_400Regular",
+          }}
+        >
+          Betabook
+        </Text>
+        <View>
+          <TouchableOpacity
+            style={{ backgroundColor: "#D6EFFF", borderRadius: 15, padding: 9 }}
+            onPress={pickImage}
+            disabled={isLoading}
+          >
+            <Text
+              style={{
+                fontSize: 19,
+                fontFamily: "InriaSans_700Bold",
+                color: "#14281D",
+              }}
+            >
+              Create new
+            </Text>
+          </TouchableOpacity>
+        </View>
+        <View
+          style={{
+            marginTop: 29,
+
+            backgroundColor: "white",
+            height: 572,
+            width: "100%",
+            bottom: 0,
+            borderTopLeftRadius: 20,
+            borderTopRightRadius: 20,
+          }}
+        >
+          <View
+            style={{
+              height: 52,
+              justifyContent: "center",
+              alignItems: "center",
+            }}
+          >
+            <Text style={{ fontSize: 19, fontFamily: "InriaSans_700Bold" }}>
+              Your climbs
+            </Text>
+          </View>
+          <FlatList
+            style={{ opacity: isLoading ? 0.5 : 1 }}
+            scrollEnabled={!isLoading}
+            data={savedFiles}
+            numColumns={2}
+            keyExtractor={(item) => item.fileId}
+            ListEmptyComponent={() => (
+              <Text
+                style={{
+                  width: "100%",
+                  textAlign: "center",
+                  fontFamily: "InriaSans_400Regular",
+                  fontSize: 19,
+                }}
+              >
+                No climbs!
+              </Text>
+            )}
+            renderItem={({ item, index }) => {
+              const touchableOpacityStyle = {
+                height: 207,
+                margin: 2.5,
+                width: 207,
+                alignItems: "center",
+              };
+              if (index < 2) {
+                touchableOpacityStyle.marginTop = 0;
+              }
+              if (index >= savedFiles.length - 2) {
+                touchableOpacityStyle.marginBottom = 0;
+              }
+              return (
+                <TouchableOpacity
+                  style={touchableOpacityStyle}
+                  activeOpacity={0.8}
+                  onPress={() => loadFile(item)}
+                  disabled={isLoading}
+                  delayLongPress={800}
+                  onLongPress={() =>
+                    deleteFile(item.fileId, item.imageProps.uri)
+                  }
+                >
+                  <>
+                    <Text
+                      style={{
+                        zIndex: 2,
+                        bottom: 4,
+                        position: "absolute",
+                        textAlign: "center",
+                        fontSize: 19,
+                        color: "white",
+                        fontFamily: "InriaSans_400Regular",
+                      }}
+                    >
+                      {item.fileName}
+                    </Text>
+                    <LinearGradient
+                      style={{
+                        zIndex: 1,
+                        height: 43,
+                        position: "absolute",
+                        bottom: 0,
+                        width: "100%",
+                      }}
+                      colors={["transparent", "black"]}
+                    />
+
+                    <Image
+                      style={{
+                        flex: 1,
+                        position: "absolute",
+                        left: 0,
+                        right: 0,
+                        top: 0,
+                        bottom: 0,
+                      }}
+                      source={{ uri: item.imageProps.uri }}
+                    />
+                  </>
+                </TouchableOpacity>
+              );
+            }}
+          />
+        </View>
       </View>
     </SafeAreaView>
   );
