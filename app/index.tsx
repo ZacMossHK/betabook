@@ -1,4 +1,11 @@
-import { Button, Image, SafeAreaView, Text, View } from "react-native";
+import {
+  Button,
+  Dimensions,
+  Image,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import {
@@ -27,6 +34,8 @@ export type SetCurrentFileState = React.Dispatch<
   React.SetStateAction<File | null>
 >;
 
+const CLIMB_TILE_WIDTH = 200;
+
 const Menu = () => {
   const router = useRouter();
   const { setClimb, clearClimb } = useClimb();
@@ -37,7 +46,7 @@ const Menu = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   const loadFiles = async () => {
-    const files = [];
+    const files: File[] = [];
     // file for development only
     if (process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG)
       files.push(devCurrentFile());
@@ -45,6 +54,13 @@ const Menu = () => {
       const file = await AsyncStorage.getItem(fileId);
       if (file) files.push(JSON.parse(file));
     }
+    if (files.length % 2)
+      files.push({
+        fileId: randomUUID(),
+        fileName: "",
+        imageProps: { width: 0, height: 0, uri: "" },
+        nodes: [],
+      });
     await setSavedFiles(files);
   };
 
@@ -181,19 +197,28 @@ const Menu = () => {
             borderTopRightRadius: 20,
           }}
         >
-          <View
+          <Text
             style={{
+              width: "100%",
               height: 52,
-              justifyContent: "center",
-              alignItems: "center",
+              fontSize: 19,
+              fontFamily: "InriaSans_700Bold",
+              textAlignVertical: "center",
+              textAlign: "center",
             }}
           >
-            <Text style={{ fontSize: 19, fontFamily: "InriaSans_700Bold" }}>
-              Your climbs
-            </Text>
-          </View>
+            Your climbs
+          </Text>
           <FlatList
-            style={{ opacity: isLoading ? 0.5 : 1 }}
+            contentContainerStyle={{}}
+            columnWrapperStyle={{
+              justifyContent: "space-evenly",
+              paddingBottom:
+                (Dimensions.get("screen").width - CLIMB_TILE_WIDTH * 2) / 3,
+            }}
+            style={{
+              opacity: isLoading ? 0.5 : 1,
+            }}
             scrollEnabled={!isLoading}
             data={savedFiles}
             numColumns={2}
@@ -210,22 +235,24 @@ const Menu = () => {
                 No climbs!
               </Text>
             )}
-            renderItem={({ item, index }) => {
-              const touchableOpacityStyle = {
-                height: 207,
-                margin: 2.5,
-                width: 207,
-                alignItems: "center",
-              };
-              if (index < 2) {
-                touchableOpacityStyle.marginTop = 0;
-              }
-              if (index >= savedFiles.length - 2) {
-                touchableOpacityStyle.marginBottom = 0;
-              }
+            renderItem={({ item }) => {
+              if (!item.imageProps.uri.length)
+                return (
+                  <View
+                    style={{
+                      height: CLIMB_TILE_WIDTH,
+                      width: CLIMB_TILE_WIDTH,
+                    }}
+                  />
+                );
+
               return (
                 <TouchableOpacity
-                  style={touchableOpacityStyle}
+                  style={{
+                    height: CLIMB_TILE_WIDTH,
+                    width: CLIMB_TILE_WIDTH,
+                    alignItems: "center",
+                  }}
                   activeOpacity={0.8}
                   onPress={() => loadFile(item)}
                   disabled={isLoading}
@@ -248,6 +275,29 @@ const Menu = () => {
                     >
                       {item.fileName}
                     </Text>
+                    {/* <TouchableOpacity
+                      style={{
+                        zIndex: 2,
+                        backgroundColor: "#D6EFFF",
+                        borderRadius: 15,
+                        padding: 9,
+                        top: 0,
+                        right: 0,
+                        position: "absolute",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          zIndex: 2,
+                          // textAlign: "center",
+                          fontSize: 19,
+                          color: "white",
+                          fontFamily: "InriaSans_400Regular",
+                        }}
+                      >
+                        X
+                      </Text>
+                    </TouchableOpacity> */}
                     <LinearGradient
                       style={{
                         zIndex: 1,
