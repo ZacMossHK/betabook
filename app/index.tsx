@@ -8,11 +8,7 @@ import {
 } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
-import {
-  FlatList,
-  TouchableHighlight,
-  TouchableOpacity,
-} from "react-native-gesture-handler";
+import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useCallback, useState } from "react";
 import devCurrentFile from "../devData/devCurrentfile";
@@ -50,17 +46,12 @@ const Menu = () => {
     // file for development only
     if (process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG)
       files.push(devCurrentFile());
+
     for (const fileId of await AsyncStorage.getAllKeys()) {
       const file = await AsyncStorage.getItem(fileId);
       if (file) files.push(JSON.parse(file));
     }
-    if (files.length % 2)
-      files.push({
-        fileId: randomUUID(),
-        fileName: "",
-        imageProps: { width: 0, height: 0, uri: "" },
-        nodes: [],
-      });
+
     await setSavedFiles(files);
   };
 
@@ -220,7 +211,19 @@ const Menu = () => {
               opacity: isLoading ? 0.5 : 1,
             }}
             scrollEnabled={!isLoading}
-            data={savedFiles}
+            data={
+              !(savedFiles.length % 2)
+                ? savedFiles
+                : [
+                    ...savedFiles,
+                    {
+                      fileId: randomUUID(),
+                      fileName: "",
+                      imageProps: { width: 0, height: 0, uri: "" },
+                      nodes: [],
+                    },
+                  ]
+            }
             numColumns={2}
             keyExtractor={(item) => item.fileId}
             ListEmptyComponent={() => (
@@ -240,6 +243,8 @@ const Menu = () => {
                 return (
                   <View
                     style={{
+                      backgroundColor: "grey",
+                      opacity: 0.3,
                       height: CLIMB_TILE_WIDTH,
                       width: CLIMB_TILE_WIDTH,
                     }}
