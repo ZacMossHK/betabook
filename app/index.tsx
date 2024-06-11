@@ -1,11 +1,4 @@
-import {
-  Button,
-  Dimensions,
-  Image,
-  SafeAreaView,
-  Text,
-  View,
-} from "react-native";
+import { Button, Dimensions, SafeAreaView, Text, View } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
@@ -17,7 +10,8 @@ import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
 import { randomUUID } from "expo-crypto";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
-import { LinearGradient } from "expo-linear-gradient";
+import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
+import ClimbTile from "../src/components/ClimbTile";
 
 export interface File {
   fileId: string;
@@ -29,8 +23,6 @@ export interface File {
 export type SetCurrentFileState = React.Dispatch<
   React.SetStateAction<File | null>
 >;
-
-const CLIMB_TILE_WIDTH = 200;
 
 const Menu = () => {
   const router = useRouter();
@@ -63,8 +55,10 @@ const Menu = () => {
     }, [])
   );
 
-  const loadFile = async (file: File) => {
+  const loadFile = async (fileId: string) => {
     await setIsLoading(true);
+    const file = savedFiles.find((savedFile) => savedFile.fileId === fileId);
+    if (!file) return;
     await setClimb(file);
     router.navigate("imageViewer");
   };
@@ -104,62 +98,6 @@ const Menu = () => {
       const newFiles = [...prevFiles];
       return newFiles.filter((file) => file.fileId !== fileId);
     });
-  };
-
-  const DeleteHeader = ({ fileId, uri, disabled }) => {
-    const [isDeletePressed, setIsDeletePressed] = useState(false);
-    return (
-      <View style={{ zIndex: 2, top: 4 }}>
-        {isDeletePressed && (
-          <View
-            style={{
-              backgroundColor: "#F55536",
-              borderRadius: 15,
-              paddingHorizontal: 7,
-              paddingVertical: 3,
-              left: 4,
-              position: "absolute",
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 12,
-                color: "white",
-                fontFamily: "InriaSans_700Bold",
-              }}
-            >
-              Hold X for 5 secs to delete
-            </Text>
-          </View>
-        )}
-
-        <TouchableOpacity
-          onPressIn={() => setIsDeletePressed(true)}
-          onPressOut={() => setIsDeletePressed(false)}
-          onLongPress={() => deleteFile(fileId, uri)}
-          delayLongPress={5000}
-          style={{
-            backgroundColor: "#F55536",
-            borderRadius: 15,
-            paddingHorizontal: 7,
-            paddingVertical: 3,
-            right: 4,
-            position: "absolute",
-          }}
-          disabled={disabled}
-        >
-          <Text
-            style={{
-              fontSize: 12,
-              color: "white",
-              fontFamily: "InriaSans_700Bold",
-            }}
-          >
-            X
-          </Text>
-        </TouchableOpacity>
-      </View>
-    );
   };
 
   return (
@@ -235,7 +173,6 @@ const Menu = () => {
         <View
           style={{
             marginTop: 29,
-
             backgroundColor: "white",
             height: 572,
             width: "100%",
@@ -294,80 +231,16 @@ const Menu = () => {
                 No climbs!
               </Text>
             )}
-            renderItem={({ item }) => {
-              if (!item.imageProps.uri.length)
-                return (
-                  <View
-                    style={{
-                      backgroundColor: "grey",
-                      opacity: 0.3,
-                      height: CLIMB_TILE_WIDTH,
-                      width: CLIMB_TILE_WIDTH,
-                    }}
-                  />
-                );
-
-              return (
-                <TouchableOpacity
-                  style={{
-                    height: CLIMB_TILE_WIDTH,
-                    width: CLIMB_TILE_WIDTH,
-                  }}
-                  activeOpacity={0.8}
-                  onPress={() => loadFile(item)}
-                  disabled={isLoading}
-                >
-                  <>
-                    <DeleteHeader
-                      fileId={item.fileId}
-                      uri={item.imageProps.uri}
-                      disabled={isLoading}
-                    />
-                    <View
-                      style={{
-                        zIndex: 2,
-                        bottom: 4,
-                        position: "absolute",
-                        width: "100%",
-                      }}
-                    >
-                      <Text
-                        style={{
-                          textAlign: "center",
-                          fontSize: 19,
-                          color: "white",
-                          fontFamily: "InriaSans_400Regular",
-                        }}
-                      >
-                        {item.fileName}
-                      </Text>
-                    </View>
-                    <LinearGradient
-                      style={{
-                        zIndex: 1,
-                        height: 43,
-                        position: "absolute",
-                        bottom: 0,
-                        width: "100%",
-                      }}
-                      colors={["transparent", "black"]}
-                    />
-
-                    <Image
-                      style={{
-                        flex: 1,
-                        position: "absolute",
-                        left: 0,
-                        right: 0,
-                        top: 0,
-                        bottom: 0,
-                      }}
-                      source={{ uri: item.imageProps.uri }}
-                    />
-                  </>
-                </TouchableOpacity>
-              );
-            }}
+            renderItem={({ item }) => (
+              <ClimbTile
+                deleteFile={deleteFile}
+                fileName={item.fileName}
+                fileId={item.fileId}
+                uri={item.imageProps.uri}
+                loadFile={loadFile}
+                isLoading={isLoading}
+              />
+            )}
           />
         </View>
       </View>
