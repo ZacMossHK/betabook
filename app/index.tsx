@@ -106,6 +106,62 @@ const Menu = () => {
     });
   };
 
+  const DeleteHeader = ({ fileId, uri, disabled }) => {
+    const [isDeletePressed, setIsDeletePressed] = useState(false);
+    return (
+      <View style={{ zIndex: 2, top: 4 }}>
+        {isDeletePressed && (
+          <View
+            style={{
+              backgroundColor: "#F55536",
+              borderRadius: 15,
+              paddingHorizontal: 7,
+              paddingVertical: 3,
+              left: 4,
+              position: "absolute",
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 12,
+                color: "white",
+                fontFamily: "InriaSans_700Bold",
+              }}
+            >
+              Hold X for 5 secs to delete
+            </Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          onPressIn={() => setIsDeletePressed(true)}
+          onPressOut={() => setIsDeletePressed(false)}
+          onLongPress={() => deleteFile(fileId, uri)}
+          delayLongPress={5000}
+          style={{
+            backgroundColor: "#F55536",
+            borderRadius: 15,
+            paddingHorizontal: 7,
+            paddingVertical: 3,
+            right: 4,
+            position: "absolute",
+          }}
+          disabled={disabled}
+        >
+          <Text
+            style={{
+              fontSize: 12,
+              color: "white",
+              fontFamily: "InriaSans_700Bold",
+            }}
+          >
+            X
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   return (
     <SafeAreaView
       style={{
@@ -256,53 +312,36 @@ const Menu = () => {
                   style={{
                     height: CLIMB_TILE_WIDTH,
                     width: CLIMB_TILE_WIDTH,
-                    alignItems: "center",
                   }}
                   activeOpacity={0.8}
                   onPress={() => loadFile(item)}
                   disabled={isLoading}
-                  delayLongPress={800}
-                  onLongPress={() =>
-                    deleteFile(item.fileId, item.imageProps.uri)
-                  }
                 >
                   <>
-                    <Text
+                    <DeleteHeader
+                      fileId={item.fileId}
+                      uri={item.imageProps.uri}
+                      disabled={isLoading}
+                    />
+                    <View
                       style={{
                         zIndex: 2,
                         bottom: 4,
                         position: "absolute",
-                        textAlign: "center",
-                        fontSize: 19,
-                        color: "white",
-                        fontFamily: "InriaSans_400Regular",
-                      }}
-                    >
-                      {item.fileName}
-                    </Text>
-                    {/* <TouchableOpacity
-                      style={{
-                        zIndex: 2,
-                        backgroundColor: "#D6EFFF",
-                        borderRadius: 15,
-                        padding: 9,
-                        top: 0,
-                        right: 0,
-                        position: "absolute",
+                        width: "100%",
                       }}
                     >
                       <Text
                         style={{
-                          zIndex: 2,
-                          // textAlign: "center",
+                          textAlign: "center",
                           fontSize: 19,
                           color: "white",
                           fontFamily: "InriaSans_400Regular",
                         }}
                       >
-                        X
+                        {item.fileName}
                       </Text>
-                    </TouchableOpacity> */}
+                    </View>
                     <LinearGradient
                       style={{
                         zIndex: 1,
