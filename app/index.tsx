@@ -137,7 +137,7 @@ const Menu = () => {
           ) : (
             <Button
               onPress={() => setIsRequestingDeletingFiles(true)}
-              title="Delete all files"
+              title="Delete all files - DEBUG!"
               color="red"
               disabled={isLoading}
             />
