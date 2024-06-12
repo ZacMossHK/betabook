@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Node, Nodes } from "../ImageViewer/index.types";
+import { Nodes } from "../ImageViewer/index.types";
 import { Keyboard, Text, View } from "react-native";
 import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
