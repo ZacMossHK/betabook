@@ -1,6 +1,5 @@
 import { Matrix3, identity3, multiply3 } from "react-native-redash";
 import { Coordinates } from "../../components/ImageViewer/index.types";
-import { SharedValue } from "react-native-reanimated";
 
 export const translateMatrix = (
   matrix: Matrix3,
