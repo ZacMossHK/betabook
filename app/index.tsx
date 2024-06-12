@@ -12,6 +12,7 @@ import { randomUUID } from "expo-crypto";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
 import ClimbTile from "../src/components/ClimbTile";
+import { isFile } from "../src/helpers/typeGuards/typeGuards";
 
 export interface File {
   fileId: string;
@@ -40,8 +41,11 @@ const Menu = () => {
       files.push(devCurrentFile());
 
     for (const fileId of await AsyncStorage.getAllKeys()) {
-      const file = await AsyncStorage.getItem(fileId);
-      if (file) files.push(JSON.parse(file));
+      const item = await AsyncStorage.getItem(fileId);
+      if (!item) continue;
+      const parsedItem = JSON.parse(item) as File | unknown;
+      if (!isFile(parsedItem)) continue;
+      files.push(parsedItem);
     }
 
     await setSavedFiles(files);
