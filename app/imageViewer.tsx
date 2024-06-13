@@ -1,14 +1,16 @@
 import Animated, {
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withTiming,
 } from "react-native-reanimated";
 import {
   Coordinates,
   SizeDimensions,
 } from "../src/components/ImageViewer/index.types";
-import { identity3 } from "react-native-redash";
+import { Matrix3, identity3 } from "react-native-redash";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
@@ -18,8 +20,12 @@ import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
 import BottomSheet, { BottomSheetHandle } from "@gorhom/bottom-sheet";
-import { NODE_SIZE } from "../src/components/ImageViewer/index.constants";
+import {
+  NODE_SIZE,
+  NODE_SIZE_OFFSET,
+} from "../src/components/ImageViewer/index.constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import { getCurrentNodePosition } from "../src/helpers/nodes/nodePositions";
 
 const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
@@ -46,6 +52,7 @@ const ImageViewer = () => {
   const isTranslatingNode = useSharedValue(false);
   const bottomSheetIndex = useSharedValue(0);
   const isHandlePressOpening = useSharedValue(false);
+  const isAnimating = useSharedValue(false);
 
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
@@ -71,6 +78,64 @@ const ImageViewer = () => {
     }
     setNodes(climb.nodes);
   }, []);
+
+  useAnimatedReaction(
+    () => transform.value[0],
+    (currentVal) => {
+      if (isAnimating.value) baseScale.value = currentVal;
+    }
+  );
+
+  const getTransformPosition = (
+    coordinate: number,
+    scale: number,
+    axis: "x" | "y"
+  ) => {
+    "worklet";
+    if (!viewportMeasurements) return 0;
+    const position =
+      getCurrentNodePosition(coordinate, scale, NODE_SIZE_OFFSET) -
+      (viewportMeasurements[axis === "x" ? "width" : "height"] * scale) / 2;
+    const imageWidth =
+      viewportMeasurements.height *
+      (climb.imageProps.width / climb.imageProps.height);
+    const mD =
+      axis === "x"
+        ? Math.abs(
+            Math.min((viewportMeasurements.width - imageWidth * scale) / 2, 0)
+          )
+        : (viewportMeasurements.height * scale - viewportMeasurements.height) /
+          2;
+    return Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET;
+  };
+
+  const animateToNodePosition = (
+    nodeX: number,
+    nodeY: number,
+    scale: number
+  ) => {
+    "worklet";
+    isAnimating.value = true;
+    transform.value = withTiming(
+      [
+        scale,
+        0,
+        getTransformPosition(nodeX, scale, "x"),
+        0,
+        scale,
+        getTransformPosition(nodeY, scale, "y"),
+        0,
+        0,
+        1,
+      ],
+      {},
+      () => {
+        isAnimating.value = false;
+        baseScale.value = transform.value[0];
+      }
+      //  prevents a ts error
+    ) as unknown as Matrix3;
+  };
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -142,6 +207,7 @@ const ImageViewer = () => {
               nodes,
               viewportMeasurements,
               setViewportMeasurements,
+              isAnimating,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -228,6 +294,7 @@ const ImageViewer = () => {
                       bottomSheetIndex,
                       isHandlePressOpening,
                       handleOpenBottomSheet,
+                      animateToNodePosition,
                     }}
                   />
                 </Animated.View>

@@ -14,6 +14,7 @@ interface NodeNoteContainerProps {
   bottomSheetIndex: SharedValue<number>;
   isHandlePressOpening: SharedValue<boolean>;
   handleOpenBottomSheet: () => void | undefined;
+  animateToNodePosition: (nodeX: number, nodeY: number, scale: number) => void;
 }
 
 const NodeNoteContainer = ({
@@ -22,6 +23,7 @@ const NodeNoteContainer = ({
   bottomSheetIndex,
   isHandlePressOpening,
   handleOpenBottomSheet,
+  animateToNodePosition,
 }: NodeNoteContainerProps) => {
   /* it's faster to set a new nodes array when the flatlist isn't being rendered. The flatlist is only rendered when the draw is open.
   However the draw opening through snapping to an index is faster than the rendering
@@ -70,6 +72,7 @@ const NodeNoteContainer = ({
             index,
             setNodes,
             nodes,
+            animateToNodePosition,
           }}
         />
       )}

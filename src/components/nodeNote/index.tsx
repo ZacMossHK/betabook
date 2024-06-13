@@ -9,9 +9,16 @@ interface NodeNoteProps {
   index: number;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
   nodes: Nodes;
+  animateToNodePosition: (nodeX: number, nodeY: number, scale: number) => void;
 }
 
-const NodeNote = ({ note, index, setNodes, nodes }: NodeNoteProps) => {
+const NodeNote = ({
+  note,
+  index,
+  setNodes,
+  nodes,
+  animateToNodePosition,
+}: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
 
@@ -127,7 +134,10 @@ const NodeNote = ({ note, index, setNodes, nodes }: NodeNoteProps) => {
             placeholder="Write your note..."
             onChangeText={setNoteValue}
             defaultValue={note}
-            onFocus={() => setIsEditingText(true)}
+            onFocus={() => {
+              animateToNodePosition(nodes[index].x, nodes[index].y, 4);
+              setIsEditingText(true);
+            }}
             onBlur={handleFinishingEditingText}
           />
         </View>

@@ -40,6 +40,7 @@ interface ImageContainerProps {
   setViewportMeasurements: React.Dispatch<
     React.SetStateAction<SizeDimensions | null>
   >;
+  isAnimating: SharedValue<boolean>;
 }
 
 const ImageContainer = ({
@@ -55,6 +56,7 @@ const ImageContainer = ({
   nodes,
   viewportMeasurements,
   setViewportMeasurements,
+  isAnimating,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -360,7 +362,9 @@ const ImageContainer = ({
     if (
       !translation.value.x &&
       !translation.value.y &&
-      pinchScale.value === 1
+      pinchScale.value === 1 &&
+      // I don't know why animateToNodePosition doesn't work unless this if block doesn't run but it doesn't so isAnimating disables it while animations are running
+      !isAnimating.value
     ) {
       const newMatrix = [...transform.value] as TransformableMatrix3;
 
@@ -375,6 +379,7 @@ const ImageContainer = ({
       transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
+
     // TODO: refactor this!
 
     if (isImageThinnerThanView) {
@@ -438,7 +443,10 @@ const ImageContainer = ({
 
   const fullscreenStyle = {
     ...imageContainerStyles.fullscreen,
-    height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
+    height:
+      Dimensions.get("screen").height -
+      60 -
+      useHeaderHeight(),
   };
 
   return (
