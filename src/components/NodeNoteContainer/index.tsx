@@ -1,7 +1,7 @@
 import { FlatList } from "react-native-gesture-handler";
 import NodeNote from "../NodeNote";
 import { Nodes } from "../ImageViewer/index.types";
-import { useState } from "react";
+import { useRef, useState } from "react";
 import {
   SharedValue,
   runOnJS,
@@ -24,7 +24,10 @@ const NodeNoteContainer = ({
   isHandlePressOpening,
   handleOpenBottomSheet,
   animateToNodePosition,
+  isEditingTextSharedValue,
+  nodeNodeContainerViewHeight,
 }: NodeNoteContainerProps) => {
+  const flatListRef = useRef<FlatList>(null);
   /* it's faster to set a new nodes array when the flatlist isn't being rendered. The flatlist is only rendered when the draw is open.
   However the draw opening through snapping to an index is faster than the rendering
   When the handle is pressed to open, the shared value isHandlePressOpening is changed to true, which kicks off the animated reactions*/
@@ -42,6 +45,9 @@ const NodeNoteContainer = ({
       }
     }
   );
+
+  const scrollFlatlistToIndex = (index: number) =>
+    flatListRef.current?.scrollToIndex({ index, animated: false });
 
   const handleOpeningContainerFromHandlePress = async () => {
     await setIsRenderingNodeNoteContainer(true);
@@ -61,6 +67,7 @@ const NodeNoteContainer = ({
 
   return (
     <FlatList
+      ref={flatListRef}
       nestedScrollEnabled={true}
       style={{ paddingHorizontal: 10 }}
       keyboardShouldPersistTaps="handled"
@@ -73,6 +80,9 @@ const NodeNoteContainer = ({
             setNodes,
             nodes,
             animateToNodePosition,
+            isEditingTextSharedValue,
+            scrollFlatlistToIndex,
+            nodeNodeContainerViewHeight,
           }}
         />
       )}

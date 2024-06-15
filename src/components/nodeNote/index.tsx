@@ -1,8 +1,13 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Nodes } from "../ImageViewer/index.types";
 import { Keyboard, Text, View } from "react-native";
-import { TextInput, TouchableOpacity } from "react-native-gesture-handler";
+import {
+  TextInput,
+  TouchableOpacity,
+  TouchableWithoutFeedback,
+} from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
+import { runOnJS, useAnimatedReaction } from "react-native-reanimated";
 
 interface NodeNoteProps {
   note: string;
@@ -18,9 +23,32 @@ const NodeNote = ({
   setNodes,
   nodes,
   animateToNodePosition,
+  isEditingTextSharedValue,
+  scrollFlatlistToIndex,
+  nodeNodeContainerViewHeight,
 }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
+
+  const handleSettingEditingText = () => {
+    scrollFlatlistToIndex(index);
+    setIsEditingText(true);
+  };
+
+  useAnimatedReaction(
+    () => nodeNodeContainerViewHeight.value,
+    (currentVal, prevVal) => {
+      // the NodeNote must wait until the height change of the container has happened so it can scroll and focus on the text input
+      if (
+        Math.floor(currentVal) === 105 &&
+        Math.floor(prevVal) !== 105 &&
+        isEditingTextSharedValue.value === index &&
+        !isEditingText
+      ) {
+        runOnJS(handleSettingEditingText)();
+      }
+    }
+  );
 
   const saveNodeNote = async () => {
     await setNodes((prevNodes) => {
@@ -32,8 +60,8 @@ const NodeNote = ({
 
   const handleFinishingEditingText = async () => {
     if (noteValue.length) await saveNodeNote();
-    Keyboard.dismiss();
     await setIsEditingText(false);
+    Keyboard.dismiss();
   };
 
   const handleUpArrowPress = () =>
@@ -122,24 +150,48 @@ const NodeNote = ({
           >
             {index + 1}.
           </Text>
-          <TextInput
-            multiline={true}
-            style={{
-              textAlignVertical: "top",
-              width: "100%",
-              fontFamily: "InriaSans_400Regular",
-              fontSize: 14,
-              color: "#14281D",
-            }}
-            placeholder="Write your note..."
-            onChangeText={setNoteValue}
-            defaultValue={note}
-            onFocus={() => {
-              animateToNodePosition(nodes[index].x, nodes[index].y, 4);
-              setIsEditingText(true);
-            }}
-            onBlur={handleFinishingEditingText}
-          />
+          {!isEditingText && (
+            <TouchableWithoutFeedback
+              style={{ width: "100%" }}
+              onPress={() => {
+                Keyboard.addListener("keyboardDidHide", () => {
+                  isEditingTextSharedValue.value = null;
+                  Keyboard.removeAllListeners("keyboardDidHide");
+                });
+                animateToNodePosition(nodes[index].x, nodes[index].y, 4);
+                isEditingTextSharedValue.value = index;
+              }}
+            >
+              <Text
+                style={{
+                  textAlignVertical: "top",
+                  width: "100%",
+                  fontFamily: "InriaSans_400Regular",
+                  fontSize: 14,
+                  color: "#14281D",
+                }}
+              >
+                {note.length ? note : "Write your note..."}
+              </Text>
+            </TouchableWithoutFeedback>
+          )}
+          {isEditingText && (
+            <TextInput
+              multiline={true}
+              style={{
+                textAlignVertical: "top",
+                width: "100%",
+                fontFamily: "InriaSans_400Regular",
+                fontSize: 14,
+                color: "#14281D",
+              }}
+              placeholder="Write your note..."
+              onChangeText={setNoteValue}
+              defaultValue={note}
+              autoFocus
+              onBlur={handleFinishingEditingText}
+            />
+          )}
         </View>
         {isEditingText && (
           <TouchableOpacity
