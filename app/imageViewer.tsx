@@ -11,10 +11,11 @@ import Animated, {
 } from "react-native-reanimated";
 import {
   Coordinates,
+  Nodes,
   SizeDimensions,
 } from "../src/components/ImageViewer/index.types";
 import { Matrix3, identity3 } from "react-native-redash";
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
@@ -57,38 +58,37 @@ const ImageViewer = () => {
   const bottomSheetIndex = useSharedValue(0);
   const isHandlePressOpening = useSharedValue(false);
   const isAnimating = useSharedValue(false);
-  const isEditingTextSharedValue = useSharedValue<number | null>(null);
+  const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
-    isEditingTextSharedValue.value !== null ? 200 : BOTTOMSHEET_MID_HEIGHT,
+    editedNodeIndex.value !== null ? 200 : BOTTOMSHEET_MID_HEIGHT,
     "100%",
   ]);
+
+  const [viewportMeasurements, setViewportMeasurements] =
+    useState<SizeDimensions | null>(null);
+  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
 
   useFrameCallback(() => {
     /* when the nodeNoteContainer's view changes animated height that new value is passed to the NodeNote
     so it can respond to it once the height change is completed */
-    const isShort =
-      isEditingTextSharedValue.value !== null &&
-      isNodeNoteContainerHeightChangeComplete.value;
+
+    /* this guard block means measurements only check the height when necessary 
+    the main reason for this is to stop reanimated's view flattening warnings when measuring as the imageViewer screen unmounts*/
     if (
-      isShort ||
-      isEditingTextSharedValue.value === null ||
+      (editedNodeIndex.value !== null &&
+        isNodeNoteContainerHeightChangeComplete.value) ||
+      editedNodeIndex.value === null ||
       !nodeNoteContainerViewRef
     ) {
-      // if (isNodeNoteContainerHeightChangeComplete.value)
-      //   isNodeNoteContainerHeightChangeComplete.value = false;
       return;
     }
     const measurement = measure(nodeNoteContainerViewRef);
     if (measurement && Math.floor(measurement.height) === 105)
       isNodeNoteContainerHeightChangeComplete.value = true;
   });
-
-  const [viewportMeasurements, setViewportMeasurements] =
-    useState<SizeDimensions | null>(null);
-  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
 
   useEffect(() => {
     saveClimb();
@@ -104,7 +104,7 @@ const ImageViewer = () => {
       setNewClimbName(climb.fileName);
     }
     setNodes(climb.nodes);
-    isEditingTextSharedValue.value = null;
+    editedNodeIndex.value = null;
   }, []);
 
   useAnimatedReaction(
@@ -137,33 +137,32 @@ const ImageViewer = () => {
     return Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET;
   };
 
-  const animateToNodePosition = (
-    nodeX: number,
-    nodeY: number,
-    scale: number
-  ) => {
-    "worklet";
-    isAnimating.value = true;
-    transform.value = withTiming(
-      [
-        scale,
-        0,
-        getTransformPosition(nodeX, scale, "x"),
-        0,
-        scale,
-        getTransformPosition(nodeY, scale, "y"),
-        0,
-        0,
-        1,
-      ],
-      {},
-      () => {
-        isAnimating.value = false;
-        baseScale.value = transform.value[0];
-      }
-      //  prevents a ts error
-    ) as unknown as Matrix3;
-  };
+  const animateToNodePosition = useCallback(
+    (nodeX: number, nodeY: number, scale: number) => {
+      "worklet";
+      isAnimating.value = true;
+      transform.value = withTiming(
+        [
+          scale,
+          0,
+          getTransformPosition(nodeX, scale, "x"),
+          0,
+          scale,
+          getTransformPosition(nodeY, scale, "y"),
+          0,
+          0,
+          1,
+        ],
+        {},
+        () => {
+          isAnimating.value = false;
+          baseScale.value = transform.value[0];
+        }
+        //  prevents a ts error
+      ) as unknown as Matrix3;
+    },
+    []
+  );
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -177,11 +176,16 @@ const ImageViewer = () => {
   const handleOpenBottomSheet = () => bottomSheetRef.current?.snapToIndex(1);
   const handleCloseBottomSheet = () => bottomSheetRef.current?.snapToIndex(0);
 
+  const handleSettingNodes = useCallback(
+    async (setNodesCallback: (prevNodes: Nodes) => Nodes) => {
+      await setNodes(setNodesCallback);
+    },
+    []
+  );
+
   const tapBottomSheetHandle = Gesture.Tap().onStart(() => {
     if (!bottomSheetIndex.value) {
-      // this is to kick off the animation reaction in NodeNoteContainer
-      // TODO: can this just be a state change instead of an animation?
-      isHandlePressOpening.value = true;
+      runOnJS(handleOpenBottomSheet)();
     } else {
       runOnJS(handleCloseBottomSheet)();
     }
@@ -287,7 +291,7 @@ const ImageViewer = () => {
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
               onChange={(currentIndex) => {
-                if (!currentIndex) isEditingTextSharedValue.value = null;
+                if (!currentIndex) editedNodeIndex.value = null;
               }}
             >
               <View
@@ -313,7 +317,7 @@ const ImageViewer = () => {
                           BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight - 30;
                       if (
                         bottomSheetIndex.value === 1 &&
-                        isEditingTextSharedValue.value !== null
+                        editedNodeIndex.value !== null
                       ) {
                         height = 106;
                       }
@@ -333,8 +337,9 @@ const ImageViewer = () => {
                       isHandlePressOpening,
                       handleOpenBottomSheet,
                       animateToNodePosition,
-                      isEditingTextSharedValue,
+                      editedNodeIndex,
                       isNodeNoteContainerHeightChangeComplete,
+                      handleSettingNodes,
                     }}
                   />
                 </Animated.View>
