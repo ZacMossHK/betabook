@@ -25,7 +25,7 @@ const NodeNoteContainer = ({
   handleOpenBottomSheet,
   animateToNodePosition,
   isEditingTextSharedValue,
-  nodeNodeContainerViewHeight,
+  isNodeNoteContainerHeightChangeComplete,
 }: NodeNoteContainerProps) => {
   const flatListRef = useRef<FlatList>(null);
   /* it's faster to set a new nodes array when the flatlist isn't being rendered. The flatlist is only rendered when the draw is open.
@@ -82,7 +82,7 @@ const NodeNoteContainer = ({
             animateToNodePosition,
             isEditingTextSharedValue,
             scrollFlatlistToIndex,
-            nodeNodeContainerViewHeight,
+            isNodeNoteContainerHeightChangeComplete,
           }}
         />
       )}

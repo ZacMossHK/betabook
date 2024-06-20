@@ -58,7 +58,7 @@ const ImageViewer = () => {
   const isHandlePressOpening = useSharedValue(false);
   const isAnimating = useSharedValue(false);
   const isEditingTextSharedValue = useSharedValue<number | null>(null);
-  const nodeNodeContainerViewHeight = useSharedValue(0);
+  const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
@@ -69,9 +69,21 @@ const ImageViewer = () => {
   useFrameCallback(() => {
     /* when the nodeNoteContainer's view changes animated height that new value is passed to the NodeNote
     so it can respond to it once the height change is completed */
-    if (!nodeNoteContainerViewRef) return;
+    const isShort =
+      isEditingTextSharedValue.value !== null &&
+      isNodeNoteContainerHeightChangeComplete.value;
+    if (
+      isShort ||
+      isEditingTextSharedValue.value === null ||
+      !nodeNoteContainerViewRef
+    ) {
+      // if (isNodeNoteContainerHeightChangeComplete.value)
+      //   isNodeNoteContainerHeightChangeComplete.value = false;
+      return;
+    }
     const measurement = measure(nodeNoteContainerViewRef);
-    if (measurement) nodeNodeContainerViewHeight.value = measurement.height;
+    if (measurement && Math.floor(measurement.height) === 105)
+      isNodeNoteContainerHeightChangeComplete.value = true;
   });
 
   const [viewportMeasurements, setViewportMeasurements] =
@@ -322,7 +334,7 @@ const ImageViewer = () => {
                       handleOpenBottomSheet,
                       animateToNodePosition,
                       isEditingTextSharedValue,
-                      nodeNodeContainerViewHeight,
+                      isNodeNoteContainerHeightChangeComplete,
                     }}
                   />
                 </Animated.View>

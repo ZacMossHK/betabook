@@ -25,7 +25,7 @@ const NodeNote = ({
   animateToNodePosition,
   isEditingTextSharedValue,
   scrollFlatlistToIndex,
-  nodeNodeContainerViewHeight,
+  isNodeNoteContainerHeightChangeComplete,
 }: NodeNoteProps) => {
   const [isEditingText, setIsEditingText] = useState(false);
   const [noteValue, setNoteValue] = useState(note);
@@ -36,12 +36,12 @@ const NodeNote = ({
   };
 
   useAnimatedReaction(
-    () => nodeNodeContainerViewHeight.value,
+    () => isNodeNoteContainerHeightChangeComplete.value,
     (currentVal, prevVal) => {
       // the NodeNote must wait until the height change of the container has happened so it can scroll and focus on the text input
       if (
-        Math.floor(currentVal) === 105 &&
-        Math.floor(prevVal) !== 105 &&
+        currentVal &&
+        !prevVal &&
         isEditingTextSharedValue.value === index &&
         !isEditingText
       ) {
@@ -156,6 +156,7 @@ const NodeNote = ({
               onPress={() => {
                 Keyboard.addListener("keyboardDidHide", () => {
                   isEditingTextSharedValue.value = null;
+                  isNodeNoteContainerHeightChangeComplete.value = false;
                   Keyboard.removeAllListeners("keyboardDidHide");
                 });
                 animateToNodePosition(nodes[index].x, nodes[index].y, 4);
