@@ -278,7 +278,7 @@ const ImageViewer = () => {
                           marginBottom: 20,
                         }}
                       >
-                        Edit nodes
+                        Edit moves
                       </Text>
                     </View>
                   </View>
