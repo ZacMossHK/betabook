@@ -16,16 +16,13 @@ import {
 interface NodeNoteProps {
   note: string;
   index: number;
-  animateToNodePosition: (nodeX: number, nodeY: number, scale: number) => void;
   handleSettingNodes: (
     setNodesCallback: (prevNodes: Nodes) => Nodes
   ) => Promise<void>;
-  nodesLength: number;
-  nodeX: number;
-  nodeY: number;
   editedNodeIndex: SharedValue<number | null>;
   scrollFlatlistToIndex: (index: number) => void | undefined;
   isNodeNoteContainerHeightChangeComplete: SharedValue<boolean>;
+  isLast: boolean;
 }
 
 const NodeNote = memo(
@@ -33,10 +30,7 @@ const NodeNote = memo(
     note,
     index,
     handleSettingNodes,
-    nodesLength,
-    nodeX,
-    nodeY,
-    animateToNodePosition,
+    isLast,
     editedNodeIndex,
     scrollFlatlistToIndex,
     isNodeNoteContainerHeightChangeComplete,
@@ -134,9 +128,9 @@ const NodeNote = memo(
                   alignContent: "center",
                   justifyContent: "center",
                   alignItems: "center",
-                  opacity: index + 1 !== nodesLength ? 1 : 0,
+                  opacity: !isLast ? 1 : 0,
                 }}
-                disabled={index + 1 === nodesLength}
+                disabled={isLast}
                 onPress={handleDownArrowPress}
               >
                 <Text>⌄</Text>
@@ -173,7 +167,6 @@ const NodeNote = memo(
                     isNodeNoteContainerHeightChangeComplete.value = false;
                     Keyboard.removeAllListeners("keyboardDidHide");
                   });
-                  animateToNodePosition(nodeX, nodeY, 4);
                   editedNodeIndex.value = index;
                 }}
               >

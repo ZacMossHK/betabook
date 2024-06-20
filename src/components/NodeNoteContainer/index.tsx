@@ -6,7 +6,6 @@ import { SharedValue } from "react-native-reanimated";
 
 interface NodeNoteContainerProps {
   nodes: Nodes;
-  animateToNodePosition: (nodeX: number, nodeY: number, scale: number) => void;
   editedNodeIndex: SharedValue<number | null>;
   isNodeNoteContainerHeightChangeComplete: SharedValue<boolean>;
   handleSettingNodes: (
@@ -16,7 +15,6 @@ interface NodeNoteContainerProps {
 
 const NodeNoteContainer = ({
   nodes,
-  animateToNodePosition,
   editedNodeIndex,
   isNodeNoteContainerHeightChangeComplete,
   handleSettingNodes,
@@ -29,30 +27,22 @@ const NodeNoteContainer = ({
     [flatListRef]
   );
 
-  const renderNodeNote = useCallback(
-    ({ item, index }: { item: Node; index: number }) => (
-      <NodeNote
-        {...{
-          note: item.note,
-          index,
-          handleSettingNodes,
-          nodesLength: nodes.length,
-          animateToNodePosition,
-          editedNodeIndex,
-          scrollFlatlistToIndex,
-          isNodeNoteContainerHeightChangeComplete,
-          nodeX: item.x,
-          nodeY: item.y,
-        }}
-      />
-    ),
-    []
+  const renderNodeNote = ({ item, index }: { item: Node; index: number }) => (
+    <NodeNote
+      {...{
+        note: item.note,
+        index,
+        handleSettingNodes,
+        isLast: index + 1 === nodes.length,
+        editedNodeIndex,
+        scrollFlatlistToIndex,
+        isNodeNoteContainerHeightChangeComplete,
+      }}
+    />
   );
 
-  const keyExtractor = useCallback(
-    (node: Node, index: number) => `note-${index}-${node.x}-${node.y}`,
-    []
-  );
+  const keyExtractor = (node: Node, index: number) =>
+    `note-${index}-${node.x}-${node.y}`;
 
   return (
     <FlatList

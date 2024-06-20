@@ -137,31 +137,38 @@ const ImageViewer = () => {
     return Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET;
   };
 
-  const animateToNodePosition = useCallback(
-    (nodeX: number, nodeY: number, scale: number) => {
-      "worklet";
-      isAnimating.value = true;
-      transform.value = withTiming(
-        [
-          scale,
-          0,
-          getTransformPosition(nodeX, scale, "x"),
-          0,
-          scale,
-          getTransformPosition(nodeY, scale, "y"),
-          0,
-          0,
-          1,
-        ],
-        {},
-        () => {
-          isAnimating.value = false;
-          baseScale.value = transform.value[0];
-        }
-        //  prevents a ts error
-      ) as unknown as Matrix3;
-    },
-    []
+  const animateToNodePosition = (index: number, scale: number) => {
+    "worklet";
+
+    isAnimating.value = true;
+    transform.value = withTiming(
+      [
+        scale,
+        0,
+        getTransformPosition(nodes[index].x, scale, "x"),
+        0,
+        scale,
+        getTransformPosition(nodes[index].y, scale, "y"),
+        0,
+        0,
+        1,
+      ],
+      {},
+      () => {
+        isAnimating.value = false;
+        baseScale.value = transform.value[0];
+      }
+      //  prevents a ts error
+    ) as unknown as Matrix3;
+  };
+
+  useAnimatedReaction(
+    () => editedNodeIndex.value,
+    (currentVal, prevVal) => {
+      if (currentVal !== null && prevVal === null) {
+        animateToNodePosition(currentVal, 4);
+      }
+    }
   );
 
   const imageMatrix = useDerivedValue(() =>
