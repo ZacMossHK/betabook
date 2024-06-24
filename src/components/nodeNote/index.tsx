@@ -104,6 +104,7 @@ const NodeNote = memo(
           <View style={{ flexDirection: "row" }}>
             <View style={{ flexDirection: "column", marginRight: 5 }}>
               <TouchableOpacity
+                // the up arrow doesn't render conditionally so the down arrow takes the correct position
                 style={{
                   height: NODE_SIZE,
                   width: NODE_SIZE,
@@ -119,22 +120,22 @@ const NodeNote = memo(
               >
                 <Text>^</Text>
               </TouchableOpacity>
-              <TouchableOpacity
-                style={{
-                  height: NODE_SIZE,
-                  width: NODE_SIZE,
-                  backgroundColor: "#D6EFFF",
-                  borderRadius: 15,
-                  alignContent: "center",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  opacity: !isLast ? 1 : 0,
-                }}
-                disabled={isLast}
-                onPress={handleDownArrowPress}
-              >
-                <Text>⌄</Text>
-              </TouchableOpacity>
+              {!isLast && (
+                <TouchableOpacity
+                  style={{
+                    height: NODE_SIZE,
+                    width: NODE_SIZE,
+                    backgroundColor: "#D6EFFF",
+                    borderRadius: 15,
+                    alignContent: "center",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                  onPress={handleDownArrowPress}
+                >
+                  <Text>⌄</Text>
+                </TouchableOpacity>
+              )}
             </View>
             <View
               style={{
