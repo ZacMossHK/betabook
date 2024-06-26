@@ -13,6 +13,7 @@ import {
   Coordinates,
   Nodes,
   SizeDimensions,
+  TransformableMatrix3,
 } from "../src/components/ImageViewer/index.types";
 import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -60,6 +61,7 @@ const ImageViewer = () => {
   const isAnimating = useSharedValue(false);
   const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
+  const [drawerBorderDistance, setDrawerBorderDistance] = useState(0);
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
@@ -77,6 +79,7 @@ const ImageViewer = () => {
 
     /* this guard block means measurements only check the height when necessary 
     the main reason for this is to stop reanimated's view flattening warnings when measuring as the imageViewer screen unmounts*/
+
     if (
       (editedNodeIndex.value !== null &&
         isNodeNoteContainerHeightChangeComplete.value) ||
@@ -106,6 +109,13 @@ const ImageViewer = () => {
     setNodes(climb.nodes);
     editedNodeIndex.value = null;
   }, []);
+
+  useEffect(() => {
+    if (!drawerBorderDistance) return;
+    // const newTransform = [...transform.value] as TransformableMatrix3
+    // newTransform[5] -= drawerBorderDistance / 2
+    // transform.value = newTransform as Matrix3
+  }, [drawerBorderDistance]);
 
   useAnimatedReaction(
     () => transform.value[0],
@@ -149,12 +159,14 @@ const ImageViewer = () => {
         0,
         scale,
         getTransformPosition(nodes[index].y, scale, "y"),
+        //  - 236
         0,
         0,
         1,
       ],
       {},
       () => {
+        console.log(transform.value);
         isAnimating.value = false;
         baseScale.value = transform.value[0];
       }
@@ -229,7 +241,7 @@ const ImageViewer = () => {
               baseScale,
               pinchScale,
               viewportMeasurements,
-              imageProps: climb.imageProps,
+              imageProps: climb.imageProps,drawerBorderDistance
             }}
           />
           <ImageContainer
@@ -247,6 +259,8 @@ const ImageViewer = () => {
               viewportMeasurements,
               setViewportMeasurements,
               isAnimating,
+              drawerBorderDistance,
+              editedNodeIndex,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -298,7 +312,33 @@ const ImageViewer = () => {
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
               onChange={(currentIndex) => {
-                if (!currentIndex) editedNodeIndex.value = null;
+                console.log(currentIndex);
+                if (!currentIndex) {
+                  editedNodeIndex.value = null;
+                  // drawerBorderDistance.value = 0;
+                  setDrawerBorderDistance(0);
+                }
+                if (currentIndex === 1)
+                  // drawerBorderDistance.value =
+                  //   BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight;
+                  setDrawerBorderDistance(
+                    BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT
+                  );
+                //  - BOTTOMSHEET_LOW_HEIGHT - 104
+                // 104;
+                // drawerBorderDistance.value = Math.max(
+                //   snapPoints.value[currentIndex] - BOTTOMSHEET_LOW_HEIGHT - 104,
+                //   0
+                // );
+                // if (
+                //   currentIndex === 1 &&
+                //   viewportMeasurements.height !== 563.1568603515625
+                // )
+                //   setViewportMeasurements((prevState) => {
+                //     const newViewportMeasurements = { ...prevState };
+                //     newViewportMeasurements.height = prevState.height - 209;
+                //     return newViewportMeasurements;
+                //   });
               }}
             >
               <View

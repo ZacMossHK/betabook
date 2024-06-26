@@ -1,6 +1,8 @@
 import Animated, {
   SharedValue,
+  interpolate,
   runOnJS,
+  useAnimatedReaction,
   useAnimatedStyle,
   useSharedValue,
 } from "react-native-reanimated";
@@ -24,6 +26,7 @@ import { useClimb } from "../../providers/ClimbProvider";
 import { Dimensions } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useAnimation } from "../../providers/AnimationProvider";
+import { useEffect } from "react";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -43,6 +46,8 @@ interface ImageContainerProps {
   isAnimating: SharedValue<boolean>;
 }
 
+const keyboardHeight = 236;
+
 const ImageContainer = ({
   isViewRendered,
   translation,
@@ -57,6 +62,8 @@ const ImageContainer = ({
   viewportMeasurements,
   setViewportMeasurements,
   isAnimating,
+  drawerBorderDistance,
+  editedNodeIndex,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -68,6 +75,20 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
+  const openDrawerVertical = useSharedValue<number | null>(null);
+
+  useEffect(() => {
+    if (!viewportMeasurements) return;
+    const imageHeight =
+      viewportMeasurements.width *
+      (climb.imageProps.height / climb.imageProps.width);
+    if (!drawerBorderDistance && openDrawerVertical.value !== null)
+      openDrawerVertical.value = null;
+
+    if (drawerBorderDistance && openDrawerVertical.value === null)
+      openDrawerVertical.value =
+        (viewportMeasurements.height - imageHeight) / 2;
+  }, [drawerBorderDistance]);
 
   const isImageThinnerThanView =
     viewportMeasurements &&
@@ -201,10 +222,12 @@ const ImageContainer = ({
         pinchScale.value,
         transform.value
       );
+
       // adjustedTranslationY.value is always 0 unless vertical translation is valid
       adjustedTranslationY.value = maxDistance.value.y
         ? adjustedTranslationY.value + event.changeY
         : 0;
+
       const currentPosition = {
         x: scaledOriginalMatrix[2] + event.translationX,
         y: scaledOriginalMatrix[5] + adjustedTranslationY.value,
@@ -232,7 +255,37 @@ const ImageContainer = ({
         adjustedTranslationX.value += event.changeX;
       }
 
-      if (Math.abs(currentPosition.y) > maxDistance.value.y) {
+      // the max distance at the top and bottom are not the same when the drawer is open
+      if (drawerBorderDistance && openDrawerVertical.value !== null) {
+        // openDrawerVertical stops the image border from increasing after it has been moved down
+        if (event.changeY < 0 && openDrawerVertical.value > 0)
+          openDrawerVertical.value = Math.max(
+            openDrawerVertical.value + event.changeY,
+            0
+          );
+
+        if (
+          currentPosition.y >
+          -maxDistance.value.y + openDrawerVertical.value
+        ) {
+          // console.log(currentPosition.y, -maxDistance.value.y + openDrawerVertical.value)
+          adjustedTranslationY.value =
+            -maxDistance.value.y +
+            openDrawerVertical.value -
+            scaledOriginalMatrix[5];
+        }
+        if (currentPosition.y < maxDistance.value.y - drawerBorderDistance) {
+          adjustedTranslationY.value =
+            maxDistance.value.y -
+            drawerBorderDistance -
+            scaledOriginalMatrix[5];
+        }
+      }
+
+      if (
+        !drawerBorderDistance &&
+        Math.abs(currentPosition.y) > maxDistance.value.y
+      ) {
         // this allows an overpanned image to immediately pan back vertically once the vertical direction is reverse away from the border
         adjustedTranslationY.value =
           maxDistance.value.y * (currentPosition.y > 0 ? 1 : -1) -
@@ -372,7 +425,16 @@ const ImageContainer = ({
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
         newMatrix[2] = maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
       }
-      if (Math.abs(transform.value[5]) > maxDistance.value.y) {
+      if (
+        drawerBorderDistance &&
+        transform.value[5] < maxDistance.value.y - drawerBorderDistance
+      ) {
+        newMatrix[5] = maxDistance.value.y - drawerBorderDistance;
+      }
+      if (
+        !drawerBorderDistance &&
+        Math.abs(transform.value[5]) > maxDistance.value.y
+      ) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
         newMatrix[5] = maxDistance.value.y * (transform.value[5] > 0 ? 1 : -1);
       }
@@ -381,25 +443,49 @@ const ImageContainer = ({
     }
 
     // TODO: refactor this!
-
     if (isImageThinnerThanView) {
       const imageHeight =
         viewportMeasurements.width *
         (climb.imageProps.height / climb.imageProps.width);
+
+      if (drawerBorderDistance && openDrawerVertical.value === null)
+        openDrawerVertical.value =
+          (viewportMeasurements.height - imageHeight) / 2;
+
       maxDistance.value = {
         x:
           (viewportMeasurements.width * imageMatrix.value[0] -
             viewportMeasurements.width) /
           2,
         // the max distance for y will be a negative number so needs .abs to turn it into a positive number
-        y: Math.abs(
-          Math.min(
-            (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
-              2,
-            0
-          )
-        ),
+        y: drawerBorderDistance
+          ? Math.max(
+              Math.abs(
+                (viewportMeasurements.height -
+                  imageHeight * imageMatrix.value[0]) /
+                  2
+              ),
+              (viewportMeasurements.height - imageHeight) / 2
+            )
+          : Math.abs(
+              Math.min(
+                (viewportMeasurements.height -
+                  imageHeight * imageMatrix.value[0]) /
+                  2,
+                0
+              )
+            ),
       };
+      console.log(
+        (viewportMeasurements.height - imageHeight) / 2,
+        Math.abs(
+          (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
+            2 +
+            drawerBorderDistance
+        ),
+        "position",
+        imageMatrix.value[5]
+      );
     } else {
       // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
       const imageWidth =
@@ -420,7 +506,6 @@ const ImageContainer = ({
           2,
       };
     }
-
     return {
       transform: [
         {
@@ -431,7 +516,7 @@ const ImageContainer = ({
         },
         {
           translateY: Math.max(
-            -maxDistance.value.y,
+            -maxDistance.value.y - drawerBorderDistance * imageMatrix.value[0],
             Math.min(maxDistance.value.y, imageMatrix.value[5])
           ),
         },
@@ -440,13 +525,9 @@ const ImageContainer = ({
       ],
     };
   });
-
   const fullscreenStyle = {
     ...imageContainerStyles.fullscreen,
-    height:
-      Dimensions.get("screen").height -
-      60 -
-      useHeaderHeight(),
+    height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
   };
 
   return (
