@@ -45,7 +45,8 @@ const MovementNodeContainer = ({
   pinchScale,
   baseScale,
   viewportMeasurements,
-  imageProps,drawerBorderDistance
+  imageProps,
+  drawerBorderDistance,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
 
@@ -74,7 +75,7 @@ const MovementNodeContainer = ({
         {
           translateY:
             Math.max(
-              -maxDistance.value.y - drawerBorderDistance,
+              -maxDistance.value.y,
               Math.min(maxDistance.value.y, imageMatrix.value[5])
             ) -
             (viewportMeasurements.height * scale -

@@ -62,6 +62,7 @@ const ImageViewer = () => {
   const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
   const [drawerBorderDistance, setDrawerBorderDistance] = useState(0);
+  const nextPositionAdjustment = useSharedValue(0);
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
@@ -166,7 +167,6 @@ const ImageViewer = () => {
       ],
       {},
       () => {
-        console.log(transform.value);
         isAnimating.value = false;
         baseScale.value = transform.value[0];
       }
@@ -185,7 +185,10 @@ const ImageViewer = () => {
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
-      translation.value,
+      {
+        x: translation.value.x,
+        y: translation.value.y - nextPositionAdjustment.value,
+      },
       origin.value,
       pinchScale.value,
       transform.value
@@ -227,7 +230,7 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          <MovementNodeContainer
+          {/* <MovementNodeContainer
             {...{
               selectedNodeIndex,
               selectedNodePosition,
@@ -241,9 +244,10 @@ const ImageViewer = () => {
               baseScale,
               pinchScale,
               viewportMeasurements,
-              imageProps: climb.imageProps,drawerBorderDistance
+              imageProps: climb.imageProps,
+              drawerBorderDistance,
             }}
-          />
+          /> */}
           <ImageContainer
             {...{
               isViewRendered,
@@ -261,6 +265,7 @@ const ImageViewer = () => {
               isAnimating,
               drawerBorderDistance,
               editedNodeIndex,
+              nextPositionAdjustment,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -312,7 +317,6 @@ const ImageViewer = () => {
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
               onChange={(currentIndex) => {
-                console.log(currentIndex);
                 if (!currentIndex) {
                   editedNodeIndex.value = null;
                   // drawerBorderDistance.value = 0;
