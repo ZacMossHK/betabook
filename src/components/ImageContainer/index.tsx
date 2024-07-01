@@ -82,8 +82,8 @@ const ImageContainer = ({
   const lastPositionY = useSharedValue(0);
   const hasHitTopEdge = useSharedValue(false);
   const scaleDownPositionAdjustment = useSharedValue(0);
-
   const isPanning = useSharedValue(false);
+  const isPinching = useSharedValue(false);
 
   const imageHeight = viewportMeasurements
     ? viewportMeasurements.width *
@@ -188,6 +188,7 @@ const ImageContainer = ({
           ? event.focalY - viewportMeasurements.height / 2
           : 0,
       };
+      isPinching.value = true;
     })
     .onChange((event) => {
       if (!viewportMeasurements) return;
@@ -245,6 +246,7 @@ const ImageContainer = ({
       nextPositionAdjustment.value += nextPosY;
     })
     .onEnd(() => {
+      isPinching.value = false;
       transform.value = multiply3(
         translateAndScaleMatrix(identity3, origin.value, pinchScale.value),
         transform.value
@@ -252,13 +254,6 @@ const ImageContainer = ({
       baseScale.value *= pinchScale.value;
       pinchScale.value = 1;
       adjustedScale.value = 0;
-      // nextPositionAdjustment.value = 0;
-      if (isPanning.value) return;
-      transform.value = multiply3(
-        translateMatrix(identity3, translation.value.x, translation.value.y),
-        transform.value
-      );
-      translation.value = { x: 0, y: 0 };
     });
 
   const pan = Gesture.Pan()
@@ -473,6 +468,23 @@ const ImageContainer = ({
     .onFinalize(() => {
       selectedLineIndex.value = null;
     });
+
+  useAnimatedReaction(
+    () => !isPanning.value && !isPinching.value && nextPositionAdjustment.value,
+    (currentVal) => {
+      if (!currentVal) return;
+      transform.value = multiply3(
+        translateMatrix(
+          identity3,
+          translation.value.x,
+          translation.value.y - nextPositionAdjustment.value
+        ),
+        transform.value
+      );
+      translation.value = { x: 0, y: 0 };
+      nextPositionAdjustment.value = 0;
+    }
+  );
 
   const animatedStyle = useAnimatedStyle(() => {
     // necessary as measuring a view that has not rendered properly will produce a warning
