@@ -30,6 +30,7 @@ interface MovementNodeContainerProps {
   baseScale: SharedValue<number>;
   viewportMeasurements: SizeDimensions | null;
   imageProps: ImageProps;
+  openBottomSheetHeight: number;
 }
 
 const MovementNodeContainer = ({
@@ -75,7 +76,7 @@ const MovementNodeContainer = ({
         {
           translateY:
             Math.max(
-              -maxDistance.value.y,
+              -(maxDistance.value.y + openBottomSheetHeight),
               Math.min(maxDistance.value.y, imageMatrix.value[5])
             ) -
             (viewportMeasurements.height * scale -

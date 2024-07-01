@@ -47,8 +47,6 @@ interface ImageContainerProps {
   openDrawScaleDownPositionAdjustmentY: SharedValue<number>;
 }
 
-const keyboardHeight = 236;
-
 const ImageContainer = ({
   isViewRendered,
   translation,
