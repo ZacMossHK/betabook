@@ -13,12 +13,10 @@ import {
   Coordinates,
   Nodes,
   SizeDimensions,
-  TransformableMatrix3,
 } from "../src/components/ImageViewer/index.types";
 import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
-import MovementNodeContainer from "../src/components/MovementNodeContainer";
 import ImageContainer from "../src/components/ImageContainer";
 import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
@@ -31,6 +29,7 @@ import {
 } from "../src/components/ImageViewer/index.constants";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { getCurrentNodePosition } from "../src/helpers/nodes/nodePositions";
+import MovementNodeContainer from "../src/components/MovementNodeContainer";
 
 const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
@@ -61,8 +60,8 @@ const ImageViewer = () => {
   const isAnimating = useSharedValue(false);
   const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
-  const [drawerBorderDistance, setDrawerBorderDistance] = useState(0);
-  const nextPositionAdjustment = useSharedValue(0);
+  const [openBottomSheetHeight, setopenBottomSheetHeight] = useState(0);
+  const openDrawScaleDownPositionAdjustmentY = useSharedValue(0);
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
@@ -112,11 +111,8 @@ const ImageViewer = () => {
   }, []);
 
   useEffect(() => {
-    if (!drawerBorderDistance) return;
-    // const newTransform = [...transform.value] as TransformableMatrix3
-    // newTransform[5] -= drawerBorderDistance / 2
-    // transform.value = newTransform as Matrix3
-  }, [drawerBorderDistance]);
+    if (!openBottomSheetHeight) return;
+  }, [openBottomSheetHeight]);
 
   useAnimatedReaction(
     () => transform.value[0],
@@ -160,7 +156,6 @@ const ImageViewer = () => {
         0,
         scale,
         getTransformPosition(nodes[index].y, scale, "y"),
-        //  - 236
         0,
         0,
         1,
@@ -187,7 +182,7 @@ const ImageViewer = () => {
     getMatrix(
       {
         x: translation.value.x,
-        y: translation.value.y - nextPositionAdjustment.value,
+        y: translation.value.y - openDrawScaleDownPositionAdjustmentY.value,
       },
       origin.value,
       pinchScale.value,
@@ -230,7 +225,7 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          {/* <MovementNodeContainer
+          <MovementNodeContainer
             {...{
               selectedNodeIndex,
               selectedNodePosition,
@@ -245,9 +240,9 @@ const ImageViewer = () => {
               pinchScale,
               viewportMeasurements,
               imageProps: climb.imageProps,
-              drawerBorderDistance,
+              openBottomSheetHeight,
             }}
-          /> */}
+          />
           <ImageContainer
             {...{
               isViewRendered,
@@ -263,9 +258,9 @@ const ImageViewer = () => {
               viewportMeasurements,
               setViewportMeasurements,
               isAnimating,
-              drawerBorderDistance,
+              openBottomSheetHeight,
               editedNodeIndex,
-              nextPositionAdjustment,
+              openDrawScaleDownPositionAdjustmentY,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -319,30 +314,12 @@ const ImageViewer = () => {
               onChange={(currentIndex) => {
                 if (!currentIndex) {
                   editedNodeIndex.value = null;
-                  // drawerBorderDistance.value = 0;
-                  setDrawerBorderDistance(0);
+                  setopenBottomSheetHeight(0);
                 }
                 if (currentIndex === 1)
-                  // drawerBorderDistance.value =
-                  //   BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight;
-                  setDrawerBorderDistance(
+                  setopenBottomSheetHeight(
                     BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT
                   );
-                //  - BOTTOMSHEET_LOW_HEIGHT - 104
-                // 104;
-                // drawerBorderDistance.value = Math.max(
-                //   snapPoints.value[currentIndex] - BOTTOMSHEET_LOW_HEIGHT - 104,
-                //   0
-                // );
-                // if (
-                //   currentIndex === 1 &&
-                //   viewportMeasurements.height !== 563.1568603515625
-                // )
-                //   setViewportMeasurements((prevState) => {
-                //     const newViewportMeasurements = { ...prevState };
-                //     newViewportMeasurements.height = prevState.height - 209;
-                //     return newViewportMeasurements;
-                //   });
               }}
             >
               <View

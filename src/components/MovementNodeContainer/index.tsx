@@ -46,7 +46,7 @@ const MovementNodeContainer = ({
   baseScale,
   viewportMeasurements,
   imageProps,
-  drawerBorderDistance,
+  openBottomSheetHeight,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
 

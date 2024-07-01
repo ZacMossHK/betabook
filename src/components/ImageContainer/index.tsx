@@ -1,6 +1,5 @@
 import Animated, {
   SharedValue,
-  interpolate,
   runOnJS,
   useAnimatedReaction,
   useAnimatedStyle,
@@ -44,6 +43,8 @@ interface ImageContainerProps {
     React.SetStateAction<SizeDimensions | null>
   >;
   isAnimating: SharedValue<boolean>;
+  openBottomSheetHeight: number;
+  openDrawScaleDownPositionAdjustmentY: SharedValue<number>;
 }
 
 const keyboardHeight = 236;
@@ -62,9 +63,8 @@ const ImageContainer = ({
   viewportMeasurements,
   setViewportMeasurements,
   isAnimating,
-  drawerBorderDistance,
-  editedNodeIndex,
-  nextPositionAdjustment,
+  openBottomSheetHeight,
+  openDrawScaleDownPositionAdjustmentY,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -76,12 +76,7 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
-  const openDrawerVertical = useSharedValue<number | null>(null);
-  const isPanningDown = useSharedValue(false);
-  const isScalingDown = useSharedValue(false);
-  const lastPositionY = useSharedValue(0);
   const hasHitTopEdge = useSharedValue(false);
-  const scaleDownPositionAdjustment = useSharedValue(0);
   const isPanning = useSharedValue(false);
   const isPinching = useSharedValue(false);
 
@@ -96,16 +91,8 @@ const ImageContainer = ({
 
   useEffect(() => {
     if (!viewportMeasurements) return;
-    if (!drawerBorderDistance) hasHitTopEdge.value = false;
-    if (!drawerBorderDistance && openDrawerVertical.value !== null)
-      openDrawerVertical.value = null;
-
-    if (drawerBorderDistance && openDrawerVertical.value === null)
-      openDrawerVertical.value = Math.max(
-        (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) / 2,
-        0
-      );
-  }, [drawerBorderDistance]);
+    if (!openBottomSheetHeight) hasHitTopEdge.value = false;
+  }, [openBottomSheetHeight]);
 
   const isImageThinnerThanView =
     viewportMeasurements &&
@@ -193,17 +180,9 @@ const ImageContainer = ({
     .onChange((event) => {
       if (!viewportMeasurements) return;
 
-      // do we need this?
-      if (event.scaleChange > 1 && openDrawerVertical.value)
-        openDrawerVertical.value = Math.max(
-          openDrawerVertical.value -
-            (imageHeight * event.scaleChange - imageHeight) / 2,
-          0
-        );
-
       if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
 
-      if (!drawerBorderDistance && maxDistance.value.y && !origin.value.y) {
+      if (!openBottomSheetHeight && maxDistance.value.y && !origin.value.y) {
         transform.value = multiply3(
           translateAndScaleMatrix(identity3, origin.value, pinchScale.value),
           transform.value
@@ -223,7 +202,7 @@ const ImageContainer = ({
       let nextPosY = 0;
 
       if (
-        drawerBorderDistance &&
+        openBottomSheetHeight &&
         !hasHitTopEdge.value &&
         event.scaleChange < 1
       ) {
@@ -243,7 +222,7 @@ const ImageContainer = ({
       }
 
       if (!nextPosY) return;
-      nextPositionAdjustment.value += nextPosY;
+      openDrawScaleDownPositionAdjustmentY.value += nextPosY;
     })
     .onEnd(() => {
       isPinching.value = false;
@@ -262,7 +241,6 @@ const ImageContainer = ({
       isPanning.value = true;
     })
     .onChange((event) => {
-      isPanningDown.value = event.changeY > 0;
       const scaledOriginalMatrix = getMatrix(
         { x: 0, y: 0 },
         origin.value,
@@ -272,15 +250,15 @@ const ImageContainer = ({
 
       let changeAmountY = event.changeY;
       if (
-        drawerBorderDistance !== 0 &&
-        isPanningDown.value &&
+        openBottomSheetHeight !== 0 &&
+        event.changeY > 0 &&
         !hasHitTopEdge.value
       )
         changeAmountY = 0;
 
       // adjustedTranslationY.value is always 0 unless vertical translation is valid
       adjustedTranslationY.value =
-        maxDistance.value.y || drawerBorderDistance
+        maxDistance.value.y || openBottomSheetHeight
           ? adjustedTranslationY.value + changeAmountY
           : 0;
 
@@ -312,39 +290,23 @@ const ImageContainer = ({
       }
 
       // the max distance at the top and bottom are not the same when the drawer is open
-      if (drawerBorderDistance && openDrawerVertical.value !== null) {
-        // openDrawerVertical stops the image border from increasing after it has been moved down
-        if (event.changeY < 0 && openDrawerVertical.value > 0)
-          openDrawerVertical.value = Math.max(
-            openDrawerVertical.value + event.changeY,
-            0
-          );
-
-        if (
-          currentPosition.y >
-          // maxDistance.value.y + openDrawerVertical.value
-          -(
-            (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
-              2 -
-            openDrawerVertical.value
-          )
-        ) {
-          // console.log("HERE");
-          //   adjustedTranslationY.value =
-          //     maxDistance.value.y +
-          //     openDrawerVertical.value -
-          //     scaledOriginalMatrix[5];
+      if (openBottomSheetHeight) {
+        if (currentPosition.y > maxDistance.value.y) {
+          adjustedTranslationY.value =
+            maxDistance.value.y - scaledOriginalMatrix[5];
         }
 
-        if (currentPosition.y < -(maxDistance.value.y + drawerBorderDistance)) {
-          // adjustedTranslationY.value =
-          //   -(maxDistance.value.y + drawerBorderDistance) -
-          //   scaledOriginalMatrix[5];
+        if (
+          currentPosition.y < -(maxDistance.value.y + openBottomSheetHeight)
+        ) {
+          adjustedTranslationY.value =
+            -(maxDistance.value.y + openBottomSheetHeight) -
+            scaledOriginalMatrix[5];
         }
       }
 
       if (
-        !drawerBorderDistance &&
+        !openBottomSheetHeight &&
         Math.abs(currentPosition.y) > maxDistance.value.y
       ) {
         // this allows an overpanned image to immediately pan back vertically once the vertical direction is reverse away from the border
@@ -366,7 +328,6 @@ const ImageContainer = ({
       translation.value = { x: 0, y: 0 };
       adjustedTranslationX.value = 0;
       adjustedTranslationY.value = 0;
-      scaleDownPositionAdjustment.value = 0;
       isPanning.value = false;
     });
 
@@ -470,19 +431,22 @@ const ImageContainer = ({
     });
 
   useAnimatedReaction(
-    () => !isPanning.value && !isPinching.value && nextPositionAdjustment.value,
+    () =>
+      !isPanning.value &&
+      !isPinching.value &&
+      openDrawScaleDownPositionAdjustmentY.value,
     (currentVal) => {
       if (!currentVal) return;
       transform.value = multiply3(
         translateMatrix(
           identity3,
           translation.value.x,
-          translation.value.y - nextPositionAdjustment.value
+          translation.value.y - openDrawScaleDownPositionAdjustmentY.value
         ),
         transform.value
       );
       translation.value = { x: 0, y: 0 };
-      nextPositionAdjustment.value = 0;
+      openDrawScaleDownPositionAdjustmentY.value = 0;
     }
   );
 
@@ -506,14 +470,14 @@ const ImageContainer = ({
         newMatrix[2] = maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
       }
       if (
-        drawerBorderDistance &&
+        openBottomSheetHeight &&
         transform.value[5] >
-          maxDistance.value.y + drawerBorderDistance * imageMatrix.value[0]
+          maxDistance.value.y + openBottomSheetHeight * imageMatrix.value[0]
       ) {
-        newMatrix[5] = maxDistance.value.y - drawerBorderDistance;
+        newMatrix[5] = maxDistance.value.y - openBottomSheetHeight;
       }
       if (
-        !drawerBorderDistance &&
+        !openBottomSheetHeight &&
         Math.abs(transform.value[5]) > maxDistance.value.y
       ) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
@@ -525,15 +489,12 @@ const ImageContainer = ({
     let topEdge;
     // TODO: refactor this!
     if (isImageThinnerThanView) {
-      // if (drawerBorderDistance && openDrawerVertical.value === null)
-      //   openDrawerVertical.value =
-      //     (viewportMeasurements.height - imageHeight) / 2;
       topEdge =
         -((viewportMeasurements.height - imageHeight) / 2) +
         (imageHeight / 2) * imageMatrix.value[0] -
         imageHeight / 2;
 
-      if (drawerBorderDistance && imageMatrix.value[5] <= topEdge)
+      if (openBottomSheetHeight && imageMatrix.value[5] <= topEdge)
         hasHitTopEdge.value = true;
 
       maxDistance.value = {
@@ -543,7 +504,7 @@ const ImageContainer = ({
           2,
         // the max distance for y will be a negative number so needs .abs to turn it into a positive number
         y:
-          drawerBorderDistance && hasHitTopEdge.value
+          openBottomSheetHeight && hasHitTopEdge.value
             ? topEdge
             : Math.abs(
                 Math.min(
@@ -571,8 +532,7 @@ const ImageContainer = ({
           2,
       };
     }
-    if (!(drawerBorderDistance && isPanningDown.value))
-      lastPositionY.value = imageMatrix.value[5];
+
     return {
       transform: [
         {
@@ -582,38 +542,10 @@ const ImageContainer = ({
           ),
         },
         {
-          translateY:
-            // drawerBorderDistance
-            //   ? Math.max(
-            //       -(maxDistance.value.y + drawerBorderDistance),
-            //       Math.min(
-            //         maxDistance.value.y + openDrawerVertical.value,
-
-            //         imageMatrix.value[5]
-            //       )
-            //     )
-            //   :
-            Math.max(
-              // bottom edge
-
-              -(maxDistance.value.y + drawerBorderDistance),
-              Math.min(
-                // openDrawerVertical.value
-                //   ? maxDistance.value.y + openDrawerVertical.value
-                //   :
-                // maxDistance.value.y,
-                // top edge
-                // -(100 - openDrawerVertical.value),
-                // drawerBorderDistance &&
-                //   (isPanningDown.value || isScalingDown.value) &&
-                //   !hasHitTopEdge.value
-                //   ? lastPositionY.value + scaleDownPositionAdjustment.value
-                //   :
-                maxDistance.value.y,
-                // -105,
-                imageMatrix.value[5]
-              )
-            ),
+          translateY: Math.max(
+            -(maxDistance.value.y + openBottomSheetHeight),
+            Math.min(maxDistance.value.y, imageMatrix.value[5])
+          ),
         },
         { scaleX: imageMatrix.value[0] },
         { scaleY: imageMatrix.value[4] },
