@@ -62,11 +62,11 @@ const ImageViewer = () => {
   const isAnimating = useSharedValue(false);
   const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
-  const [openBottomSheetHeight, setopenBottomSheetHeight] = useState(0);
+  const openBottomSheetHeight = useSharedValue(0);
   const openBottomSheetScaleDownPositionAdjustmentY = useSharedValue(0);
   const bottomSheetPosition = useSharedValue(0);
-  const isClosingBottomSheet = useSharedValue(false);
   const preAnimationYPostion = useSharedValue<number | null>(null);
+  const hasHitTopEdge = useSharedValue(false);
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -111,6 +111,7 @@ const ImageViewer = () => {
       )
         return;
       if (!isAnimating.value) isAnimating.value = true;
+      if (hasHitTopEdge.value) hasHitTopEdge.value = false;
       if (preAnimationYPostion.value === null)
         preAnimationYPostion.value = transform.value[5];
       const newMatrix = [...transform.value] as TransformableMatrix3;
@@ -165,10 +166,6 @@ const ImageViewer = () => {
     setNodes(climb.nodes);
     editedNodeIndex.value = null;
   }, []);
-
-  useEffect(() => {
-    if (!openBottomSheetHeight) return;
-  }, [openBottomSheetHeight]);
 
   useAnimatedReaction(
     () => transform.value[0],
@@ -268,7 +265,7 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          {/* <MovementNodeContainer
+          <MovementNodeContainer
             {...{
               selectedNodeIndex,
               selectedNodePosition,
@@ -284,8 +281,9 @@ const ImageViewer = () => {
               viewportMeasurements,
               imageProps: climb.imageProps,
               openBottomSheetHeight,
+              isAnimating,
             }}
-          /> */}
+          />
           <ImageContainer
             {...{
               isViewRendered,
@@ -305,6 +303,7 @@ const ImageViewer = () => {
               editedNodeIndex,
               openBottomSheetScaleDownPositionAdjustmentY,
               bottomSheetPosition,
+              hasHitTopEdge,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -359,14 +358,13 @@ const ImageViewer = () => {
               onChange={(currentIndex) => {
                 if (!currentIndex) {
                   editedNodeIndex.value = null;
-                  isAnimating.value = false;
                   preAnimationYPostion.value = null;
-                  setopenBottomSheetHeight(0);
+                  openBottomSheetHeight.value = 0;
+                  isAnimating.value = false;
                 }
                 if (currentIndex === 1)
-                  setopenBottomSheetHeight(
-                    BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT
-                  );
+                  openBottomSheetHeight.value =
+                    BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
               }}
             >
               <View

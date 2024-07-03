@@ -30,7 +30,8 @@ interface MovementNodeContainerProps {
   baseScale: SharedValue<number>;
   viewportMeasurements: SizeDimensions | null;
   imageProps: ImageProps;
-  openBottomSheetHeight: number;
+  openBottomSheetHeight: SharedValue<number>;
+  isAnimating: SharedValue<boolean>;
 }
 
 const MovementNodeContainer = ({
@@ -48,6 +49,7 @@ const MovementNodeContainer = ({
   viewportMeasurements,
   imageProps,
   openBottomSheetHeight,
+  isAnimating,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
 
@@ -75,10 +77,12 @@ const MovementNodeContainer = ({
         },
         {
           translateY:
-            Math.max(
-              -(maxDistance.value.y + openBottomSheetHeight),
-              Math.min(maxDistance.value.y, imageMatrix.value[5])
-            ) -
+            (isAnimating.value
+              ? imageMatrix.value[5]
+              : Math.max(
+                  -(maxDistance.value.y + openBottomSheetHeight.value),
+                  Math.min(maxDistance.value.y, imageMatrix.value[5])
+                )) -
             (viewportMeasurements.height * scale -
               viewportMeasurements.height) /
               2,

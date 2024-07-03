@@ -43,8 +43,9 @@ interface ImageContainerProps {
     React.SetStateAction<SizeDimensions | null>
   >;
   isAnimating: SharedValue<boolean>;
-  openBottomSheetHeight: number;
+  openBottomSheetHeight: SharedValue<number>;
   openBottomSheetScaleDownPositionAdjustmentY: SharedValue<number>;
+  hasHitTopEdge: SharedValue<boolean>;
 }
 
 const ImageContainer = ({
@@ -63,6 +64,7 @@ const ImageContainer = ({
   isAnimating,
   openBottomSheetHeight,
   openBottomSheetScaleDownPositionAdjustmentY,
+  hasHitTopEdge,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -74,7 +76,6 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
-  const hasHitTopEdge = useSharedValue(false);
   const isPanning = useSharedValue(false);
   const isPinching = useSharedValue(false);
 
@@ -86,10 +87,6 @@ const ImageContainer = ({
     ? viewportMeasurements.height *
       (climb.imageProps.width / climb.imageProps.height)
     : 0;
-
-  useEffect(() => {
-    if (!openBottomSheetHeight) hasHitTopEdge.value = false;
-  }, [openBottomSheetHeight]);
 
   const isImageThinnerThanView =
     viewportMeasurements &&
@@ -179,7 +176,11 @@ const ImageContainer = ({
 
       if (adjustedScale.value) adjustedScale.value *= event.scaleChange;
 
-      if (!openBottomSheetHeight && maxDistance.value.y && !origin.value.y) {
+      if (
+        !openBottomSheetHeight.value &&
+        maxDistance.value.y &&
+        !origin.value.y
+      ) {
         transform.value = multiply3(
           translateAndScaleMatrix(identity3, origin.value, pinchScale.value),
           transform.value
@@ -199,7 +200,7 @@ const ImageContainer = ({
       let nextPosY = 0;
 
       if (
-        openBottomSheetHeight &&
+        openBottomSheetHeight.value &&
         !hasHitTopEdge.value &&
         event.scaleChange < 1
       ) {
@@ -247,7 +248,7 @@ const ImageContainer = ({
 
       let changeAmountY = event.changeY;
       if (
-        openBottomSheetHeight !== 0 &&
+        openBottomSheetHeight.value !== 0 &&
         event.changeY > 0 &&
         !hasHitTopEdge.value
       )
@@ -255,7 +256,7 @@ const ImageContainer = ({
 
       // adjustedTranslationY.value is always 0 unless vertical translation is valid
       adjustedTranslationY.value =
-        maxDistance.value.y || openBottomSheetHeight
+        maxDistance.value.y || openBottomSheetHeight.value
           ? adjustedTranslationY.value + changeAmountY
           : 0;
 
@@ -287,23 +288,24 @@ const ImageContainer = ({
       }
 
       // the max distance at the top and bottom are not the same when the drawer is open
-      if (openBottomSheetHeight) {
+      if (openBottomSheetHeight.value) {
         if (currentPosition.y > maxDistance.value.y) {
           adjustedTranslationY.value =
             maxDistance.value.y - scaledOriginalMatrix[5];
         }
 
         if (
-          currentPosition.y < -(maxDistance.value.y + openBottomSheetHeight)
+          currentPosition.y <
+          -(maxDistance.value.y + openBottomSheetHeight.value)
         ) {
           adjustedTranslationY.value =
-            -(maxDistance.value.y + openBottomSheetHeight) -
+            -(maxDistance.value.y + openBottomSheetHeight.value) -
             scaledOriginalMatrix[5];
         }
       }
 
       if (
-        !openBottomSheetHeight &&
+        !openBottomSheetHeight.value &&
         Math.abs(currentPosition.y) > maxDistance.value.y
       ) {
         // this allows an overpanned image to immediately pan back vertically once the vertical direction is reverse away from the border
@@ -468,14 +470,15 @@ const ImageContainer = ({
         newMatrix[2] = maxDistance.value.x * (transform.value[2] > 0 ? 1 : -1);
       }
       if (
-        openBottomSheetHeight &&
+        openBottomSheetHeight.value &&
         transform.value[5] >
-          maxDistance.value.y + openBottomSheetHeight * imageMatrix.value[0]
+          maxDistance.value.y +
+            openBottomSheetHeight.value * imageMatrix.value[0]
       ) {
-        newMatrix[5] = maxDistance.value.y - openBottomSheetHeight;
+        newMatrix[5] = maxDistance.value.y - openBottomSheetHeight.value;
       }
       if (
-        !openBottomSheetHeight &&
+        !openBottomSheetHeight.value &&
         Math.abs(transform.value[5]) > maxDistance.value.y
       ) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
@@ -492,7 +495,7 @@ const ImageContainer = ({
         (imageHeight / 2) * imageMatrix.value[0] -
         imageHeight / 2;
 
-      if (openBottomSheetHeight && imageMatrix.value[5] <= topEdge)
+      if (openBottomSheetHeight.value && imageMatrix.value[5] <= topEdge)
         hasHitTopEdge.value = true;
 
       maxDistance.value = {
@@ -502,7 +505,7 @@ const ImageContainer = ({
           2,
         // the max distance for y will be a negative number so needs .abs to turn it into a positive number
         y:
-          openBottomSheetHeight && hasHitTopEdge.value
+          openBottomSheetHeight.value && hasHitTopEdge.value
             ? topEdge
             : Math.abs(
                 Math.min(
@@ -543,7 +546,7 @@ const ImageContainer = ({
           translateY: isAnimating.value
             ? imageMatrix.value[5]
             : Math.max(
-                -(maxDistance.value.y + openBottomSheetHeight),
+                -(maxDistance.value.y + openBottomSheetHeight.value),
                 Math.min(maxDistance.value.y, imageMatrix.value[5])
               ),
         },
