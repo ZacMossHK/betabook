@@ -1,4 +1,5 @@
 import Animated, {
+  interpolate,
   measure,
   runOnJS,
   useAnimatedReaction,
@@ -13,6 +14,7 @@ import {
   Coordinates,
   Nodes,
   SizeDimensions,
+  TransformableMatrix3,
 } from "../src/components/ImageViewer/index.types";
 import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
@@ -61,17 +63,71 @@ const ImageViewer = () => {
   const editedNodeIndex = useSharedValue<number | null>(null);
   const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
   const [openBottomSheetHeight, setopenBottomSheetHeight] = useState(0);
-  const openDrawScaleDownPositionAdjustmentY = useSharedValue(0);
+  const openBottomSheetScaleDownPositionAdjustmentY = useSharedValue(0);
+  const bottomSheetPosition = useSharedValue(0);
+  const isClosingBottomSheet = useSharedValue(false);
+  const preAnimationYPostion = useSharedValue<number | null>(null);
+
+  const imageMatrix = useDerivedValue(() =>
+    getMatrix(
+      {
+        x: translation.value.x,
+        y:
+          translation.value.y -
+          openBottomSheetScaleDownPositionAdjustmentY.value,
+      },
+      origin.value,
+      pinchScale.value,
+      transform.value
+    )
+  );
+
+  const [viewportMeasurements, setViewportMeasurements] =
+    useState<SizeDimensions | null>(null);
+  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
+
+  const imageHeight = viewportMeasurements
+    ? viewportMeasurements.width *
+      (climb.imageProps.height / climb.imageProps.width)
+    : 0;
+
+  // this animates the image to translate down if, when the bottom drawer closes, it would be higher than the low edge max distance
+  useAnimatedReaction(
+    () => bottomSheetIndex.value,
+    (currentVal, prevVal) => {
+      if (!viewportMeasurements) return;
+      const maxDistanceYLowEdge = Math.min(
+        (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) / 2,
+        0
+      );
+      if (
+        (preAnimationYPostion.value === null
+          ? transform.value[5]
+          : preAnimationYPostion.value) > maxDistanceYLowEdge ||
+        transform.value[5] >= 0 ||
+        prevVal === null ||
+        currentVal > 1 ||
+        currentVal > prevVal
+      )
+        return;
+      if (!isAnimating.value) isAnimating.value = true;
+      if (preAnimationYPostion.value === null)
+        preAnimationYPostion.value = transform.value[5];
+      const newMatrix = [...transform.value] as TransformableMatrix3;
+      newMatrix[5] = interpolate(
+        currentVal,
+        [1, 0],
+        [preAnimationYPostion.value, maxDistanceYLowEdge]
+      );
+      transform.value = newMatrix as Matrix3;
+    }
+  );
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null ? 200 : BOTTOMSHEET_MID_HEIGHT,
     "100%",
   ]);
-
-  const [viewportMeasurements, setViewportMeasurements] =
-    useState<SizeDimensions | null>(null);
-  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
 
   useFrameCallback(() => {
     /* when the nodeNoteContainer's view changes animated height that new value is passed to the NodeNote
@@ -146,7 +202,6 @@ const ImageViewer = () => {
 
   const animateToNodePosition = (index: number, scale: number) => {
     "worklet";
-
     isAnimating.value = true;
     transform.value = withTiming(
       [
@@ -176,18 +231,6 @@ const ImageViewer = () => {
         animateToNodePosition(currentVal, 4);
       }
     }
-  );
-
-  const imageMatrix = useDerivedValue(() =>
-    getMatrix(
-      {
-        x: translation.value.x,
-        y: translation.value.y - openDrawScaleDownPositionAdjustmentY.value,
-      },
-      origin.value,
-      pinchScale.value,
-      transform.value
-    )
   );
 
   const handleOpenBottomSheet = () => bottomSheetRef.current?.snapToIndex(1);
@@ -225,7 +268,7 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          <MovementNodeContainer
+          {/* <MovementNodeContainer
             {...{
               selectedNodeIndex,
               selectedNodePosition,
@@ -242,7 +285,7 @@ const ImageViewer = () => {
               imageProps: climb.imageProps,
               openBottomSheetHeight,
             }}
-          />
+          /> */}
           <ImageContainer
             {...{
               isViewRendered,
@@ -260,7 +303,8 @@ const ImageViewer = () => {
               isAnimating,
               openBottomSheetHeight,
               editedNodeIndex,
-              openDrawScaleDownPositionAdjustmentY,
+              openBottomSheetScaleDownPositionAdjustmentY,
+              bottomSheetPosition,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
@@ -311,9 +355,12 @@ const ImageViewer = () => {
               ref={bottomSheetRef}
               snapPoints={snapPoints}
               animatedIndex={bottomSheetIndex}
+              animatedPosition={bottomSheetPosition}
               onChange={(currentIndex) => {
                 if (!currentIndex) {
                   editedNodeIndex.value = null;
+                  isAnimating.value = false;
+                  preAnimationYPostion.value = null;
                   setopenBottomSheetHeight(0);
                 }
                 if (currentIndex === 1)

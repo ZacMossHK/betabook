@@ -44,7 +44,7 @@ interface ImageContainerProps {
   >;
   isAnimating: SharedValue<boolean>;
   openBottomSheetHeight: number;
-  openDrawScaleDownPositionAdjustmentY: SharedValue<number>;
+  openBottomSheetScaleDownPositionAdjustmentY: SharedValue<number>;
 }
 
 const ImageContainer = ({
@@ -62,7 +62,7 @@ const ImageContainer = ({
   setViewportMeasurements,
   isAnimating,
   openBottomSheetHeight,
-  openDrawScaleDownPositionAdjustmentY,
+  openBottomSheetScaleDownPositionAdjustmentY,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -88,7 +88,6 @@ const ImageContainer = ({
     : 0;
 
   useEffect(() => {
-    if (!viewportMeasurements) return;
     if (!openBottomSheetHeight) hasHitTopEdge.value = false;
   }, [openBottomSheetHeight]);
 
@@ -220,7 +219,7 @@ const ImageContainer = ({
       }
 
       if (!nextPosY) return;
-      openDrawScaleDownPositionAdjustmentY.value += nextPosY;
+      openBottomSheetScaleDownPositionAdjustmentY.value += nextPosY;
     })
     .onEnd(() => {
       isPinching.value = false;
@@ -432,19 +431,20 @@ const ImageContainer = ({
     () =>
       !isPanning.value &&
       !isPinching.value &&
-      openDrawScaleDownPositionAdjustmentY.value,
+      openBottomSheetScaleDownPositionAdjustmentY.value,
     (currentVal) => {
       if (!currentVal) return;
       transform.value = multiply3(
         translateMatrix(
           identity3,
           translation.value.x,
-          translation.value.y - openDrawScaleDownPositionAdjustmentY.value
+          translation.value.y -
+            openBottomSheetScaleDownPositionAdjustmentY.value
         ),
         transform.value
       );
       translation.value = { x: 0, y: 0 };
-      openDrawScaleDownPositionAdjustmentY.value = 0;
+      openBottomSheetScaleDownPositionAdjustmentY.value = 0;
     }
   );
 
@@ -540,10 +540,12 @@ const ImageContainer = ({
           ),
         },
         {
-          translateY: Math.max(
-            -(maxDistance.value.y + openBottomSheetHeight),
-            Math.min(maxDistance.value.y, imageMatrix.value[5])
-          ),
+          translateY: isAnimating.value
+            ? imageMatrix.value[5]
+            : Math.max(
+                -(maxDistance.value.y + openBottomSheetHeight),
+                Math.min(maxDistance.value.y, imageMatrix.value[5])
+              ),
         },
         { scaleX: imageMatrix.value[0] },
         { scaleY: imageMatrix.value[4] },
