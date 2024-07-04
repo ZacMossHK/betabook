@@ -489,6 +489,7 @@ const ImageContainer = ({
     }
     let topEdge;
     // TODO: refactor this!
+
     if (isImageThinnerThanView) {
       topEdge =
         -((viewportMeasurements.height - imageHeight) / 2) +

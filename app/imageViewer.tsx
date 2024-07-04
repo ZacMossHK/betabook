@@ -2,6 +2,7 @@ import Animated, {
   interpolate,
   measure,
   runOnJS,
+  runOnUI,
   useAnimatedReaction,
   useAnimatedRef,
   useAnimatedStyle,
@@ -20,7 +21,14 @@ import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import ImageContainer from "../src/components/ImageContainer";
-import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
+import {
+  Keyboard,
+  KeyboardMetrics,
+  Pressable,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
@@ -35,6 +43,7 @@ import MovementNodeContainer from "../src/components/MovementNodeContainer";
 
 const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
+const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, setNewClimbName, saveClimb } = useClimb();
@@ -85,6 +94,8 @@ const ImageViewer = () => {
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
   const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
+  const [keyboardMetrics, setKeyboardMetrics] =
+    useState<KeyboardMetrics | null>(null);
 
   const imageHeight = viewportMeasurements
     ? viewportMeasurements.width *
@@ -126,7 +137,9 @@ const ImageViewer = () => {
 
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
-    editedNodeIndex.value !== null ? 200 : BOTTOMSHEET_MID_HEIGHT,
+    editedNodeIndex.value !== null
+      ? BOTTOMSHEET_MID_EDIT_HEIGHT
+      : BOTTOMSHEET_MID_HEIGHT,
     "100%",
   ]);
 
@@ -158,6 +171,17 @@ const ImageViewer = () => {
   }, [nodes]);
 
   useEffect(() => {
+    Keyboard.addListener("keyboardDidShow", () => {
+      const newKeyboardMetrics = Keyboard.metrics();
+      if (
+        !newKeyboardMetrics ||
+        (keyboardMetrics &&
+          keyboardMetrics.height === newKeyboardMetrics.height)
+      )
+        return;
+      setKeyboardMetrics(newKeyboardMetrics);
+    });
+
     if (!climb.fileName) {
       setIsEditingTitle(true);
     } else {
@@ -166,13 +190,6 @@ const ImageViewer = () => {
     setNodes(climb.nodes);
     editedNodeIndex.value = null;
   }, []);
-
-  useAnimatedReaction(
-    () => transform.value[0],
-    (currentVal) => {
-      if (isAnimating.value) baseScale.value = currentVal;
-    }
-  );
 
   const getTransformPosition = (
     coordinate: number,
@@ -192,26 +209,33 @@ const ImageViewer = () => {
         ? Math.abs(
             Math.min((viewportMeasurements.width - imageWidth * scale) / 2, 0)
           )
-        : (viewportMeasurements.height * scale - viewportMeasurements.height) /
-          2;
-    return Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET;
+        : Math.abs(
+            Math.min((viewportMeasurements.height - imageHeight * scale) / 2, 0)
+          );
+    return axis === "x"
+      ? Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET
+      : Math.max(
+          -(mD + openBottomSheetHeight.value),
+          Math.min(mD, -position - openBottomSheetHeight.value / 2)
+        );
   };
 
   const animateToNodePosition = (index: number, scale: number) => {
     "worklet";
     isAnimating.value = true;
+    const transformResult = [
+      scale,
+      0,
+      getTransformPosition(nodes[index].x, scale, "x"),
+      0,
+      scale,
+      getTransformPosition(nodes[index].y, scale, "y"),
+      0,
+      0,
+      1,
+    ];
     transform.value = withTiming(
-      [
-        scale,
-        0,
-        getTransformPosition(nodes[index].x, scale, "x"),
-        0,
-        scale,
-        getTransformPosition(nodes[index].y, scale, "y"),
-        0,
-        0,
-        1,
-      ],
+      transformResult,
       {},
       () => {
         isAnimating.value = false;
@@ -222,10 +246,33 @@ const ImageViewer = () => {
   };
 
   useAnimatedReaction(
-    () => editedNodeIndex.value,
+    () =>
+      editedNodeIndex.value !== null &&
+      keyboardMetrics !== null &&
+      bottomSheetIndex.value === 1,
     (currentVal, prevVal) => {
-      if (currentVal !== null && prevVal === null) {
-        animateToNodePosition(currentVal, 4);
+      if (
+        currentVal &&
+        !prevVal &&
+        // prevents ts errors
+        editedNodeIndex.value !== null &&
+        keyboardMetrics
+      ) {
+        openBottomSheetHeight.value =
+          BOTTOMSHEET_MID_EDIT_HEIGHT -
+          BOTTOMSHEET_LOW_HEIGHT +
+          keyboardMetrics.height;
+        animateToNodePosition(editedNodeIndex.value, 4);
+      }
+    }
+  );
+
+  useAnimatedReaction(
+    () => editedNodeIndex.value === null && bottomSheetIndex.value === 1,
+    (currentVal) => {
+      if (currentVal) {
+        openBottomSheetHeight.value =
+          BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
       }
     }
   );
