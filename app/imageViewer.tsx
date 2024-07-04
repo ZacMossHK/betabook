@@ -101,6 +101,10 @@ const ImageViewer = () => {
     ? viewportMeasurements.width *
       (climb.imageProps.height / climb.imageProps.width)
     : 0;
+  const imageWidth = viewportMeasurements
+    ? viewportMeasurements.height *
+      (climb.imageProps.width / climb.imageProps.height)
+    : 0;
 
   // this animates the image to translate down if, when the bottom drawer closes, it would be higher than the low edge max distance
   useAnimatedReaction(
@@ -198,25 +202,30 @@ const ImageViewer = () => {
   ) => {
     "worklet";
     if (!viewportMeasurements) return 0;
+    const viewportMeasurementsDimension =
+      viewportMeasurements[axis === "x" ? "width" : "height"];
     const position =
       getCurrentNodePosition(coordinate, scale, NODE_SIZE_OFFSET) -
-      (viewportMeasurements[axis === "x" ? "width" : "height"] * scale) / 2;
-    const imageWidth =
-      viewportMeasurements.height *
-      (climb.imageProps.width / climb.imageProps.height);
-    const mD =
-      axis === "x"
-        ? Math.abs(
-            Math.min((viewportMeasurements.width - imageWidth * scale) / 2, 0)
-          )
-        : Math.abs(
-            Math.min((viewportMeasurements.height - imageHeight * scale) / 2, 0)
-          );
+      (viewportMeasurementsDimension * scale) / 2;
+    const newMaxDistanceAfterScaling = Math.abs(
+      Math.min(
+        (viewportMeasurementsDimension -
+          (axis === "x" ? imageWidth : imageHeight) * scale) /
+          2,
+        0
+      )
+    );
     return axis === "x"
-      ? Math.max(-mD, Math.min(mD, -position)) - NODE_SIZE_OFFSET
+      ? Math.max(
+          -newMaxDistanceAfterScaling,
+          Math.min(newMaxDistanceAfterScaling, -position)
+        ) - NODE_SIZE_OFFSET
       : Math.max(
-          -(mD + openBottomSheetHeight.value),
-          Math.min(mD, -position - openBottomSheetHeight.value / 2)
+          -(newMaxDistanceAfterScaling + openBottomSheetHeight.value),
+          Math.min(
+            newMaxDistanceAfterScaling,
+            -position - openBottomSheetHeight.value / 2
+          )
         );
   };
 
