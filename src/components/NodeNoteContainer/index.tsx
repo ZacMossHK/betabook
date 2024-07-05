@@ -7,17 +7,17 @@ import { SharedValue } from "react-native-reanimated";
 interface NodeNoteContainerProps {
   nodes: Nodes;
   editedNodeIndex: SharedValue<number | null>;
-  isNodeNoteContainerHeightChangeComplete: SharedValue<boolean>;
   handleSettingNodes: (
     setNodesCallback: (prevNodes: Nodes) => Nodes
   ) => Promise<void>;
+  nodeContainerHeight: SharedValue<number | "100%">;
 }
 
 const NodeNoteContainer = ({
   nodes,
   editedNodeIndex,
-  isNodeNoteContainerHeightChangeComplete,
   handleSettingNodes,
+  nodeContainerHeight,
 }: NodeNoteContainerProps) => {
   const flatListRef = useRef<FlatList>(null);
 
@@ -36,7 +36,7 @@ const NodeNoteContainer = ({
         isLast: index + 1 === nodes.length,
         editedNodeIndex,
         scrollFlatlistToIndex,
-        isNodeNoteContainerHeightChangeComplete,
+        nodeContainerHeight,
       }}
     />
   );

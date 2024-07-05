@@ -1,13 +1,9 @@
 import Animated, {
   interpolate,
-  measure,
   runOnJS,
-  runOnUI,
   useAnimatedReaction,
-  useAnimatedRef,
   useAnimatedStyle,
   useDerivedValue,
-  useFrameCallback,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -53,7 +49,15 @@ const ImageViewer = () => {
   const { isEditingTitle, setIsEditingTitle } = useIsEditingTitle();
 
   const bottomSheetRef = useRef<BottomSheet>(null);
-  const nodeNoteContainerViewRef = useAnimatedRef();
+
+  const [viewportMeasurements, setViewportMeasurements] =
+    useState<SizeDimensions | null>(null);
+  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
+  const [keyboardMetrics, setKeyboardMetrics] =
+    useState<KeyboardMetrics | null>(null);
+
+  const baseNodeNoteContainerHeight =
+    BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight - 30;
 
   const origin = useSharedValue<Coordinates>({ x: 0, y: 0 });
   const transform = useSharedValue(identity3);
@@ -70,12 +74,15 @@ const ImageViewer = () => {
   const isHandlePressOpening = useSharedValue(false);
   const isAnimating = useSharedValue(false);
   const editedNodeIndex = useSharedValue<number | null>(null);
-  const isNodeNoteContainerHeightChangeComplete = useSharedValue(false);
   const openBottomSheetHeight = useSharedValue(0);
   const openBottomSheetScaleDownPositionAdjustmentY = useSharedValue(0);
   const bottomSheetPosition = useSharedValue(0);
   const preAnimationYPostion = useSharedValue<number | null>(null);
   const hasHitTopEdge = useSharedValue(false);
+  const reactiveBottomSheetMidHeight = useSharedValue(BOTTOMSHEET_MID_HEIGHT);
+  const nodeContainerHeight = useSharedValue<"100%" | number>(
+    baseNodeNoteContainerHeight
+  );
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -91,12 +98,6 @@ const ImageViewer = () => {
     )
   );
 
-  const [viewportMeasurements, setViewportMeasurements] =
-    useState<SizeDimensions | null>(null);
-  const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
-  const [keyboardMetrics, setKeyboardMetrics] =
-    useState<KeyboardMetrics | null>(null);
-
   const imageHeight = viewportMeasurements
     ? viewportMeasurements.width *
       (climb.imageProps.height / climb.imageProps.width)
@@ -106,15 +107,27 @@ const ImageViewer = () => {
       (climb.imageProps.width / climb.imageProps.height)
     : 0;
 
-  // this animates the image to translate down if, when the bottom drawer closes, it would be higher than the low edge max distance
+  // keyboard hiding listener should only be set once the baseNodeContainerHeight is known
+  useEffect(() => {
+    if (!bottomSheetHandleHeight) return;
+    Keyboard.addListener("keyboardDidHide", () => {
+      if (editedNodeIndex.value === null) return;
+      nodeContainerHeight.value = baseNodeNoteContainerHeight;
+      editedNodeIndex.value = null;
+    });
+  }, [bottomSheetHandleHeight]);
+
+  // this animates the image to translate down if, when the bottom drawer closes, it would be beyond the lower edge max distance
   useAnimatedReaction(
     () => bottomSheetIndex.value,
     (currentVal, prevVal) => {
       if (!viewportMeasurements) return;
+
       const maxDistanceYLowEdge = Math.min(
         (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) / 2,
         0
       );
+
       if (
         (preAnimationYPostion.value === null
           ? transform.value[5]
@@ -125,6 +138,7 @@ const ImageViewer = () => {
         currentVal > prevVal
       )
         return;
+
       if (!isAnimating.value) isAnimating.value = true;
       if (hasHitTopEdge.value) hasHitTopEdge.value = false;
       if (preAnimationYPostion.value === null)
@@ -143,29 +157,9 @@ const ImageViewer = () => {
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null
       ? BOTTOMSHEET_MID_EDIT_HEIGHT
-      : BOTTOMSHEET_MID_HEIGHT,
+      : reactiveBottomSheetMidHeight.value,
     "100%",
   ]);
-
-  useFrameCallback(() => {
-    /* when the nodeNoteContainer's view changes animated height that new value is passed to the NodeNote
-    so it can respond to it once the height change is completed */
-
-    /* this guard block means measurements only check the height when necessary 
-    the main reason for this is to stop reanimated's view flattening warnings when measuring as the imageViewer screen unmounts*/
-
-    if (
-      (editedNodeIndex.value !== null &&
-        isNodeNoteContainerHeightChangeComplete.value) ||
-      editedNodeIndex.value === null ||
-      !nodeNoteContainerViewRef
-    ) {
-      return;
-    }
-    const measurement = measure(nodeNoteContainerViewRef);
-    if (measurement && Math.floor(measurement.height) === 105)
-      isNodeNoteContainerHeightChangeComplete.value = true;
-  });
 
   useEffect(() => {
     saveClimb();
@@ -249,11 +243,14 @@ const ImageViewer = () => {
       () => {
         isAnimating.value = false;
         baseScale.value = transform.value[0];
+        reactiveBottomSheetMidHeight.value =
+          openBottomSheetHeight.value + BOTTOMSHEET_LOW_HEIGHT;
       }
       //  prevents a ts error
     ) as unknown as Matrix3;
   };
 
+  // this only animates to node position once the keyboard size is known and the bottom sheet is in the correct position
   useAnimatedReaction(
     () =>
       editedNodeIndex.value !== null &&
@@ -276,12 +273,24 @@ const ImageViewer = () => {
     }
   );
 
+  // this resets the openBottomSheetHeight once the keyboard is dismissed
   useAnimatedReaction(
     () => editedNodeIndex.value === null && bottomSheetIndex.value === 1,
     (currentVal) => {
       if (currentVal) {
         openBottomSheetHeight.value =
           BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
+      }
+    }
+  );
+
+  useAnimatedReaction(
+    () =>
+      editedNodeIndex.value === null &&
+      reactiveBottomSheetMidHeight.value > BOTTOMSHEET_MID_HEIGHT,
+    (currentVal, prevVal) => {
+      if (currentVal && !prevVal) {
+        reactiveBottomSheetMidHeight.value = BOTTOMSHEET_MID_HEIGHT;
       }
     }
   );
@@ -303,6 +312,15 @@ const ImageViewer = () => {
       runOnJS(handleCloseBottomSheet)();
     }
   });
+
+  useAnimatedReaction(
+    () => bottomSheetIndex.value,
+    (currentVal) => {
+      if (editedNodeIndex.value !== null) return;
+      nodeContainerHeight.value =
+        currentVal > 1 ? "100%" : baseNodeNoteContainerHeight;
+    }
+  );
 
   return (
     <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
@@ -435,26 +453,12 @@ const ImageViewer = () => {
                 }}
               >
                 <Animated.View
-                  ref={nodeNoteContainerViewRef}
                   style={[
                     { width: "100%" },
-                    useAnimatedStyle(() => {
-                      if (!viewportMeasurements) return {};
-                      let height: string | number = "100%";
-                      if (bottomSheetIndex.value <= 1)
-                        height =
-                          BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight - 30;
-                      if (
-                        bottomSheetIndex.value === 1 &&
-                        editedNodeIndex.value !== null
-                      ) {
-                        height = 106;
-                      }
-                      return {
-                        // this ensures the bottom of the FlatList in the NodeContainer will always have its height set to the bottom of the drawer
-                        height,
-                      };
-                    }),
+                    useAnimatedStyle(() => ({
+                      // this ensures the bottom of the FlatList in the NodeContainer will always have its height set to the bottom of the drawer
+                      height: nodeContainerHeight.value,
+                    })),
                   ]}
                   collapsable={false}
                 >
@@ -467,8 +471,9 @@ const ImageViewer = () => {
                       handleOpenBottomSheet,
                       animateToNodePosition,
                       editedNodeIndex,
-                      isNodeNoteContainerHeightChangeComplete,
                       handleSettingNodes,
+                      reactiveBottomSheetMidHeight,
+                      nodeContainerHeight,
                     }}
                   />
                 </Animated.View>

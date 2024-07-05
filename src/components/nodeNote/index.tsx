@@ -1,4 +1,4 @@
-import { memo, useState } from "react";
+import { memo, useEffect, useState } from "react";
 import { Nodes } from "../ImageViewer/index.types";
 import { Keyboard, Text, View } from "react-native";
 import {
@@ -21,9 +21,11 @@ interface NodeNoteProps {
   ) => Promise<void>;
   editedNodeIndex: SharedValue<number | null>;
   scrollFlatlistToIndex: (index: number) => void | undefined;
-  isNodeNoteContainerHeightChangeComplete: SharedValue<boolean>;
   isLast: boolean;
+  nodeContainerHeight: SharedValue<number | "100%">;
 }
+
+const NODE_NOTE_CONTAINER_EDIT_HEIGHT = 106;
 
 const NodeNote = memo(
   ({
@@ -33,30 +35,25 @@ const NodeNote = memo(
     isLast,
     editedNodeIndex,
     scrollFlatlistToIndex,
-    isNodeNoteContainerHeightChangeComplete,
+    nodeContainerHeight,
   }: NodeNoteProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [noteValue, setNoteValue] = useState(note);
 
-    const handleSettingEditingText = () => {
-      scrollFlatlistToIndex(index);
-      setIsEditingText(true);
-    };
-
     useAnimatedReaction(
-      () => isNodeNoteContainerHeightChangeComplete.value,
+      () =>
+        editedNodeIndex.value === index &&
+        nodeContainerHeight.value === NODE_NOTE_CONTAINER_EDIT_HEIGHT,
       (currentVal, prevVal) => {
-        // the NodeNote must wait until the height change of the container has happened so it can scroll and focus on the text input
-        if (
-          currentVal &&
-          !prevVal &&
-          editedNodeIndex.value === index &&
-          !isEditingText
-        ) {
-          runOnJS(handleSettingEditingText)();
-        }
+        if (currentVal && !prevVal) runOnJS(setIsEditingText)(true);
       }
     );
+
+    useEffect(() => {
+      if (isEditingText) {
+        console.log("hey")
+        scrollFlatlistToIndex(index);}
+    }, [isEditingText]);
 
     const saveNodeNote = async () => {
       await handleSettingNodes((prevNodes: Nodes) => {
@@ -163,12 +160,8 @@ const NodeNote = memo(
               <TouchableWithoutFeedback
                 style={{ width: "100%" }}
                 onPress={() => {
-                  Keyboard.addListener("keyboardDidHide", () => {
-                    editedNodeIndex.value = null;
-                    isNodeNoteContainerHeightChangeComplete.value = false;
-                    Keyboard.removeAllListeners("keyboardDidHide");
-                  });
                   editedNodeIndex.value = index;
+                  nodeContainerHeight.value = NODE_NOTE_CONTAINER_EDIT_HEIGHT;
                 }}
               >
                 <Text

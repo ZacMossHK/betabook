@@ -68,7 +68,6 @@ const ImageContainer = ({
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
-
   if (!climb) return null;
 
   // forked from https://github.com/software-mansion/react-native-gesture-handler/issues/2138#issuecomment-1231634779
