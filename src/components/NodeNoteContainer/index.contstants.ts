@@ -1,0 +1,1 @@
+export const NODE_NOTE_CONTAINER_EDIT_HEIGHT = 106;

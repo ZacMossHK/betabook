@@ -12,6 +12,7 @@ import {
   runOnJS,
   useAnimatedReaction,
 } from "react-native-reanimated";
+import { NODE_NOTE_CONTAINER_EDIT_HEIGHT } from "../NodeNoteContainer/index.contstants";
 
 interface NodeNoteProps {
   note: string;
@@ -25,7 +26,6 @@ interface NodeNoteProps {
   nodeContainerHeight: SharedValue<number | "100%">;
 }
 
-const NODE_NOTE_CONTAINER_EDIT_HEIGHT = 106;
 
 const NodeNote = memo(
   ({
@@ -51,8 +51,8 @@ const NodeNote = memo(
 
     useEffect(() => {
       if (isEditingText) {
-        console.log("hey")
-        scrollFlatlistToIndex(index);}
+        scrollFlatlistToIndex(index);
+      }
     }, [isEditingText]);
 
     const saveNodeNote = async () => {

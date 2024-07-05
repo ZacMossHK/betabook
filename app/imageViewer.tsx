@@ -71,7 +71,6 @@ const ImageViewer = () => {
   const isSelectingNode = useSharedValue(false);
   const isTranslatingNode = useSharedValue(false);
   const bottomSheetIndex = useSharedValue(0);
-  const isHandlePressOpening = useSharedValue(false);
   const isAnimating = useSharedValue(false);
   const editedNodeIndex = useSharedValue<number | null>(null);
   const openBottomSheetHeight = useSharedValue(0);
@@ -83,6 +82,7 @@ const ImageViewer = () => {
   const nodeContainerHeight = useSharedValue<"100%" | number>(
     baseNodeNoteContainerHeight
   );
+  const isFinishedEditingNode = useSharedValue(false);
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -314,11 +314,23 @@ const ImageViewer = () => {
   });
 
   useAnimatedReaction(
+    () => editedNodeIndex.value,
+    (currentVal, prevVal) => {
+      if (currentVal === null && prevVal !== null)
+        isFinishedEditingNode.value = true;
+    }
+  );
+
+  useAnimatedReaction(
     () => bottomSheetIndex.value,
     (currentVal) => {
       if (editedNodeIndex.value !== null) return;
       nodeContainerHeight.value =
-        currentVal > 1 ? "100%" : baseNodeNoteContainerHeight;
+        currentVal > 1 && !isFinishedEditingNode.value
+          ? "100%"
+          : baseNodeNoteContainerHeight;
+      if (currentVal === 1 && isFinishedEditingNode.value)
+        isFinishedEditingNode.value = false;
     }
   );
 
@@ -465,14 +477,8 @@ const ImageViewer = () => {
                   <NodeNoteContainer
                     {...{
                       nodes,
-                      setNodes,
-                      bottomSheetIndex,
-                      isHandlePressOpening,
-                      handleOpenBottomSheet,
-                      animateToNodePosition,
                       editedNodeIndex,
                       handleSettingNodes,
-                      reactiveBottomSheetMidHeight,
                       nodeContainerHeight,
                     }}
                   />
