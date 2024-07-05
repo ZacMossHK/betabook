@@ -533,6 +533,7 @@ const ImageContainer = ({
           2,
       };
     }
+    // console.log(imageMatrix.value[5])
 
     return {
       transform: [
@@ -559,7 +560,6 @@ const ImageContainer = ({
     ...imageContainerStyles.fullscreen,
     height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
   };
-
   return (
     <GestureDetector
       gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan)}

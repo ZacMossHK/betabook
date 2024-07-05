@@ -1,10 +1,12 @@
 import Animated, {
   interpolate,
   runOnJS,
+  runOnUI,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
+  withDelay,
   withTiming,
 } from "react-native-reanimated";
 import {
@@ -128,7 +130,40 @@ const ImageViewer = () => {
         0
       );
 
+      if (keyboardMetrics) {
+        const openBottomSheetHeightDifference =
+          BOTTOMSHEET_MID_EDIT_HEIGHT -
+          BOTTOMSHEET_LOW_HEIGHT +
+          keyboardMetrics.height -
+          (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
+
+        // this animates the image when node editing finishes
+        if (
+          isFinishedEditingNode.value &&
+          currentVal === 1 &&
+          prevVal !== 1 &&
+          transform.value[5] <
+            maxDistanceYLowEdge -
+              (BOTTOMSHEET_MID_EDIT_HEIGHT -
+                BOTTOMSHEET_LOW_HEIGHT +
+                keyboardMetrics.height) +
+              openBottomSheetHeightDifference
+        ) {
+          isAnimating.value = true;
+          if (hasHitTopEdge.value) hasHitTopEdge.value = false;
+          const newMatrix = [...transform.value] as TransformableMatrix3;
+          newMatrix[5] += openBottomSheetHeightDifference;
+          transform.value = withTiming(newMatrix, {}, (i) => {
+            isAnimating.value = false;
+            isFinishedEditingNode.value = false;
+          });
+          return;
+        }
+      }
+
+      // this animates the image if the user closes the drawer themselves
       if (
+        isFinishedEditingNode.value ||
         (preAnimationYPostion.value === null
           ? transform.value[5]
           : preAnimationYPostion.value) > maxDistanceYLowEdge ||
@@ -138,7 +173,6 @@ const ImageViewer = () => {
         currentVal > prevVal
       )
         return;
-
       if (!isAnimating.value) isAnimating.value = true;
       if (hasHitTopEdge.value) hasHitTopEdge.value = false;
       if (preAnimationYPostion.value === null)
@@ -273,13 +307,40 @@ const ImageViewer = () => {
     }
   );
 
+  useAnimatedReaction(
+    () => editedNodeIndex.value,
+    (currentVal, prevVal) => {
+      if (currentVal === null && prevVal !== null)
+        isFinishedEditingNode.value = true;
+    }
+  );
+
   // this resets the openBottomSheetHeight once the keyboard is dismissed
   useAnimatedReaction(
     () => editedNodeIndex.value === null && bottomSheetIndex.value === 1,
-    (currentVal) => {
-      if (currentVal) {
+    // &&
+    // isFinishedEditingNode.value,
+    (currentVal, prevVal) => {
+      if (currentVal && !prevVal && viewportMeasurements) {
+        // const openBottomSheetHeightDifference =
+        //   openBottomSheetHeight.value -
+        //   (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
         openBottomSheetHeight.value =
           BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
+        // isAnimating.value = true;
+        // if (hasHitTopEdge.value) hasHitTopEdge.value = false;
+        // const maxDistanceYLowEdge = Math.min(
+        //   (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
+        //     2,
+        //   0
+        // );
+        // console.log(transform.value[5], maxDistanceYLowEdge);
+        // const newMatrix = [...transform.value] as TransformableMatrix3;
+        // newMatrix[5] = transform.value[5] - openBottomSheetHeightDifference;
+        // // Math.min(maxDistanceYLowEdge, newMatrix[5]);
+        // transform.value = withTiming(newMatrix, {}, (i) => {
+        //   console.log(i);
+        // });
       }
     }
   );
@@ -314,14 +375,6 @@ const ImageViewer = () => {
   });
 
   useAnimatedReaction(
-    () => editedNodeIndex.value,
-    (currentVal, prevVal) => {
-      if (currentVal === null && prevVal !== null)
-        isFinishedEditingNode.value = true;
-    }
-  );
-
-  useAnimatedReaction(
     () => bottomSheetIndex.value,
     (currentVal) => {
       if (editedNodeIndex.value !== null) return;
@@ -329,8 +382,8 @@ const ImageViewer = () => {
         currentVal > 1 && !isFinishedEditingNode.value
           ? "100%"
           : baseNodeNoteContainerHeight;
-      if (currentVal === 1 && isFinishedEditingNode.value)
-        isFinishedEditingNode.value = false;
+      // if (currentVal === 1 && isFinishedEditingNode.value)
+      //   isFinishedEditingNode.value = false;
     }
   );
 
@@ -448,9 +501,11 @@ const ImageViewer = () => {
                   openBottomSheetHeight.value = 0;
                   isAnimating.value = false;
                 }
-                if (currentIndex === 1)
-                  openBottomSheetHeight.value =
-                    BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
+
+                // if (currentIndex === 1) {
+                //   openBottomSheetHeight.value =
+                //     BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
+                // }
               }}
             >
               <View
