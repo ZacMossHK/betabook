@@ -318,29 +318,10 @@ const ImageViewer = () => {
   // this resets the openBottomSheetHeight once the keyboard is dismissed
   useAnimatedReaction(
     () => editedNodeIndex.value === null && bottomSheetIndex.value === 1,
-    // &&
-    // isFinishedEditingNode.value,
     (currentVal, prevVal) => {
       if (currentVal && !prevVal && viewportMeasurements) {
-        // const openBottomSheetHeightDifference =
-        //   openBottomSheetHeight.value -
-        //   (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
         openBottomSheetHeight.value =
           BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
-        // isAnimating.value = true;
-        // if (hasHitTopEdge.value) hasHitTopEdge.value = false;
-        // const maxDistanceYLowEdge = Math.min(
-        //   (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
-        //     2,
-        //   0
-        // );
-        // console.log(transform.value[5], maxDistanceYLowEdge);
-        // const newMatrix = [...transform.value] as TransformableMatrix3;
-        // newMatrix[5] = transform.value[5] - openBottomSheetHeightDifference;
-        // // Math.min(maxDistanceYLowEdge, newMatrix[5]);
-        // transform.value = withTiming(newMatrix, {}, (i) => {
-        //   console.log(i);
-        // });
       }
     }
   );
@@ -501,11 +482,6 @@ const ImageViewer = () => {
                   openBottomSheetHeight.value = 0;
                   isAnimating.value = false;
                 }
-
-                // if (currentIndex === 1) {
-                //   openBottomSheetHeight.value =
-                //     BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT;
-                // }
               }}
             >
               <View
