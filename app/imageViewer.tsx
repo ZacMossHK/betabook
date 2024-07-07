@@ -1,12 +1,10 @@
 import Animated, {
   interpolate,
   runOnJS,
-  runOnUI,
   useAnimatedReaction,
   useAnimatedStyle,
   useDerivedValue,
   useSharedValue,
-  withDelay,
   withTiming,
 } from "react-native-reanimated";
 import {
@@ -19,14 +17,7 @@ import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import ImageContainer from "../src/components/ImageContainer";
-import {
-  Keyboard,
-  KeyboardMetrics,
-  Pressable,
-  SafeAreaView,
-  Text,
-  View,
-} from "react-native";
+import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
@@ -55,8 +46,6 @@ const ImageViewer = () => {
   const [viewportMeasurements, setViewportMeasurements] =
     useState<SizeDimensions | null>(null);
   const [bottomSheetHandleHeight, setBottomSheetHandleHeight] = useState(0);
-  const [keyboardMetrics, setKeyboardMetrics] =
-    useState<KeyboardMetrics | null>(null);
 
   const baseNodeNoteContainerHeight =
     BOTTOMSHEET_MID_HEIGHT - bottomSheetHandleHeight - 30;
@@ -85,6 +74,8 @@ const ImageViewer = () => {
     baseNodeNoteContainerHeight
   );
   const isFinishedEditingNode = useSharedValue(false);
+  const keyboardHeight = useSharedValue<number | null>(null);
+  const isKeyboardShown = useSharedValue(false);
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -113,9 +104,11 @@ const ImageViewer = () => {
   useEffect(() => {
     if (!bottomSheetHandleHeight) return;
     Keyboard.addListener("keyboardDidHide", () => {
+      isKeyboardShown.value = false;
       if (editedNodeIndex.value === null) return;
       nodeContainerHeight.value = baseNodeNoteContainerHeight;
       editedNodeIndex.value = null;
+      isFinishedEditingNode.value = true;
     });
   }, [bottomSheetHandleHeight]);
 
@@ -130,33 +123,31 @@ const ImageViewer = () => {
         0
       );
 
-      if (keyboardMetrics) {
-        const openBottomSheetHeightDifference =
-          BOTTOMSHEET_MID_EDIT_HEIGHT -
-          BOTTOMSHEET_LOW_HEIGHT +
-          keyboardMetrics.height -
-          (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
-
+      if (keyboardHeight.value) {
         // this animates the image when node editing finishes
-        if (
-          isFinishedEditingNode.value &&
-          currentVal === 1 &&
-          prevVal !== 1 &&
-          transform.value[5] <
+        if (isFinishedEditingNode.value && currentVal === 1 && prevVal !== 1) {
+          const openBottomSheetHeightDifference =
+            BOTTOMSHEET_MID_EDIT_HEIGHT -
+            BOTTOMSHEET_LOW_HEIGHT +
+            keyboardHeight.value -
+            (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
+          isFinishedEditingNode.value = false;
+          if (
+            transform.value[5] <
             maxDistanceYLowEdge -
               (BOTTOMSHEET_MID_EDIT_HEIGHT -
                 BOTTOMSHEET_LOW_HEIGHT +
-                keyboardMetrics.height) +
+                keyboardHeight.value) +
               openBottomSheetHeightDifference
-        ) {
-          isAnimating.value = true;
-          if (hasHitTopEdge.value) hasHitTopEdge.value = false;
-          const newMatrix = [...transform.value] as TransformableMatrix3;
-          newMatrix[5] += openBottomSheetHeightDifference;
-          transform.value = withTiming(newMatrix, {}, (i) => {
-            isAnimating.value = false;
-            isFinishedEditingNode.value = false;
-          });
+          ) {
+            isAnimating.value = true;
+            if (hasHitTopEdge.value) hasHitTopEdge.value = false;
+            const newMatrix = [...transform.value] as TransformableMatrix3;
+            newMatrix[5] += openBottomSheetHeightDifference;
+            transform.value = withTiming(newMatrix, {}, (i) => {
+              isAnimating.value = false;
+            });
+          }
           return;
         }
       }
@@ -204,16 +195,8 @@ const ImageViewer = () => {
 
   useEffect(() => {
     Keyboard.addListener("keyboardDidShow", () => {
-      const newKeyboardMetrics = Keyboard.metrics();
-      if (
-        !newKeyboardMetrics ||
-        (keyboardMetrics &&
-          keyboardMetrics.height === newKeyboardMetrics.height)
-      )
-        return;
-      setKeyboardMetrics(newKeyboardMetrics);
+      isKeyboardShown.value = true;
     });
-
     if (!climb.fileName) {
       setIsEditingTitle(true);
     } else {
@@ -222,6 +205,20 @@ const ImageViewer = () => {
     setNodes(climb.nodes);
     editedNodeIndex.value = null;
   }, []);
+
+  const setKeyboardHeight = () => {
+    const keyboardMetrics = Keyboard.metrics();
+    if (keyboardMetrics) keyboardHeight.value = keyboardMetrics.height;
+  };
+
+  useAnimatedReaction(
+    () => isKeyboardShown.value,
+    (currentVal, prevVal) => {
+      if (currentVal && !prevVal) {
+        runOnJS(setKeyboardHeight)();
+      }
+    }
+  );
 
   const getTransformPosition = (
     coordinate: number,
@@ -288,7 +285,7 @@ const ImageViewer = () => {
   useAnimatedReaction(
     () =>
       editedNodeIndex.value !== null &&
-      keyboardMetrics !== null &&
+      keyboardHeight.value !== null &&
       bottomSheetIndex.value === 1,
     (currentVal, prevVal) => {
       if (
@@ -296,22 +293,14 @@ const ImageViewer = () => {
         !prevVal &&
         // prevents ts errors
         editedNodeIndex.value !== null &&
-        keyboardMetrics
+        keyboardHeight.value
       ) {
         openBottomSheetHeight.value =
           BOTTOMSHEET_MID_EDIT_HEIGHT -
           BOTTOMSHEET_LOW_HEIGHT +
-          keyboardMetrics.height;
+          keyboardHeight.value;
         animateToNodePosition(editedNodeIndex.value, 4);
       }
-    }
-  );
-
-  useAnimatedReaction(
-    () => editedNodeIndex.value,
-    (currentVal, prevVal) => {
-      if (currentVal === null && prevVal !== null)
-        isFinishedEditingNode.value = true;
     }
   );
 
@@ -363,8 +352,6 @@ const ImageViewer = () => {
         currentVal > 1 && !isFinishedEditingNode.value
           ? "100%"
           : baseNodeNoteContainerHeight;
-      // if (currentVal === 1 && isFinishedEditingNode.value)
-      //   isFinishedEditingNode.value = false;
     }
   );
 
@@ -476,12 +463,11 @@ const ImageViewer = () => {
               animatedIndex={bottomSheetIndex}
               animatedPosition={bottomSheetPosition}
               onChange={(currentIndex) => {
-                if (!currentIndex) {
-                  editedNodeIndex.value = null;
-                  preAnimationYPostion.value = null;
-                  openBottomSheetHeight.value = 0;
-                  isAnimating.value = false;
-                }
+                if (currentIndex) return;
+                editedNodeIndex.value = null;
+                preAnimationYPostion.value = null;
+                openBottomSheetHeight.value = 0;
+                isAnimating.value = false;
               }}
             >
               <View
@@ -511,6 +497,7 @@ const ImageViewer = () => {
                       editedNodeIndex,
                       handleSettingNodes,
                       nodeContainerHeight,
+                      isFinishedEditingNode,
                     }}
                   />
                 </Animated.View>

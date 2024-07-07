@@ -25,7 +25,6 @@ import { useClimb } from "../../providers/ClimbProvider";
 import { Dimensions } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useAnimation } from "../../providers/AnimationProvider";
-import { useEffect } from "react";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -481,6 +480,7 @@ const ImageContainer = ({
         Math.abs(transform.value[5]) > maxDistance.value.y
       ) {
         // this resets the transform at the edge if trying to pan outside of the image's boundaries
+
         newMatrix[5] = maxDistance.value.y * (transform.value[5] > 0 ? 1 : -1);
       }
       transform.value = newMatrix as Matrix3;
@@ -533,7 +533,6 @@ const ImageContainer = ({
           2,
       };
     }
-    // console.log(imageMatrix.value[5])
 
     return {
       transform: [
