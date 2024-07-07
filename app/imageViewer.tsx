@@ -33,6 +33,7 @@ import MovementNodeContainer from "../src/components/MovementNodeContainer";
 const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
 const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
+const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, setNewClimbName, saveClimb } = useClimb();
@@ -346,10 +347,12 @@ const ImageViewer = () => {
   useAnimatedReaction(
     () => bottomSheetIndex.value,
     (currentVal) => {
-      if (editedNodeIndex.value !== null) return;
+      if (!viewportMeasurements || editedNodeIndex.value !== null) return;
       nodeContainerHeight.value =
         currentVal > 1 && !isFinishedEditingNode.value
-          ? "100%"
+          ? viewportMeasurements.height -
+            BOTTOMSHEET_LOW_HEIGHT +
+            NODE_NOTE_CONTAINER_TOP_PADDING
           : baseNodeNoteContainerHeight;
     }
   );
@@ -473,11 +476,13 @@ const ImageViewer = () => {
                 style={{
                   alignItems: "center",
                   width: "100%",
-                  height: 1000,
+                  height: viewportMeasurements
+                    ? viewportMeasurements.height
+                    : 1000,
                   backgroundColor: "white",
                   borderTopLeftRadius: 20,
                   borderTopRightRadius: 20,
-                  paddingTop: 30,
+                  paddingTop: NODE_NOTE_CONTAINER_TOP_PADDING,
                 }}
               >
                 <Animated.View
