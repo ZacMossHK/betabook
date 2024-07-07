@@ -105,7 +105,6 @@ const ImageViewer = () => {
     if (!bottomSheetHandleHeight) return;
     Keyboard.addListener("keyboardDidHide", () => {
       isKeyboardShown.value = false;
-      if (editedNodeIndex.value === null) return;
       nodeContainerHeight.value = baseNodeNoteContainerHeight;
       editedNodeIndex.value = null;
       isFinishedEditingNode.value = true;
