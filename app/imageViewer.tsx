@@ -106,7 +106,6 @@ const ImageViewer = () => {
     if (!bottomSheetHandleHeight) return;
     Keyboard.addListener("keyboardDidHide", () => {
       isKeyboardShown.value = false;
-      nodeContainerHeight.value = baseNodeNoteContainerHeight;
       editedNodeIndex.value = null;
       isFinishedEditingNode.value = true;
     });
@@ -197,11 +196,13 @@ const ImageViewer = () => {
     Keyboard.addListener("keyboardDidShow", () => {
       isKeyboardShown.value = true;
     });
+
     if (!climb.fileName) {
       setIsEditingTitle(true);
     } else {
       setNewClimbName(climb.fileName);
     }
+
     setNodes(climb.nodes);
     editedNodeIndex.value = null;
   }, []);
@@ -465,6 +466,8 @@ const ImageViewer = () => {
               animatedIndex={bottomSheetIndex}
               animatedPosition={bottomSheetPosition}
               onChange={(currentIndex) => {
+                if (isKeyboardShown.value) Keyboard.dismiss();
+                if (currentIndex === 2) nodeContainerHeight.value = "100%";
                 if (currentIndex) return;
                 editedNodeIndex.value = null;
                 preAnimationYPostion.value = null;
