@@ -101,6 +101,11 @@ const ImageViewer = () => {
       (climb.imageProps.width / climb.imageProps.height)
     : 0;
 
+  const isImageWiderThanView =
+    viewportMeasurements &&
+    climb.imageProps.width / climb.imageProps.height >=
+      viewportMeasurements.width / viewportMeasurements.height;
+
   // keyboard hiding listener should only be set once the baseNodeContainerHeight is known
   useEffect(() => {
     if (!bottomSheetHandleHeight) return;
@@ -117,10 +122,16 @@ const ImageViewer = () => {
     (currentVal, prevVal) => {
       if (!viewportMeasurements) return;
 
-      const maxDistanceYLowEdge = Math.min(
-        (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) / 2,
-        0
-      );
+      const maxDistanceYLowEdge = isImageWiderThanView
+        ? Math.min(
+            (viewportMeasurements.height - imageHeight * imageMatrix.value[0]) /
+              2,
+            0
+          )
+        : -(
+            viewportMeasurements.height * imageMatrix.value[0] -
+            viewportMeasurements.height
+          ) / 2;
 
       if (keyboardHeight.value) {
         // this animates the image when node editing finishes
@@ -233,7 +244,7 @@ const ImageViewer = () => {
     const position =
       getCurrentNodePosition(coordinate, scale, NODE_SIZE_OFFSET) -
       (viewportMeasurementsDimension * scale) / 2;
-    const newMaxDistanceAfterScaling = Math.abs(
+    let newMaxDistanceAfterScaling = Math.abs(
       Math.min(
         (viewportMeasurementsDimension -
           (axis === "x" ? imageWidth : imageHeight) * scale) /
@@ -241,6 +252,16 @@ const ImageViewer = () => {
         0
       )
     );
+    if (!isImageWiderThanView) {
+      newMaxDistanceAfterScaling =
+        axis === "x"
+          ? Math.abs(
+              Math.min((viewportMeasurements.width - imageWidth * scale) / 2, 0)
+            )
+          : (viewportMeasurements.height * scale -
+              viewportMeasurements.height) /
+            2;
+    }
     return axis === "x"
       ? Math.max(
           -newMaxDistanceAfterScaling,
