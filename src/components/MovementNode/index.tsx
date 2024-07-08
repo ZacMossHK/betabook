@@ -66,6 +66,21 @@ const MovementNode = memo(
           viewportMeasurementsWidth / viewportMeasurementsHeight
         : false;
 
+    const imageHeight =
+      viewportMeasurementsWidth &&
+      viewportMeasurementsWidth * (imagePropsHeight / imagePropsWidth);
+    const verticalBorderDistance =
+      viewportMeasurementsHeight &&
+      imageHeight &&
+      (viewportMeasurementsHeight - imageHeight) / 2;
+    const imageWidth =
+      viewportMeasurementsHeight &&
+      viewportMeasurementsHeight * (imagePropsWidth / imagePropsHeight);
+    const horizontalBorderDistance =
+      viewportMeasurementsWidth &&
+      imageWidth &&
+      (viewportMeasurementsWidth - imageWidth) / 2;
+
     useAnimatedReaction(
       () => selectedNodeIndex.value,
       (currentValue) => {
@@ -110,7 +125,11 @@ const MovementNode = memo(
               !viewportMeasurementsWidth ||
               !viewportMeasurementsHeight ||
               selectedNodeIndex.value === null ||
-              !isSelectingNode.value
+              !isSelectingNode.value ||
+              verticalBorderDistance === null ||
+              imageHeight === null ||
+              horizontalBorderDistance === null ||
+              imageWidth === null
             )
               return;
 
@@ -128,12 +147,6 @@ const MovementNode = memo(
               };
               // This makes sure you can't move nodes off the side of the image with borders
               // This needs refactoring!
-              const imageHeight =
-                viewportMeasurementsWidth *
-                (imagePropsHeight / imagePropsWidth);
-              const verticalBorderDistance =
-                (viewportMeasurementsHeight - imageHeight) / 2;
-
               if (isImageWiderThanView) {
                 selectedNodePosition.value = {
                   x: actualPosition.value.x,
@@ -146,16 +159,6 @@ const MovementNode = memo(
                   ),
                 };
               } else {
-                console.log(
-                  actualPosition.value.y,
-                  viewportMeasurementsHeight - NODE_SIZE_OFFSET
-                );
-
-                const imageWidth =
-                  viewportMeasurementsHeight *
-                  (imagePropsWidth / imagePropsHeight);
-                const horizontalBorderDistance =
-                  (viewportMeasurementsWidth - imageWidth) / 2;
                 selectedNodePosition.value = {
                   x: Math.max(
                     horizontalBorderDistance - NODE_SIZE_OFFSET,
