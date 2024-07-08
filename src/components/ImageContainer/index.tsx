@@ -45,6 +45,9 @@ interface ImageContainerProps {
   openBottomSheetHeight: SharedValue<number>;
   openBottomSheetScaleDownPositionAdjustmentY: SharedValue<number>;
   hasHitTopEdge: SharedValue<boolean>;
+  imageHeight: number;
+  imageWidth: number;
+  isImageWiderThanView: boolean | null;
 }
 
 const ImageContainer = ({
@@ -64,6 +67,9 @@ const ImageContainer = ({
   openBottomSheetHeight,
   openBottomSheetScaleDownPositionAdjustmentY,
   hasHitTopEdge,
+  imageHeight,
+  imageWidth,
+  isImageWiderThanView,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -76,20 +82,6 @@ const ImageContainer = ({
   const adjustedScale = useSharedValue(0);
   const isPanning = useSharedValue(false);
   const isPinching = useSharedValue(false);
-
-  const imageHeight = viewportMeasurements
-    ? viewportMeasurements.width *
-      (climb.imageProps.height / climb.imageProps.width)
-    : 0;
-  const imageWidth = viewportMeasurements
-    ? viewportMeasurements.height *
-      (climb.imageProps.width / climb.imageProps.height)
-    : 0;
-
-  const isImageThinnerThanView =
-    viewportMeasurements &&
-    climb.imageProps.width / climb.imageProps.height >=
-      viewportMeasurements.width / viewportMeasurements.height;
 
   const getDistanceToLineSegment = (
     currentNodeX: number,
@@ -489,7 +481,7 @@ const ImageContainer = ({
     let topEdge;
     // TODO: refactor this!
 
-    if (isImageThinnerThanView) {
+    if (isImageWiderThanView) {
       topEdge =
         -((viewportMeasurements.height - imageHeight) / 2) +
         (imageHeight / 2) * imageMatrix.value[0] -

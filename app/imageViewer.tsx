@@ -462,6 +462,9 @@ const ImageViewer = () => {
               openBottomSheetScaleDownPositionAdjustmentY,
               bottomSheetPosition,
               hasHitTopEdge,
+              imageHeight,
+              imageWidth,
+              isImageWiderThanView,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
