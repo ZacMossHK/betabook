@@ -12,6 +12,7 @@ interface NodeNoteContainerProps {
   ) => Promise<void>;
   nodeContainerHeight: SharedValue<number | "100%">;
   bottomSheetIndex: SharedValue<number>;
+  viewportWidth: number;
 }
 
 const NodeNoteContainer = ({
@@ -20,6 +21,7 @@ const NodeNoteContainer = ({
   handleSettingNodes,
   nodeContainerHeight,
   bottomSheetIndex,
+  viewportWidth,
 }: NodeNoteContainerProps) => {
   const flatListRef = useRef<FlatList>(null);
 
@@ -40,6 +42,7 @@ const NodeNoteContainer = ({
         scrollFlatlistToIndex,
         nodeContainerHeight,
         bottomSheetIndex,
+        viewportWidth,
       }}
     />
   );

@@ -25,6 +25,7 @@ interface NodeNoteProps {
   isLast: boolean;
   nodeContainerHeight: SharedValue<number | "100%">;
   bottomSheetIndex: SharedValue<number>;
+  viewportWidth: number;
 }
 
 const NodeNote = memo(
@@ -37,6 +38,7 @@ const NodeNote = memo(
     scrollFlatlistToIndex,
     nodeContainerHeight,
     bottomSheetIndex,
+    viewportWidth,
   }: NodeNoteProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [noteValue, setNoteValue] = useState(note);
@@ -89,6 +91,8 @@ const NodeNote = memo(
         newNodes[index + 1] = nodeToMove;
         return newNodes;
       });
+
+    const textWidth = viewportWidth && viewportWidth - 85;
 
     return (
       <View
@@ -144,24 +148,26 @@ const NodeNote = memo(
                 height: NODE_SIZE,
                 borderRadius: NODE_SIZE,
                 borderColor: isEditingText ? "red" : "black",
-                borderWidth: 4,
+                borderWidth: 3,
                 backgroundColor: "white",
-                marginRight: 15,
-              }}
-            />
-            <Text
-              style={{
-                width: 15,
-                fontFamily: "InriaSans_400Regular",
-                fontSize: 14,
-                color: "#14281D",
+                marginRight: 8,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              {index + 1}.
-            </Text>
+              <Text
+                style={{
+                  color: "black",
+                  fontSize: 10,
+                  fontFamily: "InriaSans_700Bold",
+                }}
+              >
+                {index + 1}
+              </Text>
+            </View>
             {!isEditingText && (
               <TouchableWithoutFeedback
-                style={{ width: "100%" }}
+                style={{ width: "100%", height: "100%", flex: 1 }}
                 onPress={() => {
                   editedNodeIndex.value = index;
                   if (bottomSheetIndex.value === 2) return;
@@ -171,10 +177,11 @@ const NodeNote = memo(
                 <Text
                   style={{
                     textAlignVertical: "top",
-                    width: "100%",
+                    width: textWidth,
                     fontFamily: "InriaSans_400Regular",
                     fontSize: 14,
                     color: "#14281D",
+                    opacity: note.length ? 1 : 0.6,
                   }}
                 >
                   {note.length ? note : "Write your note..."}
@@ -186,7 +193,7 @@ const NodeNote = memo(
                 multiline={true}
                 style={{
                   textAlignVertical: "top",
-                  width: "100%",
+                  width: textWidth,
                   fontFamily: "InriaSans_400Regular",
                   fontSize: 14,
                   color: "#14281D",

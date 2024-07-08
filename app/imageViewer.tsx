@@ -533,6 +533,9 @@ const ImageViewer = () => {
                       nodeContainerHeight,
                       isFinishedEditingNode,
                       bottomSheetIndex,
+                      viewportWidth: viewportMeasurements
+                        ? viewportMeasurements.width
+                        : 0,
                     }}
                   />
                 </Animated.View>
