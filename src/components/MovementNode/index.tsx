@@ -60,6 +60,11 @@ const MovementNode = memo(
     const [zIndex, setZIndex] = useState(
       selectedNodeIndex.value === nodeIndex ? 3 : 2
     );
+    const isImageWiderThanView =
+      viewportMeasurementsWidth && viewportMeasurementsHeight
+        ? imagePropsWidth / imagePropsHeight >=
+          viewportMeasurementsWidth / viewportMeasurementsHeight
+        : false;
 
     useAnimatedReaction(
       () => selectedNodeIndex.value,
@@ -123,12 +128,13 @@ const MovementNode = memo(
               };
               // This makes sure you can't move nodes off the side of the image with borders
               // This needs refactoring!
-              if (imagePropsWidth >= viewportMeasurementsWidth) {
-                const imageHeight =
-                  viewportMeasurementsWidth *
-                  (imagePropsHeight / imagePropsWidth);
-                const verticalBorderDistance =
-                  (viewportMeasurementsHeight - imageHeight) / 2;
+              const imageHeight =
+                viewportMeasurementsWidth *
+                (imagePropsHeight / imagePropsWidth);
+              const verticalBorderDistance =
+                (viewportMeasurementsHeight - imageHeight) / 2;
+
+              if (isImageWiderThanView) {
                 selectedNodePosition.value = {
                   x: actualPosition.value.x,
                   y: Math.max(
@@ -140,6 +146,11 @@ const MovementNode = memo(
                   ),
                 };
               } else {
+                console.log(
+                  actualPosition.value.y,
+                  viewportMeasurementsHeight - NODE_SIZE_OFFSET
+                );
+
                 const imageWidth =
                   viewportMeasurementsHeight *
                   (imagePropsWidth / imagePropsHeight);
@@ -153,7 +164,10 @@ const MovementNode = memo(
                       horizontalBorderDistance + imageWidth - NODE_SIZE_OFFSET
                     )
                   ),
-                  y: actualPosition.value.y,
+                  y: Math.min(
+                    viewportMeasurementsHeight - NODE_SIZE_OFFSET,
+                    Math.max(actualPosition.value.y, -NODE_SIZE_OFFSET)
+                  ),
                 };
               }
             }
