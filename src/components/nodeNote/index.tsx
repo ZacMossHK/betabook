@@ -24,8 +24,8 @@ interface NodeNoteProps {
   scrollFlatlistToIndex: (index: number) => void | undefined;
   isLast: boolean;
   nodeContainerHeight: SharedValue<number | "100%">;
+  bottomSheetIndex: SharedValue<number>;
 }
-
 
 const NodeNote = memo(
   ({
@@ -36,6 +36,7 @@ const NodeNote = memo(
     editedNodeIndex,
     scrollFlatlistToIndex,
     nodeContainerHeight,
+    bottomSheetIndex,
   }: NodeNoteProps) => {
     const [isEditingText, setIsEditingText] = useState(false);
     const [noteValue, setNoteValue] = useState(note);
@@ -43,7 +44,9 @@ const NodeNote = memo(
     useAnimatedReaction(
       () =>
         editedNodeIndex.value === index &&
-        nodeContainerHeight.value === NODE_NOTE_CONTAINER_EDIT_HEIGHT,
+        (nodeContainerHeight.value === NODE_NOTE_CONTAINER_EDIT_HEIGHT ||
+          (bottomSheetIndex.value === 2 &&
+            nodeContainerHeight.value !== "100%")),
       (currentVal, prevVal) => {
         if (currentVal && !prevVal) runOnJS(setIsEditingText)(true);
       }
@@ -161,6 +164,7 @@ const NodeNote = memo(
                 style={{ width: "100%" }}
                 onPress={() => {
                   editedNodeIndex.value = index;
+                  if (bottomSheetIndex.value === 2) return;
                   nodeContainerHeight.value = NODE_NOTE_CONTAINER_EDIT_HEIGHT;
                 }}
               >

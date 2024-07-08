@@ -316,6 +316,16 @@ const ImageViewer = () => {
     }
   );
 
+  // this does the same with a bottomSheetIndex of 2
+  useAnimatedReaction(
+    () => editedNodeIndex.value === null && bottomSheetIndex.value === 2,
+    (currentVal, prevVal) => {
+      if (currentVal && !prevVal) {
+        nodeContainerHeight.value = "100%";
+      }
+    }
+  );
+
   useAnimatedReaction(
     () =>
       editedNodeIndex.value === null &&
@@ -355,6 +365,23 @@ const ImageViewer = () => {
             BOTTOMSHEET_LOW_HEIGHT +
             NODE_NOTE_CONTAINER_TOP_PADDING
           : baseNodeNoteContainerHeight;
+    }
+  );
+
+  useAnimatedReaction(
+    () => bottomSheetIndex.value === 2 && editedNodeIndex.value !== null,
+    (currentVal, prevVal) => {
+      if (
+        currentVal &&
+        !prevVal &&
+        viewportMeasurements &&
+        keyboardHeight.value !== null
+      ) {
+        nodeContainerHeight.value =
+          viewportMeasurements.height -
+          keyboardHeight.value -
+          NODE_NOTE_CONTAINER_TOP_PADDING;
+      }
     }
   );
 
@@ -505,6 +532,7 @@ const ImageViewer = () => {
                       handleSettingNodes,
                       nodeContainerHeight,
                       isFinishedEditingNode,
+                      bottomSheetIndex,
                     }}
                   />
                 </Animated.View>

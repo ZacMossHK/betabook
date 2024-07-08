@@ -11,6 +11,7 @@ interface NodeNoteContainerProps {
     setNodesCallback: (prevNodes: Nodes) => Nodes
   ) => Promise<void>;
   nodeContainerHeight: SharedValue<number | "100%">;
+  bottomSheetIndex: SharedValue<number>;
 }
 
 const NodeNoteContainer = ({
@@ -18,6 +19,7 @@ const NodeNoteContainer = ({
   editedNodeIndex,
   handleSettingNodes,
   nodeContainerHeight,
+  bottomSheetIndex,
 }: NodeNoteContainerProps) => {
   const flatListRef = useRef<FlatList>(null);
 
@@ -37,6 +39,7 @@ const NodeNoteContainer = ({
         editedNodeIndex,
         scrollFlatlistToIndex,
         nodeContainerHeight,
+        bottomSheetIndex,
       }}
     />
   );
