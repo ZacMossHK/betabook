@@ -340,19 +340,22 @@ const ImageContainer = ({
       ),
     };
   };
+  
   const isNewNodePositionOutsideImageBorder = (
     newNodePosition: Coordinates
   ) => {
     "worklet";
     if (!viewportMeasurements) return true;
-    const imageHeight =
-      viewportMeasurements.width *
-      (climb.imageProps.height / climb.imageProps.width);
-    const borderDistance = (viewportMeasurements.height - imageHeight) / 2;
-    // checks if the node is outside of the borders of the image
+    const borderDistance =
+      (isImageWiderThanView
+        ? viewportMeasurements.height - imageHeight
+        : viewportMeasurements.width - imageWidth) / 2;
+    const newNodePositionCoordinate =
+      newNodePosition[isImageWiderThanView ? "y" : "x"];
     return (
-      newNodePosition.y + NODE_SIZE_OFFSET < borderDistance ||
-      newNodePosition.y + NODE_SIZE_OFFSET > borderDistance + imageHeight
+      newNodePositionCoordinate + NODE_SIZE_OFFSET < borderDistance ||
+      newNodePositionCoordinate + NODE_SIZE_OFFSET >
+        borderDistance + (isImageWiderThanView ? imageHeight : imageWidth)
     );
   };
 
