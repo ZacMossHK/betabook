@@ -517,7 +517,6 @@ const ImageViewer = () => {
               animatedIndex={bottomSheetIndex}
               animatedPosition={bottomSheetPosition}
               onChange={(currentIndex) => {
-                if (currentIndex && !isEditingTitle) Keyboard.dismiss();
                 if (currentIndex === 2) nodeContainerHeight.value = "100%";
                 if (currentIndex) return;
                 editedNodeIndex.value = null;
