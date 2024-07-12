@@ -77,6 +77,7 @@ const ImageViewer = () => {
   const isFinishedEditingNode = useSharedValue(false);
   const keyboardHeight = useSharedValue<number | null>(null);
   const isKeyboardShown = useSharedValue(false);
+  const selectedSubNodeIndex = useSharedValue<number | null>(null);
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -174,6 +175,7 @@ const ImageViewer = () => {
         currentVal > prevVal
       )
         return;
+
       if (!isAnimating.value) isAnimating.value = true;
       if (hasHitTopEdge.value) hasHitTopEdge.value = false;
       if (preAnimationYPostion.value === null)
@@ -201,6 +203,7 @@ const ImageViewer = () => {
     selectedNodePosition.value = null;
     selectedNodeIndex.value = null;
     isSelectingNode.value = false;
+    selectedSubNodeIndex.value = null;
   }, [nodes]);
 
   useEffect(() => {
@@ -440,6 +443,7 @@ const ImageViewer = () => {
               imageProps: climb.imageProps,
               openBottomSheetHeight,
               isAnimating,
+              selectedSubNodeIndex,
             }}
           />
           <ImageContainer
@@ -465,6 +469,7 @@ const ImageViewer = () => {
               imageHeight,
               imageWidth,
               isImageWiderThanView,
+              selectedNodeIndex,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>

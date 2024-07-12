@@ -48,6 +48,7 @@ interface ImageContainerProps {
   imageHeight: number;
   imageWidth: number;
   isImageWiderThanView: boolean | null;
+  selectedNodeIndex: SharedValue<number | null>;
 }
 
 const ImageContainer = ({
@@ -70,6 +71,7 @@ const ImageContainer = ({
   imageHeight,
   imageWidth,
   isImageWiderThanView,
+  selectedNodeIndex,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -340,7 +342,7 @@ const ImageContainer = ({
       ),
     };
   };
-  
+
   const isNewNodePositionOutsideImageBorder = (
     newNodePosition: Coordinates
   ) => {
@@ -373,7 +375,20 @@ const ImageContainer = ({
       if (isNewNodePositionOutsideImageBorder(newNodePosition)) {
         return;
       }
-      runOnJS(setNodes)([...nodes, { ...newNodePosition, note: "" }]);
+      if (selectedNodeIndex.value === null) {
+        runOnJS(setNodes)([
+          ...nodes,
+          { ...newNodePosition, note: "", subNodes: [] },
+        ]);
+        return;
+      }
+      const newNodes = [...nodes];
+      newNodes[selectedNodeIndex.value].subNodes.push({
+        ...newNodePosition,
+        note: "",
+        subNodes: [],
+      });
+      runOnJS(setNodes)(newNodes);
     });
 
   const lineLongPress = Gesture.LongPress()
@@ -414,6 +429,7 @@ const ImageContainer = ({
       nodesCopy.splice(selectedLineIndex.value + 1, 0, {
         ...newNodePosition,
         note: "",
+        subNodes: [],
       });
       selectedLineIndex.value = null;
       runOnJS(setNodes)(nodesCopy);
@@ -481,14 +497,17 @@ const ImageContainer = ({
       transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
-    let topEdge;
+    let topEdge =
+      -((viewportMeasurements.height - imageHeight) / 2) +
+      (imageHeight / 2) * imageMatrix.value[0] -
+      imageHeight / 2;
     // TODO: refactor this!
 
     if (isImageWiderThanView) {
-      topEdge =
-        -((viewportMeasurements.height - imageHeight) / 2) +
-        (imageHeight / 2) * imageMatrix.value[0] -
-        imageHeight / 2;
+      // topEdge =
+      //   -((viewportMeasurements.height - imageHeight) / 2) +
+      //   (imageHeight / 2) * imageMatrix.value[0] -
+      //   imageHeight / 2;
 
       if (openBottomSheetHeight.value && imageMatrix.value[5] <= topEdge)
         hasHitTopEdge.value = true;
@@ -511,6 +530,7 @@ const ImageContainer = ({
                 )
               ),
       };
+      console.log(openBottomSheetHeight.value && hasHitTopEdge.value);
     } else {
       // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
       maxDistance.value = {

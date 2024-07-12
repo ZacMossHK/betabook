@@ -7,7 +7,12 @@ import Animated, {
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
 import { memo, useMemo, useState } from "react";
-import { NODE_SIZE, NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import {
+  NODE_SIZE,
+  NODE_SIZE_OFFSET,
+  SUB_NODE_SIZE,
+  SUB_NODE_SIZE_OFFSET,
+} from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { Text } from "react-native";
 
@@ -30,9 +35,15 @@ interface MovementNodeProps {
   imagePropsHeight: number;
   translateNode: (
     selectedNodeIndex: number,
-    selectedNodePosition: Coordinates
+    selectedNodePosition: Coordinates,
+    selectedSubNodeIndex: number | null
   ) => void;
-  deleteNode: (indexToDelete: number) => void;
+  deleteNode: (
+    indexToDelete: number,
+    subNodeIndexToDelete: number | null
+  ) => void;
+  subNodeIndex?: number;
+  selectedSubNodeIndex: SharedValue<number | null>;
 }
 
 const MovementNode = memo(
@@ -55,11 +66,17 @@ const MovementNode = memo(
     imagePropsHeight,
     translateNode,
     deleteNode,
+    subNodeIndex,
+    selectedSubNodeIndex,
   }: MovementNodeProps) => {
     // zIndex must be set through state instead of animatedStyle style as animating layout style props (eg. zIndex) causes slowdown when animating
     const [zIndex, setZIndex] = useState(
       selectedNodeIndex.value === nodeIndex ? 3 : 2
     );
+
+    const isSubNode = subNodeIndex !== undefined;
+    const nodeOffset = isSubNode ? SUB_NODE_SIZE_OFFSET : NODE_SIZE_OFFSET;
+
     const isImageWiderThanView =
       viewportMeasurementsWidth && viewportMeasurementsHeight
         ? imagePropsWidth / imagePropsHeight >=
@@ -106,11 +123,12 @@ const MovementNode = memo(
           .onBegin(() => {
             isSelectingNode.value = true;
             selectedNodeIndex.value = nodeIndex;
+            selectedSubNodeIndex.value = isSubNode ? subNodeIndex : null;
           })
           .onEnd(() => {
-            isTranslatingNode.value = false;
-            isSelectingNode.value = false;
+            if (!isSubNode) return;
             selectedNodeIndex.value = null;
+            selectedSubNodeIndex.value = null;
           }),
       [nodeIndex]
     );
@@ -151,25 +169,25 @@ const MovementNode = memo(
                 selectedNodePosition.value = {
                   x: actualPosition.value.x,
                   y: Math.max(
-                    verticalBorderDistance - NODE_SIZE_OFFSET,
+                    verticalBorderDistance - nodeOffset,
                     Math.min(
                       actualPosition.value.y,
-                      verticalBorderDistance + imageHeight - NODE_SIZE_OFFSET
+                      verticalBorderDistance + imageHeight - nodeOffset
                     )
                   ),
                 };
               } else {
                 selectedNodePosition.value = {
                   x: Math.max(
-                    horizontalBorderDistance - NODE_SIZE_OFFSET,
+                    horizontalBorderDistance - nodeOffset,
                     Math.min(
                       actualPosition.value.x,
-                      horizontalBorderDistance + imageWidth - NODE_SIZE_OFFSET
+                      horizontalBorderDistance + imageWidth - nodeOffset
                     )
                   ),
                   y: Math.min(
-                    viewportMeasurementsHeight - NODE_SIZE_OFFSET,
-                    Math.max(actualPosition.value.y, -NODE_SIZE_OFFSET)
+                    viewportMeasurementsHeight - nodeOffset,
+                    Math.max(actualPosition.value.y, -nodeOffset)
                   ),
                 };
               }
@@ -185,7 +203,8 @@ const MovementNode = memo(
               return;
             runOnJS(translateNode)(
               selectedNodeIndex.value,
-              selectedNodePosition.value
+              selectedNodePosition.value,
+              selectedSubNodeIndex.value
             );
           }),
       [
@@ -205,7 +224,7 @@ const MovementNode = memo(
           .hitSlop(nodeHitSlop)
           .minDuration(800)
           .onStart(() => {
-            runOnJS(deleteNode)(nodeIndex);
+            runOnJS(deleteNode)(nodeIndex, isSubNode ? subNodeIndex : null);
           }),
       [nodeIndex]
     );
@@ -217,9 +236,9 @@ const MovementNode = memo(
         <Animated.View
           style={[
             {
-              width: NODE_SIZE,
-              height: NODE_SIZE,
-              borderRadius: NODE_SIZE,
+              width: isSubNode ? SUB_NODE_SIZE : NODE_SIZE,
+              height: isSubNode ? SUB_NODE_SIZE : NODE_SIZE,
+              borderRadius: isSubNode ? 0 : NODE_SIZE,
               borderColor: "black",
               borderWidth: 3,
               position: "absolute",
@@ -236,12 +255,18 @@ const MovementNode = memo(
               ],
             },
             useAnimatedStyle(() => {
-              const node = adjustedPositionNodes.value[nodeIndex];
+              if (!adjustedPositionNodes.value[nodeIndex]) return {};
+              const node = isSubNode
+                ? adjustedPositionNodes.value[nodeIndex].subNodes[subNodeIndex]
+                : adjustedPositionNodes.value[nodeIndex];
               if (!node) return {};
               return {
                 transform: [{ translateX: node.x }, { translateY: node.y }],
                 borderColor:
-                  selectedNodeIndex.value === nodeIndex && isSelectingNode.value
+                  selectedNodeIndex.value === nodeIndex &&
+                  isSelectingNode.value &&
+                  ((!isSubNode && selectedSubNodeIndex.value === null) ||
+                    (isSubNode && selectedSubNodeIndex.value === subNodeIndex))
                     ? "red"
                     : "black",
               };
@@ -251,11 +276,11 @@ const MovementNode = memo(
           <Text
             style={{
               color: "black",
-              fontSize: 10,
+              fontSize: isSubNode ? 7 : 10,
               fontFamily: "InriaSans_700Bold",
             }}
           >
-            {nodeIndex + 1}
+            {(isSubNode ? subNodeIndex : nodeIndex) + 1}
           </Text>
         </Animated.View>
       </GestureDetector>

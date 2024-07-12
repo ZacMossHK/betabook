@@ -2,7 +2,10 @@ import Animated, {
   SharedValue,
   useAnimatedStyle,
 } from "react-native-reanimated";
-import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
+import {
+  NODE_SIZE_OFFSET,
+  SUB_NODE_SIZE_OFFSET,
+} from "../ImageViewer/index.constants";
 import { Coordinates, Nodes } from "../ImageViewer/index.types";
 import { useAnimation } from "../../providers/AnimationProvider";
 import { memo } from "react";
@@ -15,23 +18,27 @@ interface MovementNodeLineProps {
   nextNodeY: number;
   nodeIndex: number;
   adjustedPositionNodes: Readonly<SharedValue<Nodes>>;
+  subNodeIndex?: number;
 }
 
-const getNodeXYWithOffset = (node: Coordinates) => {
+const getNodeXYWithOffset = (node: Coordinates, isSubNode: boolean) => {
   "worklet";
   const { x, y } = node;
-  return [x, y].map((n) => n + NODE_SIZE_OFFSET);
+  return [x, y].map(
+    (n) => n + (isSubNode ? SUB_NODE_SIZE_OFFSET : NODE_SIZE_OFFSET)
+  );
 };
 
 const generateTransform = (
   currentNode: Coordinates,
   nextNode: Coordinates,
-  ratioDiff: number
+  ratioDiff: number,
+  isSubNode: boolean
 ) => {
   "worklet";
   if (!currentNode || !nextNode) return [];
-  const [x1, y1] = getNodeXYWithOffset(currentNode);
-  const [x2, y2] = getNodeXYWithOffset(nextNode);
+  const [x1, y1] = getNodeXYWithOffset(currentNode, isSubNode);
+  const [x2, y2] = getNodeXYWithOffset(nextNode, isSubNode);
   return [
     { translateX: x1 },
     { translateY: y1 },
@@ -61,10 +68,12 @@ const MovementNodeLine = memo(
     nextNodeX,
     nextNodeY,
     nodeIndex,
+    subNodeIndex,
     adjustedPositionNodes,
   }: MovementNodeLineProps) => {
     const { selectedLineIndex } = useAnimation();
 
+    const isSubNode = subNodeIndex !== undefined;
     const currentNode = { x: currentNodeX, y: currentNodeY };
     const nextNode = { x: nextNodeX, y: nextNodeY };
 
@@ -73,7 +82,7 @@ const MovementNodeLine = memo(
         style={[
           {
             backgroundColor: "black",
-            height: 3,
+            height: isSubNode ? 2.5 : 3.5,
             zIndex: 1,
             transformOrigin: "0% 50%",
             width: 1,
@@ -81,24 +90,40 @@ const MovementNodeLine = memo(
             /* This is a workaround as useAnimatedStyle does not consistently activate on mount - https://github.com/software-mansion/react-native-reanimated/issues/3296
             This transform renders the static position upon rerendering after adding a node.
             The static position is immediately overriden by useAnimatedStyle when any animation occurs - eg. panning, zooming, moving a node. */
-            transform: generateTransform(currentNode, nextNode, ratioDiff),
+            transform: generateTransform(
+              currentNode,
+              nextNode,
+              ratioDiff,
+              isSubNode
+            ),
           },
-          useAnimatedStyle(() =>
-            [nodeIndex, nodeIndex + 1].some(
-              (index) => index === adjustedPositionNodes.value.length
-            )
-              ? {}
-              : {
-                  backgroundColor:
-                    selectedLineIndex.value === nodeIndex ? "red" : "black",
-                  // TODO: a lot of lines with transform props cause a huge performance drop, there should be logic here to work out if a line is on screen and if it isn't, give it opacity 0 and no transform props
-                  transform: generateTransform(
-                    adjustedPositionNodes.value[nodeIndex],
-                    adjustedPositionNodes.value[nodeIndex + 1],
-                    ratioDiff
-                  ),
-                }
-          ),
+          useAnimatedStyle(() => {
+            if (!adjustedPositionNodes.value[nodeIndex]) return {};
+            let currentAdjustedNode = adjustedPositionNodes.value[nodeIndex];
+            let nextAdjustedNode = adjustedPositionNodes.value[nodeIndex + 1];
+            if (isSubNode) {
+              if (subNodeIndex)
+                currentAdjustedNode =
+                  adjustedPositionNodes.value[nodeIndex].subNodes[
+                    subNodeIndex - 1
+                  ];
+              nextAdjustedNode =
+                adjustedPositionNodes.value[nodeIndex].subNodes[subNodeIndex];
+            }
+            return {
+              backgroundColor:
+                selectedLineIndex.value === nodeIndex && !isSubNode
+                  ? "red"
+                  : "black",
+              // TODO: a lot of lines with transform props cause a huge performance drop, there should be logic here to work out if a line is on screen and if it isn't, give it opacity 0 and no transform props
+              transform: generateTransform(
+                currentAdjustedNode,
+                nextAdjustedNode,
+                ratioDiff,
+                isSubNode
+              ),
+            };
+          }),
         ]}
       />
     );

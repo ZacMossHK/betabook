@@ -15,11 +15,12 @@ export type TransformableMatrix3 = [
   number
 ];
 
+export type Nodes = Node[];
+
 export interface Node extends Coordinates {
   note: string;
+  subNodes: Nodes
 }
-
-export type Nodes = Node[];
 
 export interface SizeDimensions {
   width: number;
