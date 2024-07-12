@@ -44,6 +44,7 @@ interface MovementNodeProps {
   ) => void;
   subNodeIndex?: number;
   selectedSubNodeIndex: SharedValue<number | null>;
+  isPanning: SharedValue<boolean>;
 }
 
 const MovementNode = memo(
@@ -68,6 +69,7 @@ const MovementNode = memo(
     deleteNode,
     subNodeIndex,
     selectedSubNodeIndex,
+    isPanning,
   }: MovementNodeProps) => {
     // zIndex must be set through state instead of animatedStyle style as animating layout style props (eg. zIndex) causes slowdown when animating
     const [zIndex, setZIndex] = useState(
@@ -121,6 +123,8 @@ const MovementNode = memo(
           .maxDuration(5000)
           .hitSlop(nodeHitSlop)
           .onBegin(() => {
+            console.log("fired");
+            if (isPanning.value) return;
             isSelectingNode.value = true;
             selectedNodeIndex.value = nodeIndex;
             selectedSubNodeIndex.value = isSubNode ? subNodeIndex : null;
@@ -140,6 +144,7 @@ const MovementNode = memo(
           .hitSlop(nodeHitSlop)
           .onChange((event) => {
             if (
+              isPanning.value ||
               !viewportMeasurementsWidth ||
               !viewportMeasurementsHeight ||
               selectedNodeIndex.value === null ||
@@ -263,6 +268,7 @@ const MovementNode = memo(
               return {
                 transform: [{ translateX: node.x }, { translateY: node.y }],
                 borderColor:
+                  !isPanning.value &&
                   selectedNodeIndex.value === nodeIndex &&
                   isSelectingNode.value &&
                   ((!isSubNode && selectedSubNodeIndex.value === null) ||

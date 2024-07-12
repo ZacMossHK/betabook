@@ -78,6 +78,7 @@ const ImageViewer = () => {
   const keyboardHeight = useSharedValue<number | null>(null);
   const isKeyboardShown = useSharedValue(false);
   const selectedSubNodeIndex = useSharedValue<number | null>(null);
+  const isPanning = useSharedValue(false);
 
   const imageMatrix = useDerivedValue(() =>
     getMatrix(
@@ -410,7 +411,12 @@ const ImageViewer = () => {
   );
 
   return (
-    <Pressable style={{ flex: 1 }} onPress={() => Keyboard.dismiss()}>
+    <Pressable
+      style={{ flex: 1 }}
+      onPress={() => {
+        Keyboard.dismiss();
+      }}
+    >
       {isEditingTitle && (
         // show grey transparent overlay if the title is being edited
         <View
@@ -444,6 +450,7 @@ const ImageViewer = () => {
               openBottomSheetHeight,
               isAnimating,
               selectedSubNodeIndex,
+              isPanning,
             }}
           />
           <ImageContainer
@@ -470,6 +477,7 @@ const ImageViewer = () => {
               imageWidth,
               isImageWiderThanView,
               selectedNodeIndex,
+              isPanning,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>

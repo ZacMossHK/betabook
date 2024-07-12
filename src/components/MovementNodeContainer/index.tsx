@@ -37,6 +37,7 @@ interface MovementNodeContainerProps {
   openBottomSheetHeight: SharedValue<number>;
   isAnimating: SharedValue<boolean>;
   selectedSubNodeIndex: SharedValue<number | null>;
+  isPanning: SharedValue<boolean>;
 }
 
 const MovementNodeContainer = ({
@@ -56,6 +57,7 @@ const MovementNodeContainer = ({
   openBottomSheetHeight,
   isAnimating,
   selectedSubNodeIndex,
+  isPanning,
 }: MovementNodeContainerProps) => {
   // pinched from https://github.com/facebook/react-native/issues/41403#issuecomment-1805532160
 
@@ -272,6 +274,7 @@ const MovementNodeContainer = ({
                   ? viewportMeasurements?.height
                   : null,
                 selectedSubNodeIndex,
+                isPanning,
               }}
             />
           );
@@ -304,6 +307,7 @@ const MovementNodeContainer = ({
                   ? viewportMeasurements?.height
                   : null,
                 selectedSubNodeIndex,
+                isPanning,
               }}
             />
             {subNodes}

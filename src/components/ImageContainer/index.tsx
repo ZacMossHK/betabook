@@ -49,6 +49,7 @@ interface ImageContainerProps {
   imageWidth: number;
   isImageWiderThanView: boolean | null;
   selectedNodeIndex: SharedValue<number | null>;
+  isPanning: SharedValue<boolean>;
 }
 
 const ImageContainer = ({
@@ -72,6 +73,7 @@ const ImageContainer = ({
   imageWidth,
   isImageWiderThanView,
   selectedNodeIndex,
+  isPanning,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -82,7 +84,7 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
-  const isPanning = useSharedValue(false);
+  // const isPanning = useSharedValue(false);
   const isPinching = useSharedValue(false);
 
   const getDistanceToLineSegment = (
@@ -530,7 +532,6 @@ const ImageContainer = ({
                 )
               ),
       };
-      console.log(openBottomSheetHeight.value && hasHitTopEdge.value);
     } else {
       // this is only necessary if the aspect ratio of the image is thinner than the width of the viewport
       maxDistance.value = {
