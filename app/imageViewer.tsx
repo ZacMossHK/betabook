@@ -478,6 +478,7 @@ const ImageViewer = () => {
               isImageWiderThanView,
               selectedNodeIndex,
               isPanning,
+              selectedSubNodeIndex,selectedNodePosition
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>

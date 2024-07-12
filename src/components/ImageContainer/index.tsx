@@ -50,6 +50,8 @@ interface ImageContainerProps {
   isImageWiderThanView: boolean | null;
   selectedNodeIndex: SharedValue<number | null>;
   isPanning: SharedValue<boolean>;
+  selectedSubNodeIndex: SharedValue<number | null>;
+  selectedNodePosition: SharedValue<Coordinates | null>;
 }
 
 const ImageContainer = ({
@@ -74,6 +76,8 @@ const ImageContainer = ({
   isImageWiderThanView,
   selectedNodeIndex,
   isPanning,
+  selectedSubNodeIndex,
+  selectedNodePosition,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();
@@ -438,6 +442,9 @@ const ImageContainer = ({
     })
     .onFinalize(() => {
       selectedLineIndex.value = null;
+      if (selectedNodePosition.value) return;
+      selectedNodeIndex.value = null;
+      selectedSubNodeIndex.value = null;
     });
 
   useAnimatedReaction(

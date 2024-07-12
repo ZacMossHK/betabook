@@ -123,7 +123,6 @@ const MovementNode = memo(
           .maxDuration(5000)
           .hitSlop(nodeHitSlop)
           .onBegin(() => {
-            console.log("fired");
             if (isPanning.value) return;
             isSelectingNode.value = true;
             selectedNodeIndex.value = nodeIndex;
