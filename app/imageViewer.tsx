@@ -394,8 +394,15 @@ const ImageViewer = () => {
   );
 
   useAnimatedReaction(
-    () => bottomSheetIndex.value === 2 && editedNodeIndex.value !== null,
+    () => bottomSheetIndex.value === 2 && editedNodeIndex.value !== null ,
     (currentVal, prevVal) => {
+      console.log(
+        editedNodeIndex.value,
+        bottomSheetIndex.value,
+        currentVal,
+        !prevVal,
+        keyboardHeight.value !== null
+      );
       if (
         currentVal &&
         !prevVal &&
@@ -478,7 +485,8 @@ const ImageViewer = () => {
               isImageWiderThanView,
               selectedNodeIndex,
               isPanning,
-              selectedSubNodeIndex,selectedNodePosition
+              selectedSubNodeIndex,
+              selectedNodePosition,
             }}
           />
           <View style={{ flex: 1, zIndex: 10 }}>
