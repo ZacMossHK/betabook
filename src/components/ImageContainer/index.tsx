@@ -506,19 +506,26 @@ const ImageContainer = ({
       transform.value = newMatrix as Matrix3;
       return {}; // required to stop animatedStyle endlessly refreshing - possibly related to https://github.com/software-mansion/react-native-reanimated/issues/1767
     }
-    let topEdge =
-      -((viewportMeasurements.height - imageHeight) / 2) +
-      (imageHeight / 2) * imageMatrix.value[0] -
-      imageHeight / 2;
     // TODO: refactor this!
-
     if (isImageWiderThanView) {
-      // topEdge =
-      //   -((viewportMeasurements.height - imageHeight) / 2) +
-      //   (imageHeight / 2) * imageMatrix.value[0] -
-      //   imageHeight / 2;
+      const topEdge =
+        -((viewportMeasurements.height - imageHeight) / 2) +
+        (imageHeight / 2) * imageMatrix.value[0] -
+        imageHeight / 2;
 
-      if (openBottomSheetHeight.value && imageMatrix.value[5] <= topEdge)
+      const isImageShorterThanBottomSheetViewport =
+        openBottomSheetHeight.value &&
+        imageHeight < viewportMeasurements.height - openBottomSheetHeight.value;
+
+      if (
+        openBottomSheetHeight.value &&
+        imageMatrix.value[5] <=
+          (isImageShorterThanBottomSheetViewport
+            ? /* if the image is shorter than the viewport with an open bottom sheet then it will never fill the open space above it when panning up.
+            this calculates the top edge to be the minimum position where the wide image's Y axis is comopletely viewable */
+              -(topEdge + openBottomSheetHeight.value)
+            : topEdge)
+      )
         hasHitTopEdge.value = true;
 
       maxDistance.value = {
@@ -526,11 +533,11 @@ const ImageContainer = ({
           (viewportMeasurements.width * imageMatrix.value[0] -
             viewportMeasurements.width) /
           2,
-        // the max distance for y will be a negative number so needs .abs to turn it into a positive number
         y:
           openBottomSheetHeight.value && hasHitTopEdge.value
             ? topEdge
-            : Math.abs(
+            : // the max distance for y will be a negative number so needs .abs to turn it into a positive number
+              Math.abs(
                 Math.min(
                   (viewportMeasurements.height -
                     imageHeight * imageMatrix.value[0]) /
@@ -578,10 +585,12 @@ const ImageContainer = ({
       ],
     };
   });
+
   const fullscreenStyle = {
     ...imageContainerStyles.fullscreen,
     height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
   };
+
   return (
     <GestureDetector
       gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan)}
