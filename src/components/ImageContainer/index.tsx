@@ -200,7 +200,8 @@ const ImageContainer = ({
       if (
         openBottomSheetHeight.value &&
         !hasHitTopEdge.value &&
-        event.scaleChange < 1
+        event.scaleChange < 1 &&
+        isImageWiderThanView
       ) {
         const oldImageHeight = imageHeight * baseScale.value * pinchScale.value;
         const newImageHeight =
@@ -248,7 +249,8 @@ const ImageContainer = ({
       if (
         openBottomSheetHeight.value !== 0 &&
         event.changeY > 0 &&
-        !hasHitTopEdge.value
+        !hasHitTopEdge.value &&
+        isImageWiderThanView
       )
         changeAmountY = 0;
 
