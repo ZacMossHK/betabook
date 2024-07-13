@@ -123,7 +123,8 @@ const Menu = () => {
         }}
       >
         {/* delete all files button for development only */}
-        {savedFiles.length ? (
+        {savedFiles.length &&
+        process.env.EXPO_PUBLIC_ENVIRONMENT === "testing" ? (
           isRequestingDeletingFiles ? (
             <>
               <Button

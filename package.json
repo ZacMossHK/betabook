@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "scripts": {
-    "start": "expo start",
+    "start": "EXPO_PUBLIC_ENVIRONMENT=development expo start",
     "start-10": "EXPO_PUBLIC_NODES_NUM=10 expo start",
     "start-img": "EXPO_PUBLIC_DEV_IMG=true expo start",
     "start-img-10": "EXPO_PUBLIC_DEV_IMG=true EXPO_PUBLIC_NODES_NUM=10 expo start",
