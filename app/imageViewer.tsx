@@ -394,18 +394,15 @@ const ImageViewer = () => {
   );
 
   useAnimatedReaction(
-    () => bottomSheetIndex.value === 2 && editedNodeIndex.value !== null ,
+    () =>
+      bottomSheetIndex.value === 2 &&
+      editedNodeIndex.value !== null &&
+      keyboardHeight.value !== null,
     (currentVal, prevVal) => {
-      console.log(
-        editedNodeIndex.value,
-        bottomSheetIndex.value,
-        currentVal,
-        !prevVal,
-        keyboardHeight.value !== null
-      );
       if (
         currentVal &&
         !prevVal &&
+        // necessary to prevent ts errors
         viewportMeasurements &&
         keyboardHeight.value !== null
       ) {
@@ -553,7 +550,7 @@ const ImageViewer = () => {
                   width: "100%",
                   height: viewportMeasurements
                     ? viewportMeasurements.height
-                    : 1000,
+                    : 1000, // this is an arbitrary value that is necessary to prevent a display error
                   backgroundColor: "white",
                   borderTopLeftRadius: 20,
                   borderTopRightRadius: 20,

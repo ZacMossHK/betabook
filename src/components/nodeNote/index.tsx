@@ -47,11 +47,7 @@ const NodeNote = memo(
       () =>
         editedNodeIndex.value === index &&
         (nodeContainerHeight.value === NODE_NOTE_CONTAINER_EDIT_HEIGHT ||
-          (bottomSheetIndex.value === 2 
-            // WHY IS THIS NOT WORKING!!!!!!!!
-            // &&
-            // nodeContainerHeight.value !== "100%"
-          )),
+          bottomSheetIndex.value === 2),
       (currentVal, prevVal) => {
         if (currentVal && !prevVal) runOnJS(setIsEditingText)(true);
       }
@@ -173,7 +169,7 @@ const NodeNote = memo(
                 style={{ width: "100%", height: "100%", flex: 1 }}
                 onPress={() => {
                   editedNodeIndex.value = index;
-                  console.log(index);
+                  // nodeContainerHeight is changed in an animatedReaction so that it can take into account keyboard height
                   if (bottomSheetIndex.value === 2) return;
                   nodeContainerHeight.value = NODE_NOTE_CONTAINER_EDIT_HEIGHT;
                 }}
