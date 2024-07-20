@@ -5,7 +5,6 @@ import {
   TextInput,
 } from "react-native-gesture-handler";
 import { Alert, Pressable, Text, TouchableOpacity, View } from "react-native";
-
 import IsEditingTitleProvider, {
   useIsEditingTitle,
 } from "../src/providers/EditingTitleProvider";
@@ -44,7 +43,7 @@ const RootLayout = () => {
                 headerRight: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
-                  const { saveClimb, newClimbName } = useClimb();
+                  const { saveClimb, newName } = useClimb();
 
                   if (!isEditingTitle) {
                     return (
@@ -78,9 +77,9 @@ const RootLayout = () => {
                         padding: 9,
                         backgroundColor: PRIMARY_BUTTON_COLOUR,
                         borderRadius: 15,
-                        opacity: !newClimbName.length ? 0.3 : 1,
+                        opacity: !newName.length ? 0.3 : 1,
                       }}
-                      disabled={!newClimbName.length}
+                      disabled={!newName.length}
                       onPress={() => {
                         saveClimb();
                         setIsEditingTitle(false);
@@ -101,7 +100,7 @@ const RootLayout = () => {
                 headerTitle: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
-                  const { climb, newClimbName, setNewClimbName, saveClimb } =
+                  const { climb, newName, setNewName, saveClimb } =
                     useClimb();
 
                   if (isEditingTitle) {
@@ -124,11 +123,11 @@ const RootLayout = () => {
                             fontSize: 22,
                           }}
                           placeholder={"Enter climb name..."}
-                          defaultValue={climb?.fileName || ""}
-                          onChangeText={setNewClimbName}
+                          defaultValue={climb?.name || ""}
+                          onChangeText={setNewName}
                           onLayout={(e) => e.target.focus()}
                           onBlur={(e) => {
-                            if (!newClimbName.length) {
+                            if (!newName.length) {
                               Alert.alert("Climb name cannot be blank");
                               e.target.focus();
                               return;
@@ -156,7 +155,7 @@ const RootLayout = () => {
                       >
                         {isViewingHelp
                           ? "Help & Instructions"
-                          : climb?.fileName || ""}
+                          : climb?.name || ""}
                       </Text>
                     </Pressable>
                   );

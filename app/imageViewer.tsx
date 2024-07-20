@@ -21,11 +21,7 @@ import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
-import BottomSheet, {
-  BottomSheetHandle,
-  BottomSheetModal,
-  BottomSheetModalProvider,
-} from "@gorhom/bottom-sheet";
+import BottomSheet, { BottomSheetHandle } from "@gorhom/bottom-sheet";
 import {
   NODE_SIZE,
   NODE_SIZE_OFFSET,
@@ -40,7 +36,7 @@ const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
 export const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
 
 const ImageViewer = () => {
-  const { climb, nodes, setNodes, setNewClimbName, saveClimb } = useClimb();
+  const { climb, nodes, setNodes, setNewName, saveClimb } = useClimb();
 
   if (!climb) return null;
 
@@ -216,10 +212,10 @@ const ImageViewer = () => {
       isKeyboardShown.value = true;
     });
 
-    if (!climb.fileName) {
+    if (!climb.name) {
       setIsEditingTitle(true);
     } else {
-      setNewClimbName(climb.fileName);
+      setNewName(climb.name);
     }
 
     setNodes(climb.nodes);

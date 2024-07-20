@@ -8,16 +8,16 @@ import {
 import * as FileSystem from "expo-file-system";
 import { IMAGE_DIR } from "../components/Menu/index.constants";
 import { Nodes } from "../components/ImageViewer/index.types";
-import { File } from "../../App";
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { Climb } from "../../app";
 
 interface ClimbDataType {
-  climb: File | null;
-  setClimb: React.Dispatch<React.SetStateAction<File | null>>;
+  climb: Climb | null;
+  setClimb: React.Dispatch<React.SetStateAction<Climb | null>>;
   nodes: Nodes;
   setNodes: React.Dispatch<React.SetStateAction<Nodes>>;
-  newClimbName: string;
-  setNewClimbName: React.Dispatch<React.SetStateAction<string>>;
+  newName: string;
+  setNewName: React.Dispatch<React.SetStateAction<string>>;
   saveClimb: () => Promise<void>;
   clearClimb: () => void;
 }
@@ -27,16 +27,16 @@ const ClimbContext = createContext<ClimbDataType>({
   setClimb: () => {},
   nodes: [],
   setNodes: () => {},
-  newClimbName: "",
-  setNewClimbName: () => {},
+  newName: "",
+  setNewName: () => {},
   saveClimb: async () => {},
   clearClimb: () => {},
 });
 
 const ClimbProvider = ({ children }: PropsWithChildren) => {
-  const [climb, setClimb] = useState<File | null>(null);
+  const [climb, setClimb] = useState<Climb | null>(null);
   const [nodes, setNodes] = useState<Nodes>(climb?.nodes || []);
-  const [newClimbName, setNewClimbName] = useState("");
+  const [newName, setNewName] = useState("");
 
   const getImageExtension = (uri: string) => {
     const splitUri = uri.split(".");
@@ -44,8 +44,8 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
   };
 
   useEffect(() => {
-    if (!climb?.fileName) return;
-    setNewClimbName(climb.fileName);
+    if (!climb?.name) return;
+    setNewName(climb.name);
   }, []);
 
   const saveClimb = async () => {
@@ -53,12 +53,12 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
     // creates the image directory if it doesn't exist
     if (!(await FileSystem.getInfoAsync(IMAGE_DIR)).exists)
       await FileSystem.makeDirectoryAsync(IMAGE_DIR, { intermediates: true });
-    const newFile = {
+    const newClimb = {
       ...climb,
       nodes,
-      fileName: newClimbName || climb.fileName,
+      name: newName || climb.name,
     };
-    const imageFileUri = `${IMAGE_DIR}${climb.fileId}.${getImageExtension(
+    const imageFileUri = `${IMAGE_DIR}${climb.id}.${getImageExtension(
       climb.imageProps.uri
     )}`;
     // if image doesn't exist on local storage, copy it over
@@ -67,16 +67,16 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
         from: climb.imageProps.uri,
         to: imageFileUri,
       });
-      newFile.imageProps = { ...newFile.imageProps, uri: imageFileUri };
+      newClimb.imageProps = { ...newClimb.imageProps, uri: imageFileUri };
     }
-    await AsyncStorage.setItem(climb.fileId, JSON.stringify(newFile));
-    await setClimb(newFile);
+    await AsyncStorage.setItem(climb.id, JSON.stringify(newClimb));
+    await setClimb(newClimb);
   };
 
   const clearClimb = () => {
     setClimb(null);
     setNodes([]);
-    setNewClimbName("");
+    setNewName("");
   };
 
   return (
@@ -86,8 +86,8 @@ const ClimbProvider = ({ children }: PropsWithChildren) => {
         setClimb,
         nodes,
         setNodes,
-        newClimbName,
-        setNewClimbName,
+        newName,
+        setNewName,
         saveClimb,
         clearClimb,
       }}

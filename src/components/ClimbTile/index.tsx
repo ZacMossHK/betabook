@@ -6,23 +6,23 @@ import { LinearGradient } from "expo-linear-gradient";
 
 interface ClimbTileProps {
   uri: string;
-  fileId: string;
-  fileName: string | null;
+  id: string;
+  name: string | null;
   isLoading: boolean;
-  loadFile: (fileId: string) => Promise<void>;
-  deleteFile: (fileId: string, imagePath: string) => Promise<void>;
+  loadClimb: (id: string) => Promise<void>;
+  deleteClimb: (id: string, imagePath: string) => Promise<void>;
 }
 
 const ClimbTile = ({
   uri,
-  fileId,
+  id,
   isLoading,
-  fileName,
-  loadFile,
-  deleteFile,
+  name,
+  loadClimb,
+  deleteClimb,
 }: ClimbTileProps) => {
   const [isDeletePressed, setIsDeletePressed] = useState(false);
-  
+
   const tileBodyOpacity = isDeletePressed ? 0.8 : 1;
 
   if (!uri.length)
@@ -44,7 +44,7 @@ const ClimbTile = ({
         width: CLIMB_TILE_WIDTH,
       }}
       activeOpacity={0.8}
-      onPress={() => loadFile(fileId)}
+      onPress={() => loadClimb(id)}
       disabled={isLoading || isDeletePressed}
     >
       <>
@@ -74,7 +74,7 @@ const ClimbTile = ({
           <TouchableOpacity
             onPressIn={() => setIsDeletePressed(true)}
             onPressOut={() => setIsDeletePressed(false)}
-            onLongPress={() => deleteFile(fileId, uri)}
+            onLongPress={() => deleteClimb(id, uri)}
             delayLongPress={5000}
             style={{
               backgroundColor: "#F55536",
@@ -113,7 +113,7 @@ const ClimbTile = ({
               fontFamily: "InriaSans_400Regular",
             }}
           >
-            {fileName}
+            {name}
           </Text>
         </View>
         <LinearGradient

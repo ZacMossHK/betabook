@@ -1,16 +1,9 @@
-import {
-  Button,
-  Dimensions,
-  SafeAreaView,
-  Text,
-  View,
-} from "react-native";
+import { Button, Dimensions, SafeAreaView, Text, View } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useCallback, useState } from "react";
-import devCurrentFile from "../devData/devCurrentfile";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import * as ImagePicker from "expo-image-picker";
 import * as FileSystem from "expo-file-system";
@@ -18,12 +11,13 @@ import { randomUUID } from "expo-crypto";
 import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
 import ClimbTile from "../src/components/ClimbTile";
-import { isFile } from "../src/helpers/typeGuards/typeGuards";
+import { isClimb } from "../src/helpers/typeGuards/typeGuards";
 import { PRIMARY_BUTTON_COLOUR } from "../src/components/PrimaryButton/index.constants";
+import devCurrentClimb from "../devData/devCurrentClimb";
 
-export interface File {
-  fileId: string;
-  fileName: string | null;
+export interface Climb {
+  id: string;
+  name: string | null;
   imageProps: ImageProps;
   nodes: Nodes;
 }
@@ -36,41 +30,41 @@ const Menu = () => {
   const router = useRouter();
   const { setClimb, clearClimb } = useClimb();
 
-  const [savedFiles, setSavedFiles] = useState<File[]>([]);
-  const [isRequestingDeletingFiles, setIsRequestingDeletingFiles] =
+  const [savedClimbs, setSavedClimbs] = useState<Climb[]>([]);
+  const [isRequestingDeletingFiles, setIsRequestingDeletingClimbs] =
     useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const loadFiles = async () => {
-    const files: File[] = [];
+  const loadClimbs = async () => {
+    const climbs: Climb[] = [];
     // file for development only
     if (process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG)
-      files.push(devCurrentFile());
+      climbs.push(devCurrentClimb());
 
-    for (const fileId of await AsyncStorage.getAllKeys()) {
-      const item = await AsyncStorage.getItem(fileId);
+    for (const id of await AsyncStorage.getAllKeys()) {
+      const item = await AsyncStorage.getItem(id);
       if (!item) continue;
-      const parsedItem = JSON.parse(item) as File | unknown;
-      if (!isFile(parsedItem)) continue;
-      files.push(parsedItem);
+      const parsedItem = JSON.parse(item) as Climb | unknown;
+      if (!isClimb(parsedItem)) continue;
+      climbs.push(parsedItem);
     }
 
-    await setSavedFiles(files);
+    await setSavedClimbs(climbs);
   };
 
   useFocusEffect(
     useCallback(() => {
       setIsLoading(false);
       clearClimb();
-      loadFiles();
+      loadClimbs();
     }, [])
   );
 
-  const loadFile = async (fileId: string) => {
+  const loadClimb = async (id: string) => {
     await setIsLoading(true);
-    const file = savedFiles.find((savedFile) => savedFile.fileId === fileId);
-    if (!file) return;
-    await setClimb(file);
+    const climb = savedClimbs.find((savedClimb) => savedClimb.id === id);
+    if (!climb) return;
+    await setClimb(climb);
     router.navigate("imageViewer");
   };
 
@@ -86,8 +80,8 @@ const Menu = () => {
     }
     const { uri, height, width } = result.assets[0];
     await setClimb({
-      fileId: randomUUID(),
-      fileName: null,
+      id: randomUUID(),
+      name: null,
       imageProps: { uri, height, width },
       nodes: [],
     });
@@ -95,22 +89,21 @@ const Menu = () => {
     router.navigate("imageViewer");
   };
 
-  const deleteAllFiles = async () => {
+  const deleteAllClimbs = async () => {
     await AsyncStorage.multiRemove(await AsyncStorage.getAllKeys());
     await FileSystem.deleteAsync(IMAGE_DIR);
-    await setSavedFiles([]);
-    await setIsRequestingDeletingFiles(false);
+    await setSavedClimbs([]);
+    await setIsRequestingDeletingClimbs(false);
   };
 
-  const deleteFile = async (fileId: string, imagePath: string) => {
-    await AsyncStorage.removeItem(fileId);
+  const deleteClimb = async (id: string, imagePath: string) => {
+    await AsyncStorage.removeItem(id);
     await FileSystem.deleteAsync(imagePath);
-    await setSavedFiles((prevFiles) => {
-      const newFiles = [...prevFiles];
-      return newFiles.filter((file) => file.fileId !== fileId);
+    await setSavedClimbs((prevClimbs) => {
+      const newClimbs = [...prevClimbs];
+      return newClimbs.filter((climb) => climb.id !== id);
     });
   };
-
 
   return (
     <SafeAreaView
@@ -131,25 +124,25 @@ const Menu = () => {
         }}
       >
         {/* delete all files button for development only */}
-        {savedFiles.length &&
+        {savedClimbs.length &&
         process.env.EXPO_PUBLIC_ENVIRONMENT === "testing" ? (
           isRequestingDeletingFiles ? (
             <>
               <Button
-                onPress={deleteAllFiles}
+                onPress={deleteAllClimbs}
                 title="Confirm file Deletion - cannot be undone!"
                 color="red"
                 disabled={isLoading}
               />
               <Button
                 title="Cancel"
-                onPress={() => setIsRequestingDeletingFiles(false)}
+                onPress={() => setIsRequestingDeletingClimbs(false)}
                 disabled={isLoading}
               />
             </>
           ) : (
             <Button
-              onPress={() => setIsRequestingDeletingFiles(true)}
+              onPress={() => setIsRequestingDeletingClimbs(true)}
               title="Delete all files - DEBUG!"
               color="red"
               disabled={isLoading}
@@ -222,20 +215,20 @@ const Menu = () => {
             }}
             scrollEnabled={!isLoading}
             data={
-              !(savedFiles.length % 2)
-                ? savedFiles
+              !(savedClimbs.length % 2)
+                ? savedClimbs
                 : [
-                    ...savedFiles,
+                    ...savedClimbs,
                     {
-                      fileId: randomUUID(),
-                      fileName: "",
+                      id: randomUUID(),
+                      name: "",
                       imageProps: { width: 0, height: 0, uri: "" },
                       nodes: [],
                     },
                   ]
             }
             numColumns={2}
-            keyExtractor={(item) => item.fileId}
+            keyExtractor={(item) => item.id}
             ListEmptyComponent={() => (
               <Text
                 style={{
@@ -250,11 +243,11 @@ const Menu = () => {
             )}
             renderItem={({ item }) => (
               <ClimbTile
-                deleteFile={deleteFile}
-                fileName={item.fileName}
-                fileId={item.fileId}
+                deleteClimb={deleteClimb}
+                name={item.name}
+                id={item.id}
                 uri={item.imageProps.uri}
-                loadFile={loadFile}
+                loadClimb={loadClimb}
                 isLoading={isLoading}
               />
             )}

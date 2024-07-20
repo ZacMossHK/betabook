@@ -1,4 +1,4 @@
-import { File } from "../../../app/";
+import { Climb } from "../../../app/";
 import {
   Coordinates,
   ImageProps,
@@ -37,15 +37,15 @@ const isNode = (obj: unknown): obj is Node =>
 const isNodes = (obj: unknown): obj is Nodes =>
   Array.isArray(obj) && obj.every(isNode);
 
-export const isFile = (obj: unknown): obj is File => {
+export const isClimb = (obj: unknown): obj is Climb => {
   if (typeof obj !== "object" || obj === null) return false;
 
-  const file = obj as File;
+  const climb = obj as Climb;
 
   return (
-    hasString(file.fileId) &&
-    hasStringOrNull(file.fileName) &&
-    isImageProps(file.imageProps) &&
-    isNodes(file.nodes)
+    hasString(climb.id) &&
+    hasStringOrNull(climb.name) &&
+    isImageProps(climb.imageProps) &&
+    isNodes(climb.nodes)
   );
 };
