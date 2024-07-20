@@ -21,7 +21,11 @@ import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
-import BottomSheet, { BottomSheetHandle } from "@gorhom/bottom-sheet";
+import BottomSheet, {
+  BottomSheetHandle,
+  BottomSheetModal,
+  BottomSheetModalProvider,
+} from "@gorhom/bottom-sheet";
 import {
   NODE_SIZE,
   NODE_SIZE_OFFSET,
@@ -33,7 +37,7 @@ import MovementNodeContainer from "../src/components/MovementNodeContainer";
 const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
 const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
-const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
+export const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
 
 const ImageViewer = () => {
   const { climb, nodes, setNodes, setNewClimbName, saveClimb } = useClimb();

@@ -1,4 +1,4 @@
-import { Stack } from "expo-router";
+import { Stack, useRouter } from "expo-router";
 import ClimbProvider, { useClimb } from "../src/providers/ClimbProvider";
 import {
   GestureHandlerRootView,
@@ -16,6 +16,8 @@ import {
 } from "@expo-google-fonts/inria-sans";
 import { useFonts } from "expo-font";
 import AnimationProvider from "../src/providers/AnimationProvider";
+import { useRouteInfo } from "expo-router/build/hooks";
+import { PRIMARY_BUTTON_COLOUR } from "../src/components/PrimaryButton/index.constants";
 
 const RootLayout = () => {
   const [fontsLoaded] = useFonts({
@@ -23,6 +25,9 @@ const RootLayout = () => {
     InriaSans_400Regular,
     InriaSans_700Bold,
   });
+
+  const router = useRouter();
+  const isViewingHelp = useRouteInfo().pathname === "/help";
 
   // TODO: replace with splash screen
   if (!fontsLoaded) return null;
@@ -41,13 +46,37 @@ const RootLayout = () => {
                     useIsEditingTitle();
                   const { saveClimb, newClimbName } = useClimb();
 
-                  if (!isEditingTitle) return;
+                  if (!isEditingTitle) {
+                    return (
+                      <TouchableOpacity
+                        style={{
+                          padding: 9,
+                          backgroundColor: PRIMARY_BUTTON_COLOUR,
+                          borderRadius: 15,
+                        }}
+                        onPress={() =>
+                          isViewingHelp
+                            ? router.back()
+                            : router.navigate("help")
+                        }
+                      >
+                        <Text
+                          style={{
+                            fontFamily: "InriaSans_700Bold",
+                            color: "#14281D",
+                          }}
+                        >
+                          {isViewingHelp ? "Back" : "Help"}
+                        </Text>
+                      </TouchableOpacity>
+                    );
+                  }
 
                   return (
                     <TouchableOpacity
                       style={{
                         padding: 9,
-                        backgroundColor: "#D6EFFF",
+                        backgroundColor: PRIMARY_BUTTON_COLOUR,
                         borderRadius: 15,
                         opacity: !newClimbName.length ? 0.3 : 1,
                       }}
@@ -116,6 +145,7 @@ const RootLayout = () => {
                     <Pressable
                       style={{ flex: 1 }}
                       onPress={() => setIsEditingTitle(true)}
+                      disabled={isViewingHelp}
                     >
                       <Text
                         style={{
@@ -124,7 +154,9 @@ const RootLayout = () => {
                           fontSize: 22,
                         }}
                       >
-                        {climb?.fileName || ""}
+                        {isViewingHelp
+                          ? "Help & Instructions"
+                          : climb?.fileName || ""}
                       </Text>
                     </Pressable>
                   );

@@ -13,6 +13,7 @@ import {
   useAnimatedReaction,
 } from "react-native-reanimated";
 import { NODE_NOTE_CONTAINER_EDIT_HEIGHT } from "../NodeNoteContainer/index.contstants";
+import { PRIMARY_BUTTON_COLOUR } from "../PrimaryButton/index.constants";
 
 interface NodeNoteProps {
   note: string;
@@ -111,7 +112,7 @@ const NodeNote = memo(
                 style={{
                   height: NODE_SIZE,
                   width: NODE_SIZE,
-                  backgroundColor: "#D6EFFF",
+                  backgroundColor: PRIMARY_BUTTON_COLOUR,
                   borderRadius: 15,
                   alignContent: "center",
                   justifyContent: "center",
@@ -128,7 +129,7 @@ const NodeNote = memo(
                   style={{
                     height: NODE_SIZE,
                     width: NODE_SIZE,
-                    backgroundColor: "#D6EFFF",
+                    backgroundColor: PRIMARY_BUTTON_COLOUR,
                     borderRadius: 15,
                     alignContent: "center",
                     justifyContent: "center",
@@ -210,7 +211,7 @@ const NodeNote = memo(
             <TouchableOpacity
               style={{
                 padding: 9,
-                backgroundColor: "#D6EFFF",
+                backgroundColor: PRIMARY_BUTTON_COLOUR,
                 borderRadius: 15,
                 alignSelf: "flex-end",
               }}

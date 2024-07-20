@@ -1,4 +1,10 @@
-import { Button, Dimensions, SafeAreaView, Text, View } from "react-native";
+import {
+  Button,
+  Dimensions,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
@@ -13,6 +19,7 @@ import { IMAGE_DIR } from "../src/components/Menu/index.constants";
 import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
 import ClimbTile from "../src/components/ClimbTile";
 import { isFile } from "../src/helpers/typeGuards/typeGuards";
+import { PRIMARY_BUTTON_COLOUR } from "../src/components/PrimaryButton/index.constants";
 
 export interface File {
   fileId: string;
@@ -104,6 +111,7 @@ const Menu = () => {
     });
   };
 
+
   return (
     <SafeAreaView
       style={{
@@ -160,7 +168,11 @@ const Menu = () => {
         </Text>
         <View>
           <TouchableOpacity
-            style={{ backgroundColor: "#D6EFFF", borderRadius: 15, padding: 9 }}
+            style={{
+              backgroundColor: PRIMARY_BUTTON_COLOUR,
+              borderRadius: 15,
+              padding: 9,
+            }}
             onPress={pickImage}
             disabled={isLoading}
           >

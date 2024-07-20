@@ -1,0 +1,1 @@
+export const PRIMARY_BUTTON_COLOUR = "#D6EFFF"
