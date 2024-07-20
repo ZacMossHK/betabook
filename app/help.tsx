@@ -1,5 +1,5 @@
 import { Image, StyleSheet, Text, View, Linking, Alert } from "react-native";
-import { FlatList, TouchableOpacity } from "react-native-gesture-handler";
+import { FlatList } from "react-native-gesture-handler";
 import PrimaryButton from "../src/components/PrimaryButton";
 import { useRef } from "react";
 
@@ -305,7 +305,8 @@ const HelpScreen = () => {
       <Text style={helpScreenStyle.sectionHeader}>Changing the title</Text>
       <View style={helpScreenStyle.instructionContainer}>
         <Text style={helpScreenStyle.instructionBody}>
-          To change the title, tap on the title in the header. Enter your new title and press OK.
+          To change the title, tap on the title in the header. Enter your new
+          title and press OK.
         </Text>
       </View>
     </View>,
