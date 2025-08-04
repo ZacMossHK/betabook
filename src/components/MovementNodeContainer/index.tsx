@@ -196,14 +196,7 @@ const MovementNodeContainer = ({
   );
 
   return (
-    <Animated.View
-      style={[
-        {
-          zIndex: 2,
-        },
-        animatedStyle,
-      ]}
-    >
+    <Animated.View style={animatedStyle}>
       {nodes.map((node, nodeIndex) => {
         const scale = pinchScale.value * baseScale.value;
 

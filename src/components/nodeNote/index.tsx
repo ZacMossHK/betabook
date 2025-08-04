@@ -193,6 +193,7 @@ const NodeNote = memo(
               <TextInput
                 multiline={true}
                 style={{
+                  bottom:3,
                   textAlignVertical: "top",
                   width: textWidth,
                   fontFamily: "InriaSans_400Regular",

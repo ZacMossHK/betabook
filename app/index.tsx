@@ -193,6 +193,7 @@ const Menu = () => {
         >
           <Text
             style={{
+              paddingTop: 14,
               width: "100%",
               height: 52,
               fontSize: 19,

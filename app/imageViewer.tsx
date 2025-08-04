@@ -144,6 +144,7 @@ const ImageViewer = () => {
             keyboardHeight.value -
             (BOTTOMSHEET_MID_HEIGHT - BOTTOMSHEET_LOW_HEIGHT);
           isFinishedEditingNode.value = false;
+
           if (
             transform.value[5] <
             maxDistanceYLowEdge -
@@ -153,6 +154,7 @@ const ImageViewer = () => {
               openBottomSheetHeightDifference
           ) {
             isAnimating.value = true;
+
             if (hasHitTopEdge.value) hasHitTopEdge.value = false;
             const newMatrix = [...transform.value] as TransformableMatrix3;
             newMatrix[5] += openBottomSheetHeightDifference;
@@ -160,6 +162,7 @@ const ImageViewer = () => {
               isAnimating.value = false;
             });
           }
+
           return;
         }
       }
@@ -194,7 +197,7 @@ const ImageViewer = () => {
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null
-      ? BOTTOMSHEET_MID_EDIT_HEIGHT
+      ? BOTTOMSHEET_MID_EDIT_HEIGHT + keyboardHeight.value // ios specific!!!
       : reactiveBottomSheetMidHeight.value,
     "100%",
   ]);
@@ -256,6 +259,7 @@ const ImageViewer = () => {
         0
       )
     );
+
     if (!isImageWiderThanView) {
       newMaxDistanceAfterScaling =
         axis === "x"
@@ -266,6 +270,7 @@ const ImageViewer = () => {
               viewportMeasurements.height) /
             2;
     }
+
     return axis === "x"
       ? Math.max(
           -newMaxDistanceAfterScaling,
@@ -436,27 +441,6 @@ const ImageViewer = () => {
       )}
       <SafeAreaView style={{ flex: 1, backgroundColor: "white" }}>
         <Animated.View collapsable={false} style={{ flex: 1 }}>
-          <MovementNodeContainer
-            {...{
-              selectedNodeIndex,
-              selectedNodePosition,
-              nodes,
-              setNodes,
-              imageMatrix,
-              isViewRendered,
-              maxDistance,
-              isSelectingNode,
-              isTranslatingNode,
-              baseScale,
-              pinchScale,
-              viewportMeasurements,
-              imageProps: climb.imageProps,
-              openBottomSheetHeight,
-              isAnimating,
-              selectedSubNodeIndex,
-              isPanning,
-            }}
-          />
           <ImageContainer
             {...{
               isViewRendered,
@@ -486,7 +470,34 @@ const ImageViewer = () => {
               selectedNodePosition,
             }}
           />
-          <View style={{ flex: 1, zIndex: 10 }}>
+          <MovementNodeContainer
+            {...{
+              selectedNodeIndex,
+              selectedNodePosition,
+              nodes,
+              setNodes,
+              imageMatrix,
+              isViewRendered,
+              maxDistance,
+              isSelectingNode,
+              isTranslatingNode,
+              baseScale,
+              pinchScale,
+              viewportMeasurements,
+              imageProps: climb.imageProps,
+              openBottomSheetHeight,
+              isAnimating,
+              selectedSubNodeIndex,
+              isPanning,
+            }}
+          />
+          <View
+            style={{
+              flex: 1,
+              // bottom handle on iOS is 34 px
+              top: 34,
+            }}
+          >
             <BottomSheet
               handleComponent={(props) => (
                 <GestureDetector gesture={tapBottomSheetHandle}>
@@ -498,6 +509,7 @@ const ImageViewer = () => {
                     <BottomSheetHandle {...props} />
                     <View
                       style={{
+                        bottom: 4, // ios specific!!!
                         flexDirection: "row",
                         width: "100%",
                         justifyContent: "center",
