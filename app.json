@@ -1,5 +1,6 @@
 {
   "expo": {
+    "newArchEnabled": true,
     "scheme": "your-app-scheme",
     "name": "betabook",
     "slug": "betabook",
@@ -12,9 +13,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.zacmosshk.betabook"
@@ -29,10 +28,7 @@
     "web": {
       "favicon": "./assets/favicon.png"
     },
-    "plugins": [
-      "expo-router",
-      "expo-font"
-    ],
+    "plugins": ["expo-router", "expo-font"],
     "extra": {
       "router": {
         "origin": false
