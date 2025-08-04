@@ -1,5 +1,5 @@
 import { GestureResponderEvent, Text, View } from "react-native";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { Pressable } from "react-native-gesture-handler";
 import { PRIMARY_BUTTON_COLOUR } from "./index.constants";
 
 interface BasePrimaryButtonProps {
@@ -28,7 +28,7 @@ const PrimaryButton = ({
   children,
 }: PrimaryButtonProps) => (
   <View>
-    <TouchableOpacity
+    <Pressable
       style={{
         backgroundColor: PRIMARY_BUTTON_COLOUR,
         borderRadius: 15,
@@ -49,7 +49,7 @@ const PrimaryButton = ({
           {title}
         </Text>
       )}
-    </TouchableOpacity>
+    </Pressable>
   </View>
 );
 

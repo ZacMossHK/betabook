@@ -1,6 +1,6 @@
 import { Image, Text, View } from "react-native";
 import { CLIMB_TILE_WIDTH } from "./index.constants";
-import { TouchableOpacity } from "react-native-gesture-handler";
+import { Pressable } from "react-native-gesture-handler";
 import { useState } from "react";
 import { LinearGradient } from "expo-linear-gradient";
 
@@ -38,12 +38,11 @@ const ClimbTile = ({
     );
 
   return (
-    <TouchableOpacity
+    <Pressable
       style={{
         height: CLIMB_TILE_WIDTH,
         width: CLIMB_TILE_WIDTH,
       }}
-      activeOpacity={0.8}
       onPress={() => loadClimb(id)}
       disabled={isLoading || isDeletePressed}
     >
@@ -71,10 +70,13 @@ const ClimbTile = ({
               </Text>
             </View>
           )}
-          <TouchableOpacity
+          <Pressable
             onPressIn={() => setIsDeletePressed(true)}
             onPressOut={() => setIsDeletePressed(false)}
-            onLongPress={() => deleteClimb(id, uri)}
+            onLongPress={() => {
+              console.log("this");
+              deleteClimb(id, uri);
+            }}
             delayLongPress={5000}
             style={{
               backgroundColor: "#F55536",
@@ -94,7 +96,7 @@ const ClimbTile = ({
             >
               X
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
         <View
           style={{
@@ -141,7 +143,7 @@ const ClimbTile = ({
           source={{ uri: uri }}
         />
       </>
-    </TouchableOpacity>
+    </Pressable>
   );
 };
 

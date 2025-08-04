@@ -1,11 +1,7 @@
 import { memo, useEffect, useState } from "react";
 import { Nodes } from "../ImageViewer/index.types";
 import { Keyboard, Text, View } from "react-native";
-import {
-  TextInput,
-  TouchableOpacity,
-  TouchableWithoutFeedback,
-} from "react-native-gesture-handler";
+import { TextInput, Pressable } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
 import {
   SharedValue,
@@ -107,7 +103,7 @@ const NodeNote = memo(
         <View style={{ flexDirection: "column" }}>
           <View style={{ flexDirection: "row" }}>
             <View style={{ flexDirection: "column", marginRight: 5 }}>
-              <TouchableOpacity
+              <Pressable
                 // the up arrow doesn't render conditionally so the down arrow takes the correct position
                 style={{
                   height: NODE_SIZE,
@@ -123,9 +119,9 @@ const NodeNote = memo(
                 onPress={handleUpArrowPress}
               >
                 <Text>^</Text>
-              </TouchableOpacity>
+              </Pressable>
               {!isLast && (
-                <TouchableOpacity
+                <Pressable
                   style={{
                     height: NODE_SIZE,
                     width: NODE_SIZE,
@@ -138,7 +134,7 @@ const NodeNote = memo(
                   onPress={handleDownArrowPress}
                 >
                   <Text>⌄</Text>
-                </TouchableOpacity>
+                </Pressable>
               )}
             </View>
             <View
@@ -166,7 +162,7 @@ const NodeNote = memo(
               </Text>
             </View>
             {!isEditingText && (
-              <TouchableWithoutFeedback
+              <Pressable
                 style={{ width: "100%", height: "100%", flex: 1 }}
                 onPress={() => {
                   editedNodeIndex.value = index;
@@ -187,13 +183,13 @@ const NodeNote = memo(
                 >
                   {note.length ? note : "Write your note..."}
                 </Text>
-              </TouchableWithoutFeedback>
+              </Pressable>
             )}
             {isEditingText && (
               <TextInput
                 multiline={true}
                 style={{
-                  bottom:3,
+                  bottom: 3,
                   textAlignVertical: "top",
                   width: textWidth,
                   fontFamily: "InriaSans_400Regular",
@@ -209,7 +205,7 @@ const NodeNote = memo(
             )}
           </View>
           {isEditingText && (
-            <TouchableOpacity
+            <Pressable
               style={{
                 padding: 9,
                 backgroundColor: PRIMARY_BUTTON_COLOUR,
@@ -227,7 +223,7 @@ const NodeNote = memo(
               >
                 OK
               </Text>
-            </TouchableOpacity>
+            </Pressable>
           )}
         </View>
       </View>
