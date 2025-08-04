@@ -25,9 +25,6 @@
       },
       "package": "com.zacmosshk.betabook"
     },
-    "web": {
-      "favicon": "./assets/favicon.png"
-    },
     "plugins": ["expo-router", "expo-font"],
     "extra": {
       "router": {
