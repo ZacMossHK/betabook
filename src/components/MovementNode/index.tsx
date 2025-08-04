@@ -6,7 +6,7 @@ import Animated, {
   useSharedValue,
 } from "react-native-reanimated";
 import { GestureDetector, Gesture } from "react-native-gesture-handler";
-import { memo, , useState } from "react";
+import { memo, useMemo, useState } from "react";
 import {
   NODE_SIZE,
   NODE_SIZE_OFFSET,
