@@ -197,7 +197,7 @@ const ImageViewer = () => {
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null
-      ? BOTTOMSHEET_MID_EDIT_HEIGHT + keyboardHeight.value // ios specific!!!
+      ? BOTTOMSHEET_MID_EDIT_HEIGHT + (keyboardHeight.value ?? 0) // ios specific!!!
       : reactiveBottomSheetMidHeight.value,
     "100%",
   ]);
