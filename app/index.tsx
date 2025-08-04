@@ -13,7 +13,6 @@ import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
 import ClimbTile from "../src/components/ClimbTile";
 import { isClimb } from "../src/helpers/typeGuards/typeGuards";
 import { PRIMARY_BUTTON_COLOUR } from "../src/components/PrimaryButton/index.constants";
-import devCurrentClimb from "../devData/devCurrentClimb";
 
 export interface Climb {
   id: string;
@@ -37,10 +36,6 @@ const Menu = () => {
 
   const loadClimbs = async () => {
     const climbs: Climb[] = [];
-    // file for development only
-    if (process.env.EXPO_PUBLIC_NODES_NUM || process.env.EXPO_PUBLIC_DEV_IMG)
-      climbs.push(devCurrentClimb());
-
     for (const id of await AsyncStorage.getAllKeys()) {
       const item = await AsyncStorage.getItem(id);
       if (!item) continue;
