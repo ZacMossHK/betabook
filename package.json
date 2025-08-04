@@ -4,13 +4,8 @@
   "main": "expo-router/entry",
   "scripts": {
     "start": "EXPO_PUBLIC_ENVIRONMENT=development expo start",
-    "start-10": "EXPO_PUBLIC_NODES_NUM=10 expo start",
-    "start-img": "EXPO_PUBLIC_DEV_IMG=true expo start",
-    "start-img-10": "EXPO_PUBLIC_DEV_IMG=true EXPO_PUBLIC_NODES_NUM=10 expo start",
-    "start-img-crop": "EXPO_PUBLIC_DEV_IMG=crop expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web",
     "ts:check": "tsc"
   },
   "dependencies": {
