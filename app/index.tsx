@@ -1,4 +1,11 @@
-import { Button, Dimensions, SafeAreaView, Text, View } from "react-native";
+import {
+  Button,
+  Dimensions,
+  Platform,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
 import { FlatList, Pressable } from "react-native-gesture-handler";
@@ -13,6 +20,10 @@ import { CLIMB_TILE_WIDTH } from "../src/components/ClimbTile/index.constants";
 import ClimbTile from "../src/components/ClimbTile";
 import { isClimb } from "../src/helpers/typeGuards/typeGuards";
 import { PRIMARY_BUTTON_COLOUR } from "../src/components/PrimaryButton/index.constants";
+import {
+  configureReanimatedLogger,
+  ReanimatedLogLevel,
+} from "react-native-reanimated";
 
 export interface Climb {
   id: string;
@@ -24,6 +35,11 @@ export interface Climb {
 export type SetCurrentFileState = React.Dispatch<
   React.SetStateAction<File | null>
 >;
+
+configureReanimatedLogger({
+  level: ReanimatedLogLevel.warn,
+  strict: false,
+});
 
 const Menu = () => {
   const router = useRouter();
