@@ -38,8 +38,9 @@ const RootLayout = () => {
           <AnimationProvider>
             <Stack
               screenOptions={{
+                headerTintColor: "white",
                 headerStyle: { backgroundColor: "#F55536" },
-
+                statusBarStyle: "light",
                 headerRight: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
@@ -100,8 +101,7 @@ const RootLayout = () => {
                 headerTitle: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
-                  const { climb, newName, setNewName, saveClimb } =
-                    useClimb();
+                  const { climb, newName, setNewName, saveClimb } = useClimb();
 
                   if (isEditingTitle) {
                     return (
