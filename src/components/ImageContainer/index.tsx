@@ -25,7 +25,6 @@ import { useClimb } from "../../providers/ClimbProvider";
 import { Dimensions, Platform } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useAnimation } from "../../providers/AnimationProvider";
-import { BOTTOMSHEET_LOW_HEIGHT } from "../../../app/imageViewer";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -53,6 +52,7 @@ interface ImageContainerProps {
   isPanning: SharedValue<boolean>;
   selectedSubNodeIndex: SharedValue<number | null>;
   selectedNodePosition: SharedValue<Coordinates | null>;
+  BOTTOMSHEET_LOW_HEIGHT: number;
 }
 
 const ImageContainer = ({
@@ -79,6 +79,7 @@ const ImageContainer = ({
   isPanning,
   selectedSubNodeIndex,
   selectedNodePosition,
+  BOTTOMSHEET_LOW_HEIGHT,
 }: ImageContainerProps) => {
   const { climb } = useClimb();
   const { selectedLineIndex } = useAnimation();

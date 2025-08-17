@@ -37,7 +37,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { getCurrentNodePosition } from "../src/helpers/nodes/nodePositions";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 
-export const BOTTOMSHEET_LOW_HEIGHT = 60;
+const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
 const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
 export const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
@@ -206,7 +206,8 @@ const ImageViewer = () => {
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null
       ? BOTTOMSHEET_MID_EDIT_HEIGHT +
-        (Platform.OS === "ios" ? keyboardHeight.value ?? 0 : 0)
+        (keyboardHeight.value ?? 0) +
+        (Platform.OS === "ios" ? 0 : 25)
       : reactiveBottomSheetMidHeight.value,
     "100%",
   ]);
@@ -477,6 +478,7 @@ const ImageViewer = () => {
               isPanning,
               selectedSubNodeIndex,
               selectedNodePosition,
+              BOTTOMSHEET_LOW_HEIGHT,
             }}
           />
           <MovementNodeContainer
@@ -503,10 +505,11 @@ const ImageViewer = () => {
           <View
             style={{
               flex: 1,
+              // bottom: 400,
               ...(Platform.OS === "ios"
                 ? { top: 34 }
                 : {
-                    position: "static",
+                    // position: "static",
                   }),
             }}
           >
