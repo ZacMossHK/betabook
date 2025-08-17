@@ -67,9 +67,6 @@ const HelpScreen = () => {
     </View>
   );
 
-  const openBetabookInstagram = () =>
-    openURI("https://www.instagram.com/betabookclimbing/");
-
   const whatIsBetaBookSection = (
     <View style={helpScreenStyle.sectionContainer}>
       <Text style={helpScreenStyle.sectionHeader}>What is Betabook?</Text>
@@ -86,32 +83,7 @@ const HelpScreen = () => {
           alignItems: "center",
           gap: 13,
         }}
-      >
-        <PrimaryButton
-          onPress={openBetabookInstagram}
-          children={
-            <View
-              style={{ flexDirection: "row", gap: 15, alignItems: "center" }}
-            >
-              <Image
-                resizeMode="contain"
-                source={require("../assets/Instagram_Glyph_Black.png")}
-                style={{ height: 28, width: 28 }}
-              />
-              <Text
-                style={{
-                  fontSize: 15,
-                  fontFamily: "InriaSans_700Bold",
-                  color: "#14281D",
-                  textAlign: "center",
-                }}
-              >
-                Follow Betabook on Instagram! @betabookclimbing
-              </Text>
-            </View>
-          }
-        />
-      </View>
+      ></View>
     </View>
   );
 
