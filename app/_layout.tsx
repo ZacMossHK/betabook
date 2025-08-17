@@ -4,7 +4,14 @@ import {
   GestureHandlerRootView,
   TextInput,
 } from "react-native-gesture-handler";
-import { Alert, Pressable, Text, TouchableOpacity, View } from "react-native";
+import {
+  Alert,
+  Platform,
+  Pressable,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import IsEditingTitleProvider, {
   useIsEditingTitle,
 } from "../src/providers/EditingTitleProvider";
@@ -40,7 +47,7 @@ const RootLayout = () => {
               screenOptions={{
                 headerTintColor: "white",
                 headerStyle: { backgroundColor: "#F55536" },
-                statusBarStyle: "light",
+                ...(Platform.OS === "ios" && { statusBarStyle: "light" }), // prevents iOS error when changing statusBarStyle
                 headerRight: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
@@ -113,14 +120,14 @@ const RootLayout = () => {
                       >
                         <TextInput
                           style={{
+                            paddingVertical: 5,
                             borderRadius: 15,
                             paddingHorizontal: 9,
                             backgroundColor: "white",
-                            height: 40,
-                            textAlign: "center",
                             fontFamily: "InriaSans_400Regular",
                             color: "#14281D",
                             fontSize: 22,
+                            width: "70%",
                           }}
                           placeholder={"Enter climb name..."}
                           defaultValue={climb?.name || ""}
@@ -142,7 +149,10 @@ const RootLayout = () => {
 
                   return (
                     <Pressable
-                      style={{ flex: 1 }}
+                      style={{
+                        flex: 1,
+                        ...(Platform.OS === "android" && { top: 3 }),
+                      }}
                       onPress={() => setIsEditingTitle(true)}
                       disabled={isViewingHelp}
                     >
