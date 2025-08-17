@@ -47,7 +47,7 @@ const RootLayout = () => {
               screenOptions={{
                 headerTintColor: "white",
                 headerStyle: { backgroundColor: "#F55536" },
-                ...(Platform.OS === "ios" && { statusBarStyle: "light" }), // prevents iOS error when changing statusBarStyle
+                ...(Platform.OS === "android" && { statusBarStyle: "light" }), // prevents iOS error when changing statusBarStyle
                 headerRight: () => {
                   const { isEditingTitle, setIsEditingTitle } =
                     useIsEditingTitle();
