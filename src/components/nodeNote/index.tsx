@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import { Nodes } from "../ImageViewer/index.types";
-import { Keyboard, Platform, Text, View } from "react-native";
+import { Keyboard, Platform, Text, TouchableOpacity, View } from "react-native";
 import { TextInput, Pressable } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
 import {
@@ -103,7 +103,7 @@ const NodeNote = memo(
         <View style={{ flexDirection: "column" }}>
           <View style={{ flexDirection: "row" }}>
             <View style={{ flexDirection: "column", marginRight: 5 }}>
-              <Pressable
+              <TouchableOpacity
                 // the up arrow doesn't render conditionally so the down arrow takes the correct position
                 style={{
                   height: NODE_SIZE,
@@ -119,9 +119,9 @@ const NodeNote = memo(
                 onPress={handleUpArrowPress}
               >
                 <Text>^</Text>
-              </Pressable>
+              </TouchableOpacity>
               {!isLast && (
-                <Pressable
+                <TouchableOpacity
                   style={{
                     height: NODE_SIZE,
                     width: NODE_SIZE,
@@ -134,7 +134,7 @@ const NodeNote = memo(
                   onPress={handleDownArrowPress}
                 >
                   <Text>⌄</Text>
-                </Pressable>
+                </TouchableOpacity>
               )}
             </View>
             <View
@@ -205,7 +205,7 @@ const NodeNote = memo(
             )}
           </View>
           {isEditingText && (
-            <Pressable
+            <TouchableOpacity
               style={{
                 padding: 9,
                 backgroundColor: PRIMARY_BUTTON_COLOUR,
@@ -223,7 +223,7 @@ const NodeNote = memo(
               >
                 OK
               </Text>
-            </Pressable>
+            </TouchableOpacity>
           )}
         </View>
       </View>

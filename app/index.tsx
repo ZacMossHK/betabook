@@ -4,11 +4,12 @@ import {
   Platform,
   SafeAreaView,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
 import { ImageProps, Nodes } from "../src/components/ImageViewer/index.types";
 import { Stack, useFocusEffect, useRouter } from "expo-router";
-import { FlatList, Pressable } from "react-native-gesture-handler";
+import { FlatList } from "react-native-gesture-handler";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useCallback, useState } from "react";
 import AsyncStorage from "@react-native-async-storage/async-storage";
@@ -171,7 +172,7 @@ const Menu = () => {
           Betabook
         </Text>
         <View>
-          <Pressable
+          <TouchableOpacity
             style={{
               backgroundColor: PRIMARY_BUTTON_COLOUR,
               borderRadius: 15,
@@ -189,7 +190,7 @@ const Menu = () => {
             >
               Create new
             </Text>
-          </Pressable>
+          </TouchableOpacity>
         </View>
         <View
           style={{
