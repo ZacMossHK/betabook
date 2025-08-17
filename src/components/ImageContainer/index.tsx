@@ -22,9 +22,10 @@ import {
 import { getNewNodePosition } from "../../helpers/nodes/nodePositions";
 import { NODE_SIZE_OFFSET } from "../ImageViewer/index.constants";
 import { useClimb } from "../../providers/ClimbProvider";
-import { Dimensions } from "react-native";
+import { Dimensions, Platform } from "react-native";
 import { useHeaderHeight } from "@react-navigation/elements";
 import { useAnimation } from "../../providers/AnimationProvider";
+import { BOTTOMSHEET_LOW_HEIGHT } from "../../../app/imageViewer";
 
 interface ImageContainerProps {
   isViewRendered: SharedValue<boolean>;
@@ -88,7 +89,6 @@ const ImageContainer = ({
   const adjustedTranslationX = useSharedValue(0);
   const adjustedTranslationY = useSharedValue(0);
   const adjustedScale = useSharedValue(0);
-  // const isPanning = useSharedValue(false);
   const isPinching = useSharedValue(false);
 
   const getDistanceToLineSegment = (
@@ -588,11 +588,6 @@ const ImageContainer = ({
     };
   });
 
-  const fullscreenStyle = {
-    ...imageContainerStyles.fullscreen,
-    height: Dimensions.get("screen").height - 60 - useHeaderHeight(),
-  };
-
   return (
     <GestureDetector
       gesture={Gesture.Simultaneous(longPress, lineLongPress, pinch, pan)}
@@ -606,12 +601,20 @@ const ImageContainer = ({
           isViewRendered.value = true;
         }}
         collapsable={false}
-        style={fullscreenStyle}
+        style={{
+          ...imageContainerStyles.fullscreen,
+          height:
+            Platform.OS === "ios"
+              ? Dimensions.get("screen").height -
+                BOTTOMSHEET_LOW_HEIGHT -
+                useHeaderHeight()
+              : Dimensions.get("window").height - BOTTOMSHEET_LOW_HEIGHT * 1.5,
+        }}
       >
         <Animated.Image
           source={{ uri: climb.imageProps.uri }}
           resizeMode={"contain"}
-          style={[fullscreenStyle, animatedStyle]}
+          style={[imageContainerStyles.fullscreen, animatedStyle]}
           fadeDuration={0}
         />
       </Animated.View>

@@ -1,6 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import { Nodes } from "../ImageViewer/index.types";
-import { Keyboard, Text, View } from "react-native";
+import { Keyboard, Platform, Text, View } from "react-native";
 import { TextInput, Pressable } from "react-native-gesture-handler";
 import { NODE_SIZE } from "../ImageViewer/index.constants";
 import {
@@ -189,7 +189,7 @@ const NodeNote = memo(
               <TextInput
                 multiline={true}
                 style={{
-                  bottom: 3,
+                  ...(Platform.OS === "ios" && { bottom: 3 }),
                   textAlignVertical: "top",
                   width: textWidth,
                   fontFamily: "InriaSans_400Regular",

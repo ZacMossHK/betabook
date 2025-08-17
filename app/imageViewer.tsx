@@ -17,7 +17,14 @@ import { Matrix3, identity3 } from "react-native-redash";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { getMatrix } from "../src/helpers/matrixTransformers/utils";
 import ImageContainer from "../src/components/ImageContainer";
-import { Keyboard, Pressable, SafeAreaView, Text, View } from "react-native";
+import {
+  Keyboard,
+  Platform,
+  Pressable,
+  SafeAreaView,
+  Text,
+  View,
+} from "react-native";
 import NodeNoteContainer from "../src/components/NodeNoteContainer";
 import { useClimb } from "../src/providers/ClimbProvider";
 import { useIsEditingTitle } from "../src/providers/EditingTitleProvider";
@@ -30,7 +37,7 @@ import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { getCurrentNodePosition } from "../src/helpers/nodes/nodePositions";
 import MovementNodeContainer from "../src/components/MovementNodeContainer";
 
-const BOTTOMSHEET_LOW_HEIGHT = 60;
+export const BOTTOMSHEET_LOW_HEIGHT = 60;
 const BOTTOMSHEET_MID_HEIGHT = 369;
 const BOTTOMSHEET_MID_EDIT_HEIGHT = 200;
 export const NODE_NOTE_CONTAINER_TOP_PADDING = 30;
@@ -94,6 +101,7 @@ const ImageViewer = () => {
     )
   );
 
+  // images that are wider than the viewport dimensions ignore imageWidth, and the opposite is true
   const imageHeight = viewportMeasurements
     ? viewportMeasurements.width *
       (climb.imageProps.height / climb.imageProps.width)
@@ -197,7 +205,8 @@ const ImageViewer = () => {
   const snapPoints = useDerivedValue(() => [
     BOTTOMSHEET_LOW_HEIGHT,
     editedNodeIndex.value !== null
-      ? BOTTOMSHEET_MID_EDIT_HEIGHT + (keyboardHeight.value ?? 0) // ios specific!!!
+      ? BOTTOMSHEET_MID_EDIT_HEIGHT +
+        (Platform.OS === "ios" ? keyboardHeight.value ?? 0 : 0)
       : reactiveBottomSheetMidHeight.value,
     "100%",
   ]);
@@ -494,8 +503,11 @@ const ImageViewer = () => {
           <View
             style={{
               flex: 1,
-              // bottom handle on iOS is 34 px
-              top: 34,
+              ...(Platform.OS === "ios"
+                ? { top: 34 }
+                : {
+                    position: "static",
+                  }),
             }}
           >
             <BottomSheet
@@ -509,7 +521,7 @@ const ImageViewer = () => {
                     <BottomSheetHandle {...props} />
                     <View
                       style={{
-                        bottom: 4, // ios specific!!!
+                        bottom: 4,
                         flexDirection: "row",
                         width: "100%",
                         justifyContent: "center",

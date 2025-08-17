@@ -74,7 +74,6 @@ const ClimbTile = ({
             onPressIn={() => setIsDeletePressed(true)}
             onPressOut={() => setIsDeletePressed(false)}
             onLongPress={() => {
-              console.log("this");
               deleteClimb(id, uri);
             }}
             delayLongPress={5000}
